@@ -11,8 +11,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from data_pipeline import load_config, prepare_data
-from factor_engine import (
+from .data_pipeline import load_config, prepare_data
+from .factor_engine import (
     canonical,
     crossover,
     evaluate,
@@ -49,7 +49,7 @@ def sample_training_data(data: pd.DataFrame, config: dict, quick: bool) -> pd.Da
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config.json")
+    parser.add_argument("--config", default="configs/stock/v1.json")
     parser.add_argument("--quick", action="store_true")
     parser.add_argument("--force-data", action="store_true")
     args = parser.parse_args()

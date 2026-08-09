@@ -5,9 +5,9 @@ from dataclasses import asdict
 from pathlib import Path
 import pandas as pd
 import lightgbm as lgb
-from data import category_of,feature_names,load_config,load_frame
-from ga import GAOptions,run_ga
-from models import build_factor_frame,rolling_backtest
+from .data import category_of,feature_names,load_config,load_frame
+from .ga import GAOptions,run_ga
+from .models import build_factor_frame,rolling_backtest
 
 FACTOR_EXPERIMENTS={
  "F00":dict(objective="top3_ic",months="48"),"F01":dict(objective="top3_ic",months="all"),"F02":dict(objective="top3_ndcg",months="all"),"F03":dict(objective="contiguous_ndcg",months="all")}
@@ -104,10 +104,11 @@ def run_windows(c,root):
   s.update({"experiment_id":eid,"removed_category":removed,"factor_count":len(subset)});ablations.append(s);save_manifest(root/"ablations"/eid,c,"ablations",eid,s)
  pd.DataFrame(ablations).to_csv(root/"ablations"/"results.csv",index=False,encoding="utf-8-sig")
  if not eligible:
-  write_validation_report(root,final);raise RuntimeError("没有方案同时通过2024、2025、月度胜率和NDCG门槛，拒绝冻结配置")
- frozen={"frozen":True,"selection_data_end":c["split"]["validation_end"],"library":str(lib.resolve()),"model":model,"bins":bins,"lookback_days":final["lookback_days"],"validation_days":{30:5,60:10,120:20}[final["lookback_days"]],"update_days":final["update_days"],"half_life":final["half_life"],"validation_summary":final};(root/"FINAL_STRATEGY_CONFIG.json").write_text(json.dumps(frozen,ensure_ascii=False,indent=2),encoding="utf-8");write_validation_report(root,final);return final
+  write_validation_report(Path(c["paths"]["reports"]),final);raise RuntimeError("没有方案同时通过2024、2025、月度胜率和NDCG门槛，拒绝冻结配置")
+ frozen={"frozen":True,"selection_data_end":c["split"]["validation_end"],"library":str(lib.relative_to(root)).replace("\\","/"),"model":model,"bins":bins,"lookback_days":final["lookback_days"],"validation_days":{30:5,60:10,120:20}[final["lookback_days"]],"update_days":final["update_days"],"half_life":final["half_life"],"validation_summary":final};(root/"FINAL_STRATEGY_CONFIG.json").write_text(json.dumps(frozen,ensure_ascii=False,indent=2),encoding="utf-8");write_validation_report(Path(c["paths"]["reports"]),final);return final
 
 def write_validation_report(root,summary):
+ root.mkdir(parents=True,exist_ok=True)
  lines=["# Top-50 V2 验证报告","","> 参数选择仅使用2024-2025数据；2026未参与本报告中的选择。","","## 冻结方案","",f"- 模型：`{summary.get('model')}`",f"- 训练窗口：{summary.get('lookback_days')}个交易日",f"- 更新间隔：{summary.get('update_days')}个交易日",f"- 时间衰减半衰期：{summary.get('half_life')}个交易日","","## 核心指标","", "| 指标 | 数值 |","|---|---:|"]
  for key in ("top50_return_5d","top50_excess_5d","top50_mean_percentile","precision_at_50","ndcg_at_50","monthly_win_rate","monthly_median_excess","worst_month_excess","turnover","rank_ic"):
   if key in summary:lines.append(f"| `{key}` | {summary[key]:.6f} |")
@@ -124,9 +125,10 @@ def final_test(c,root):
  lib_path=Path(f["library"]);lib_path=lib_path if lib_path.is_absolute() else root/lib_path
  frozen_before=p.read_bytes();data=load_frame(c,"20250601",c["split"]["test_end"]);lib=json.loads(lib_path.read_text(encoding="utf-8"));frame,factors=build_factor_frame(data,lib);test=rolling_backtest(frame,factors,c,f["model"],c["split"]["test_start"],c["split"]["test_end"],f["lookback_days"],f["validation_days"],f["update_days"],f["half_life"],f.get("bins",10),root/"final_test");val=f["validation_summary"];numeric=(int,float);gap={k:{"validation":val.get(k),"test":test.get(k),"absolute_gap":test.get(k)-val.get(k) if isinstance(test.get(k),numeric) and isinstance(val.get(k),numeric) else None,"retention":test.get(k)/val.get(k) if isinstance(test.get(k),numeric) and isinstance(val.get(k),numeric) and val.get(k) else None} for k in ("top50_excess_5d","ndcg_at_50","precision_at_50","monthly_win_rate","turnover")}
  if p.read_bytes()!=frozen_before:raise RuntimeError("确认测试期间冻结配置发生变化")
- (root/"TEST_2026_REPORT.json").write_text(json.dumps(test,ensure_ascii=False,indent=2),encoding="utf-8");(root/"VALIDATION_TEST_GAP.json").write_text(json.dumps(gap,ensure_ascii=False,indent=2),encoding="utf-8");shutil.copy2(root/"final_test"/"top50_predictions.parquet",root/"top50_predictions.parquet");write_test_reports(root,test,gap);return test
+ (root/"TEST_2026_REPORT.json").write_text(json.dumps(test,ensure_ascii=False,indent=2),encoding="utf-8");(root/"VALIDATION_TEST_GAP.json").write_text(json.dumps(gap,ensure_ascii=False,indent=2),encoding="utf-8");shutil.copy2(root/"final_test"/"top50_predictions.parquet",root/"top50_predictions.parquet");write_test_reports(root,Path(c["paths"]["reports"]),test,gap);return test
 
-def write_test_reports(root,test,gap):
+def write_test_reports(root,report_root,test,gap):
+ report_root.mkdir(parents=True,exist_ok=True)
  test_lines=["# Top-50 V2 2026确认测试","","> 此结果来自冻结配置，未用于调参。","","| 指标 | 2026 |","|---|---:|"]
  for key,value in test.items():
   if isinstance(value,(int,float)):test_lines.append(f"| `{key}` | {value:.6f} |")
@@ -137,13 +139,13 @@ def write_test_reports(root,test,gap):
  if validation_model.exists() and test_model.exists():
   vb=lgb.Booster(model_file=str(validation_model));tb=lgb.Booster(model_file=str(test_model));vi=pd.Series(vb.feature_importance("gain"),index=vb.feature_name());ti=pd.Series(tb.feature_importance("gain"),index=tb.feature_name());vi=vi/(vi.sum() or 1);ti=ti/(ti.sum() or 1);imp=pd.DataFrame({"validation":vi,"test":ti}).fillna(0);imp["change"]=imp.test-imp.validation;imp=imp.reindex(imp.test.sort_values(ascending=False).head(10).index);test_lines.extend(["","## 最近模型特征重要性变化","","| 因子 | 验证末期 | 测试末期 | 变化 |","|---|---:|---:|---:|"])
   for name,x in imp.iterrows():test_lines.append(f"| `{name}` | {x.validation:.6f} | {x.test:.6f} | {x.change:+.6f} |")
- (root/"TEST_2026_REPORT.md").write_text("\n".join(test_lines)+"\n",encoding="utf-8")
+ (report_root/"TEST_2026_REPORT.md").write_text("\n".join(test_lines)+"\n",encoding="utf-8")
  gap_lines=["# 验证与测试差异","","| 指标 | 验证 | 测试 | 绝对差 | 保持率 |","|---|---:|---:|---:|---:|"]
  for key,x in gap.items():gap_lines.append(f"| `{key}` | {x['validation']:.6f} | {x['test']:.6f} | {x['absolute_gap']:.6f} | {x['retention']:.6f} |")
- (root/"VALIDATION_TEST_GAP.md").write_text("\n".join(gap_lines)+"\n",encoding="utf-8")
+ (report_root/"VALIDATION_TEST_GAP.md").write_text("\n".join(gap_lines)+"\n",encoding="utf-8")
 
 def main():
- ap=argparse.ArgumentParser();ap.add_argument("--config",default="config.json");ap.add_argument("--stage",choices=("factor","operators","ga","models","windows","final-test","all-validation"),required=True);ap.add_argument("--quick",action="store_true");a=ap.parse_args();c=load_config(a.config);root=Path(c["paths"]["artifacts"]);write_matrix(root)
+ ap=argparse.ArgumentParser();ap.add_argument("--config",default="configs/stock/top50.json");ap.add_argument("--stage",choices=("factor","operators","ga","models","windows","final-test","all-validation"),required=True);ap.add_argument("--quick",action="store_true");a=ap.parse_args();c=load_config(a.config);root=Path(c["paths"]["artifacts"]);write_matrix(root)
  if a.quick and a.stage in ("windows","all-validation","final-test"):raise RuntimeError("快速冒烟模式不得冻结配置或运行2026确认测试")
  if a.stage in ("factor","all-validation"):run_ga_stage("factor",FACTOR_EXPERIMENTS,c,root,a.quick)
  if a.stage in ("operators","all-validation"):run_ga_stage("operators",OPERATOR_EXPERIMENTS,c,root,a.quick)

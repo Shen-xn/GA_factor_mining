@@ -1,7 +1,7 @@
 # Top-50 因子策略 V2
 
 本目录是独立实验区，不修改V1代码、因子库或历史报告，只复用
-`../outputs/prepared_data.parquet`。
+`outputs/stock/v1/prepared_data.parquet`。
 
 ## 时间协议
 
@@ -45,13 +45,14 @@
 使用项目专用环境：
 
 ```powershell
-cd C:\Users\s1171\Documents\ChatGPT\GA_factor_mining\top50_v2
-D:\Users\s1171\qt_MLE\.conda\qt_mle\python.exe run_experiments.py --stage factor
-D:\Users\s1171\qt_MLE\.conda\qt_mle\python.exe run_experiments.py --stage operators
-D:\Users\s1171\qt_MLE\.conda\qt_mle\python.exe run_experiments.py --stage ga
-D:\Users\s1171\qt_MLE\.conda\qt_mle\python.exe run_experiments.py --stage models
-D:\Users\s1171\qt_MLE\.conda\qt_mle\python.exe run_experiments.py --stage windows
-D:\Users\s1171\qt_MLE\.conda\qt_mle\python.exe run_experiments.py --stage final-test
+cd C:\Users\s1171\Documents\ChatGPT\GA_factor_mining
+$env:PYTHONPATH = "$PWD\src"
+python -m ga_factor_mining.stock.top50.run_experiments --stage factor
+python -m ga_factor_mining.stock.top50.run_experiments --stage operators
+python -m ga_factor_mining.stock.top50.run_experiments --stage ga
+python -m ga_factor_mining.stock.top50.run_experiments --stage models
+python -m ga_factor_mining.stock.top50.run_experiments --stage windows
+python -m ga_factor_mining.stock.top50.run_experiments --stage final-test
 ```
 
 `--quick`只用于因子、算子、遗传和模型阶段的程序冒烟检查。程序明确禁止快速模式
@@ -66,7 +67,7 @@ D:\Users\s1171\qt_MLE\.conda\qt_mle\python.exe run_experiments.py --stage final-
 
 ## 产物
 
-产物统一写入`artifacts/`。每个实验目录包含配置快照、配置SHA-256、随机种子、
+机器产物统一写入 `outputs/stock/top50/`，人工报告写入 `reports/stock/top50/`。每个实验目录包含配置快照、配置SHA-256、随机种子、
 运行时间、逐日指标、逐月指标、全股票预测、Top-50名单和最近一个滚动模型。
 
 正式链路最终生成：

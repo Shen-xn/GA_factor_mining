@@ -7,18 +7,17 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from scipy.stats import rankdata
-from data import CATEGORIES,category_of,stable_hash
+from ...common.expression_tree import (
+ canonical, depth, expression_text, get_subtree, nodes, paths,
+ replace_subtree, valid_expression,
+)
+from .data import CATEGORIES,category_of,stable_hash
 
 UNARY=("neg","abs","signed_log","signed_sqrt")
 BINARY=("add","sub","mul","div","min","max")
 TEMPORAL=("delta_5","slope_5","mean_5","std_20","zscore_20","ts_rank_20")
 
-def canonical(x):return json.dumps(x,separators=(",",":"),ensure_ascii=False)
-def depth(x):return 0 if isinstance(x,str) else 1+max(depth(v) for v in x[1:])
-def nodes(x):return 1 if isinstance(x,str) else 1+sum(nodes(v) for v in x[1:])
-def text(x):
- if isinstance(x,str):return x
- return f"{x[0]}({','.join(text(v) for v in x[1:])})"
+def text(x):return expression_text(x)
 def expression_category(e):
  terms=[]
  def visit(node):
@@ -105,34 +104,19 @@ def random_expr(terminals,max_depth,rng,temporal=(),d=0):
  if rng.random()<.35:return [rng.choice(UNARY),random_expr(terminals,max_depth,rng,temporal,d+1)]
  return [rng.choice(BINARY),random_expr(terminals,max_depth,rng,temporal,d+1),random_expr(terminals,max_depth,rng,temporal,d+1)]
 
-def paths(e,p=()):
- out=[p]
- if not isinstance(e,str):
-  for i in range(1,len(e)):out+=paths(e[i],p+(i,))
- return out
 def valid_expr(e):
- if isinstance(e,str):return True
- if e[0] in TEMPORAL:return len(e)==2 and isinstance(e[1],str)
- return all(valid_expr(x) for x in e[1:])
-def get(e,p):
- for i in p:e=e[i]
- return e
-def put(e,p,v):
- if not p:return copy.deepcopy(v)
- o=copy.deepcopy(e);cur=o
- for i in p[:-1]:cur=cur[i]
- cur[p[-1]]=copy.deepcopy(v);return o
+ return valid_expression(e,TEMPORAL)
 def crossover(a,b,rng,mode):
- if mode=="symmetric_subtree":return put(a,rng.choice(paths(a)),get(b,rng.choice(paths(b))))
+ if mode=="symmetric_subtree":return replace_subtree(a,rng.choice(paths(a)),get_subtree(b,rng.choice(paths(b))))
  if isinstance(a,str) or rng.random()<.30:return copy.deepcopy(b)
  o=copy.deepcopy(a);i=rng.randrange(1,len(o));o[i]=crossover(o[i],b,rng,mode);return o
 def mutate(e,terminals,max_depth,rng,mode,temporal):
  if mode=="mixed":
-  kind=rng.choice(("terminal","operator","subtree"));p=rng.choice(paths(e));node=get(e,p)
-  if kind=="terminal":return put(e,p,rng.choice(terminals))
+  kind=rng.choice(("terminal","operator","subtree"));p=rng.choice(paths(e));node=get_subtree(e,p)
+  if kind=="terminal":return replace_subtree(e,p,rng.choice(terminals))
   if kind=="operator" and not isinstance(node,str):
-   choices=UNARY if len(node)==2 else BINARY; n=copy.deepcopy(node);n[0]=rng.choice(choices);return put(e,p,n)
-  return put(e,p,random_expr(terminals,max_depth,rng,temporal))
+   choices=UNARY if len(node)==2 else BINARY; n=copy.deepcopy(node);n[0]=rng.choice(choices);return replace_subtree(e,p,n)
+  return replace_subtree(e,p,random_expr(terminals,max_depth,rng,temporal))
  if isinstance(e,str) or rng.random()<.25:return random_expr(terminals,max_depth,rng,temporal)
  o=copy.deepcopy(e);i=rng.randrange(1,len(o));o[i]=mutate(o[i],terminals,max_depth-1 if max_depth>1 else 1,rng,mode,temporal);return o
 

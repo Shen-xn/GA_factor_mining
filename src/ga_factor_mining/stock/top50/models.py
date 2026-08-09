@@ -5,8 +5,8 @@ from pathlib import Path
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
-from ga import Evaluator
-from metrics import evaluate_predictions
+from .ga import Evaluator
+from .metrics import evaluate_predictions
 
 def build_factor_frame(data,library):
  d=data.sort_values(["ts_code","trade_date"]).reset_index(drop=True);ev=Evaluator(d);out=d[["ts_code","trade_date","future_ret_5d","target_rank","relevance","is_target_topk"]].copy()

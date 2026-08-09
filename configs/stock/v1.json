@@ -1,5 +1,5 @@
 {
-  "data": {"features_path": "data/features_daily.parquet", "feature_meta_path": "data/features_daily_meta.json", "price_path": "data/stk_factor.parquet", "prepared_data_path": "outputs/prepared_data.parquet", "price_column": "close_qfq", "output_dir": "outputs"},
+  "data": {"features_path": "../../data/stock/features_daily.parquet", "feature_meta_path": "../../data/stock/features_daily_meta.json", "price_path": "../../data/stock/stk_factor.parquet", "prepared_data_path": "../../outputs/stock/v1/prepared_data.parquet", "price_column": "close_qfq", "output_dir": "../../outputs/stock/v1"},
   "target": {"horizon": 5, "name": "future_ret_5d", "min_daily_stocks": 200},
   "split": {"factor_library_end": "20251231", "test_start": "20260101", "test_end": "20260529"},
   "factor_mining": {"seed": 42, "population_size": 80, "generations": 20, "elite_size": 12, "tournament_size": 5, "mutation_rate": 0.35, "crossover_rate": 0.55, "random_immigrant_rate": 0.15, "max_depth": 3, "sample_months": 48, "min_month_days": 12, "top_months_for_score": 3, "candidate_keep": 600, "library_size": 20, "max_factors_per_peak_month": 3, "max_abs_value": 1000000.0, "min_factor_std": 0.000001, "corr_prune_threshold": 0.80},

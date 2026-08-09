@@ -10,9 +10,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from backtest_2026 import build_factor_frame
-from data_pipeline import daily_rank_ic, load_config, prepare_data
-from factor_engine import cap_normalized_weights
+from .backtest_2026 import build_factor_frame
+from .data_pipeline import daily_rank_ic, load_config, prepare_data
+from .factor_engine import cap_normalized_weights
 
 
 def reliability_weights(
@@ -39,7 +39,7 @@ def reliability_weights(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config.json")
+    parser.add_argument("--config", default="configs/stock/v1.json")
     args = parser.parse_args()
     config, _ = load_config(args.config)
     data, _ = prepare_data(config)

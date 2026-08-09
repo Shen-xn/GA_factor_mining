@@ -9,8 +9,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from data_pipeline import daily_rank_ic, load_config, prepare_data
-from factor_engine import cap_normalized_weights, evaluate
+from .data_pipeline import daily_rank_ic, load_config, prepare_data
+from .factor_engine import cap_normalized_weights, evaluate
 
 
 def build_factor_frame(data: pd.DataFrame, library: dict, config: dict) -> pd.DataFrame:
@@ -22,7 +22,7 @@ def build_factor_frame(data: pd.DataFrame, library: dict, config: dict) -> pd.Da
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config.json")
+    parser.add_argument("--config", default="configs/stock/v1.json")
     parser.add_argument("--library", default=None)
     args = parser.parse_args()
     config, _ = load_config(args.config)

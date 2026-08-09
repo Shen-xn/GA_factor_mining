@@ -1,6 +1,6 @@
 {
   "seed": 42,
-  "paths": {"prepared_data": "../outputs/prepared_data.parquet", "feature_meta": "../data/features_daily_meta.json", "artifacts": "artifacts"},
+  "paths": {"prepared_data": "../../outputs/stock/v1/prepared_data.parquet", "feature_meta": "../../data/stock/features_daily_meta.json", "artifacts": "../../outputs/stock/top50", "reports": "../../reports/stock/top50"},
   "split": {"discovery_start": "20150101", "discovery_end": "20231231", "validation_start": "20240101", "validation_end": "20251231", "test_start": "20260101", "test_end": "20260529"},
   "target": {"column": "future_ret_5d", "horizon": 5, "top_k": 50, "relevance_edges": [0.90, 0.95, 0.98, 0.99]},
   "ga": {"population_size": 80, "generations": 20, "elite_size": 12, "tournament_size": 5, "mutation_rate": 0.35, "crossover_rate": 0.55, "random_immigrant_rate": 0.15, "max_depth": 3, "sample_stocks_per_day": 700, "min_month_days": 12, "candidate_keep": 600, "library_size": 20, "corr_prune_threshold": 0.80, "max_factors_per_peak_month": 3, "complexity_penalty": 0.0005, "daily_volatility_penalty": 0.05},

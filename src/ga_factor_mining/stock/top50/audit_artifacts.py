@@ -2,10 +2,10 @@
 from pathlib import Path
 import json
 import pandas as pd
-from data import load_config
+from .data import load_config
 
 def main():
- c=load_config("config.json");root=Path(c["paths"]["artifacts"]);errors=[];h=int(c["target"]["horizon"])
+ c=load_config("configs/stock/top50.json");root=Path(c["paths"]["artifacts"]);errors=[];h=int(c["target"]["horizon"])
  dates=pd.read_parquet(c["paths"]["prepared_data"],columns=["trade_date"]).trade_date.astype(str).drop_duplicates().sort_values().tolist();position={d:i for i,d in enumerate(dates)}
  for path in root.rglob("models.csv"):
   table=pd.read_csv(path,dtype={"date":str,"train_end":str})

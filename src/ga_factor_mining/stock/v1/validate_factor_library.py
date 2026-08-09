@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from data_pipeline import load_config, prepare_data
-from factor_engine import evaluate, fast_daily_rank_ic
+from .data_pipeline import load_config, prepare_data
+from .factor_engine import evaluate, fast_daily_rank_ic
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config.json")
+    parser.add_argument("--config", default="configs/stock/v1.json")
     args = parser.parse_args()
     config, _ = load_config(args.config)
     data, _ = prepare_data(config)

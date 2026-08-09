@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import copy
-import json
 import random
 from dataclasses import dataclass
 from typing import Any
@@ -11,35 +10,18 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from data_pipeline import daily_rank_ic
+from ...common.expression_tree import (
+    BINARY_OPERATORS as BINARY,
+    UNARY_OPERATORS as UNARY,
+    canonical,
+    depth as expression_depth,
+    expression_text,
+    nodes as expression_nodes,
+)
+from .data_pipeline import daily_rank_ic
 
 UNARY = ("neg", "abs", "signed_log", "signed_sqrt")
 BINARY = ("add", "sub", "mul", "div", "min", "max")
-
-
-def canonical(expr: Any) -> str:
-    return json.dumps(expr, ensure_ascii=False, separators=(",", ":"))
-
-
-def expression_text(expr: Any) -> str:
-    if isinstance(expr, str):
-        return expr
-    op = expr[0]
-    if op in UNARY:
-        return f"{op}({expression_text(expr[1])})"
-    return f"{op}({expression_text(expr[1])},{expression_text(expr[2])})"
-
-
-def expression_depth(expr: Any) -> int:
-    if isinstance(expr, str):
-        return 0
-    return 1 + max(expression_depth(child) for child in expr[1:])
-
-
-def expression_nodes(expr: Any) -> int:
-    if isinstance(expr, str):
-        return 1
-    return 1 + sum(expression_nodes(child) for child in expr[1:])
 
 
 def evaluate(expr: Any, frame: pd.DataFrame, max_abs: float = 1e6) -> pd.Series:

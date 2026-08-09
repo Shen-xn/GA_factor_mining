@@ -12,8 +12,8 @@ import pandas as pd
 from sklearn.metrics import mean_absolute_error
 from sklearn.tree import DecisionTreeRegressor, export_text
 
-from backtest_2026 import build_factor_frame
-from data_pipeline import daily_rank_ic, load_config, prepare_data
+from .backtest_2026 import build_factor_frame
+from .data_pipeline import daily_rank_ic, load_config, prepare_data
 
 
 def make_tree(config: dict, depth: int, min_leaf: float) -> DecisionTreeRegressor:
@@ -30,7 +30,7 @@ def make_tree(config: dict, depth: int, min_leaf: float) -> DecisionTreeRegresso
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config.json")
+    parser.add_argument("--config", default="configs/stock/v1.json")
     args = parser.parse_args()
     config, _ = load_config(args.config)
     data, _ = prepare_data(config)

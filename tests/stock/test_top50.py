@@ -1,12 +1,11 @@
-import random,sys,tempfile,unittest
+import random,tempfile,unittest
 from pathlib import Path
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import numpy as np
 import pandas as pd
-from data import add_labels
-from ga import Evaluator,Scorer,crossover,depth,random_expr,valid_expr
-from metrics import evaluate_predictions
-from run_experiments import final_test
+from ga_factor_mining.stock.top50.data import add_labels
+from ga_factor_mining.stock.top50.ga import Evaluator,Scorer,crossover,depth,random_expr,valid_expr
+from ga_factor_mining.stock.top50.metrics import evaluate_predictions
+from ga_factor_mining.stock.top50.run_experiments import final_test
 
 CONFIG={"target":{"column":"future_ret_5d","top_k":2,"relevance_edges":[.5,.7,.9,.99]}}
 class V2Tests(unittest.TestCase):

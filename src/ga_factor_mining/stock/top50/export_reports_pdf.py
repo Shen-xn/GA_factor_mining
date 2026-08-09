@@ -7,6 +7,8 @@ from pathlib import Path
 
 import markdown
 
+from ...common.paths import REPORT_ROOT
+
 
 REPORTS = (
     "VALIDATION_REPORT.md",
@@ -92,11 +94,11 @@ def export(source: Path) -> Path:
 
 
 def main() -> None:
-    artifacts = Path(__file__).resolve().parent / "artifacts"
+    reports = REPORT_ROOT / "stock" / "top50"
     if not EDGE.exists():
         raise FileNotFoundError(f"未找到Edge: {EDGE}")
     for name in REPORTS:
-        target = export(artifacts / name)
+        target = export(reports / name)
         print(f"[pdf] {target.name} ({target.stat().st_size:,} bytes)")
 
 

@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error
 
-from backtest_2026 import build_factor_frame
-from data_pipeline import daily_rank_ic, load_config, prepare_data
+from .backtest_2026 import build_factor_frame
+from .data_pipeline import daily_rank_ic, load_config, prepare_data
 
 
 def make_model(
@@ -51,7 +51,7 @@ def make_model(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config.json")
+    parser.add_argument("--config", default="configs/stock/v1.json")
     parser.add_argument(
         "--mode", choices=("regression", "ranker"), default="regression"
     )

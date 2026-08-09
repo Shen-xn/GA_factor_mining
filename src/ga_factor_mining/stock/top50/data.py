@@ -13,9 +13,9 @@ CATEGORIES = {
  "moneyflow": {"net_mf_amount_ratio","net_mf_vol_ratio","sm_net_amount_ratio","md_net_amount_ratio","lg_net_amount_ratio","elg_net_amount_ratio","lg_buy_amount_ratio","elg_buy_amount_ratio","lg_sell_amount_ratio","elg_sell_amount_ratio","net_mf_amount_ratio_5d","elg_net_amount_ratio_5d","lg_net_amount_ratio_5d","net_mf_rank_cs","elg_net_rank_cs","main_force_rank_cs"}
 }
 
-def load_config(path="config.json"):
+def load_config(path="configs/stock/top50.json"):
  p=Path(path).resolve(); c=json.loads(p.read_text(encoding="utf-8")); base=p.parent
- for k in ("prepared_data","feature_meta","artifacts"): c["paths"][k]=str((base/c["paths"][k]).resolve())
+ for k in ("prepared_data","feature_meta","artifacts","reports"): c["paths"][k]=str((base/c["paths"][k]).resolve())
  Path(c["paths"]["artifacts"]).mkdir(parents=True,exist_ok=True); return c
 
 def feature_names(c):
