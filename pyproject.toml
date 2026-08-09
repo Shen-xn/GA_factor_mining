@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ga-factor-mining"
+version = "0.1.0"
+description = "个股与板块遗传算法因子挖掘研究"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",
+  "pandas",
+  "pyarrow",
+  "scipy",
+  "scikit-learn>=1.9",
+  "joblib",
+  "lightgbm>=4.6",
+  "matplotlib",
+  "markdown",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
