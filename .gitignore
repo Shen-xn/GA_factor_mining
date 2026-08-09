@@ -25,3 +25,7 @@ data/
 *.log
 *.tmp
 *.bak
+
+# sector_dev 本地可保留旧个股大文件，但不在本分支显示或提交。
+/outputs/stock/
+/reports/stock/

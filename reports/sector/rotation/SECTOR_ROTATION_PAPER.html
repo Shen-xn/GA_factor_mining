@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>板块基金轮动策略研究报告</title>
+<style>
+    @page { size: A4; margin: 18mm 16mm; }
+    body {
+      font-family: "Microsoft YaHei", "SimSun", "Noto Sans CJK SC", Arial, sans-serif;
+      color: #20242a;
+      line-height: 1.62;
+      font-size: 13.2px;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 28px;
+      line-height: 1.25;
+      margin: 0 0 16px;
+      color: #17365d;
+      border-bottom: 2px solid #17365d;
+      padding-bottom: 10px;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 28px 0 10px;
+      color: #17365d;
+      border-left: 5px solid #5b8cc0;
+      padding-left: 10px;
+    }
+    h3 {
+      font-size: 16px;
+      margin: 20px 0 8px;
+      color: #2f4f6f;
+    }
+    p { margin: 8px 0 10px; }
+    ul, ol { margin: 8px 0 10px 22px; padding: 0; }
+    li { margin: 3px 0; }
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      background: #f4f6f8;
+      border: 1px solid #e5e8ec;
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-size: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 16px;
+      font-size: 11.2px;
+      page-break-inside: avoid;
+    }
+    th {
+      background: #eaf1f8;
+      color: #17365d;
+      font-weight: 700;
+    }
+    th, td {
+      border: 1px solid #cfd8e3;
+      padding: 5px 6px;
+      vertical-align: middle;
+    }
+    tr:nth-child(even) td { background: #fbfcfe; }
+    img {
+      display: block;
+      max-width: 94%;
+      margin: 12px auto 18px;
+      page-break-inside: avoid;
+    }
+    blockquote {
+      margin: 12px 0;
+      padding: 8px 12px;
+      background: #f6f8fb;
+      border-left: 4px solid #8aa9c8;
+    }
+    </style>
+</head>
+<body>
+<h1 id="_1">板块基金轮动策略研究报告</h1>
+<p>生成日期：2026-06-30<br />
+研究目录：<code>sector_strategy_research/</code><br />
+核心假设：每个同花顺板块指数都存在一个无跟踪误差、可按收盘价成交的跟踪基金。</p>
+<h2 id="_2">摘要</h2>
+<p>本研究单独评估“只交易板块基金”的短周期轮动策略。策略目标不是预测单个股票，而是构造一个可以直接反映未来 5 至 10 个交易日板块收益强弱的板块强度评分，并据此每日或定期持有评分最高的少数板块。</p>
+<p>在当前无交易成本、无跟踪误差、无容量约束的理想化设定下，板块强度模型能够在 2024-2025 验证期和 2026 确认测试期同时跑赢同宇宙等权基准。综合收益、回撤和分散性后，当前推荐方案为 <code>recommended_lgbm5_top5</code>：使用 LightGBM 预测未来 5 日板块收益横截面分位，每日持有行业与概念板块中的 Top5。该方案验证期年化收益 65.67%，夏普 1.78，最大回撤 -29.03%；2026 测试期年化收益 52.69%，夏普 1.71，最大回撤 -9.42%。</p>
+<p>需要强调：这不是实际 ETF 回测。它更像一个板块强度信号的上限实验，目的是判断板块层面的短线收益是否可被历史量价状态捕捉。真实落地前必须加入可交易 ETF 映射、跟踪误差、手续费、滑点、容量和调仓约束。</p>
+<h2 id="1">1. 研究目的</h2>
+<p>本部分研究回答三个问题：</p>
+<ol>
+<li>在板块指数层面，短周期动量、波动、均线位置和交易活跃度是否能预测未来 5 至 10 个交易日收益。</li>
+<li>如果每个板块都有一个理想跟踪基金，仅交易板块基金能否形成正收益和稳定超额收益。</li>
+<li>板块强度是否值得作为后续个股 Top50 策略的行业配置、市场状态或风险过滤信号。</li>
+</ol>
+<p>这个实验刻意独立于前面的个股深度学习和 Top50 因子挖掘目录，所有代码与产物都保存在 <code>sector_strategy_research/</code> 中，避免污染原有研究线。</p>
+<h2 id="2">2. 数据来源与处理</h2>
+<h3 id="21">2.1 数据范围</h3>
+<p>使用已经拉取好的同花顺板块数据：</p>
+<ul>
+<li>日线行情表：<code>data/sector/ths_daily.parquet</code></li>
+<li>板块基础表：<code>data/sector/ths_index.parquet</code></li>
+<li>数据日期：2015-01-05 至 2026-05-29，共 2,769 个交易日。</li>
+<li>实验样本：基于同花顺行业、概念、地域、主题等板块指数构造，最终策略主要使用 <code>industry_concept</code> 宇宙，即行业 <code>I</code> 加概念/主题 <code>N</code>。</li>
+</ul>
+<h3 id="22">2.2 时间切分</h3>
+<p>研究采用严格时间切分：</p>
+<ul>
+<li>训练/建模历史：2015-01-05 至 2023-12-31。</li>
+<li>验证期：2024-01-01 至 2025-12-31。</li>
+<li>确认测试期：2026-01-01 至 2026-05-29。</li>
+</ul>
+<p>参数选择主要看验证期表现，测试期只用于确认，不反向修改策略。</p>
+<h3 id="23">2.3 标签定义</h3>
+<p>对每个板块，在信号日 <code>t</code> 收盘后生成特征，未来收益从下一个交易日开始计算。模型标签包括：</p>
+<ul>
+<li><code>future_ret_5d</code>：未来 5 个交易日收益。</li>
+<li><code>future_ret_10d</code>：未来 10 个交易日收益。</li>
+<li><code>future_ret_rank</code>：同一交易日所有板块未来收益的横截面分位。</li>
+</ul>
+<p>模型训练使用未来收益分位作为目标，而不是直接使用原始收益，目的是降低极端涨跌对模型的支配，让模型学习“横向比较谁更强”。</p>
+<h3 id="24">2.4 特征处理</h3>
+<p>所有输入特征只使用当前及过去信息。核心特征包括：</p>
+<ul>
+<li>多周期收益排名：<code>ret_1d/3d/5d/10d/20d/60d_rank</code></li>
+<li>波动率排名：<code>volatility_10d_rank</code>、<code>volatility_20d_rank</code></li>
+<li>风险调整收益：<code>risk_adj_5_20_rank</code>、<code>risk_adj_10_20_rank</code>、<code>risk_adj_20_60_rank</code></li>
+<li>价格位置：<code>close_pos_20d_rank</code>、<code>drawdown_60d_rank</code></li>
+<li>均线偏离：<code>ma_gap_5_20_rank</code>、<code>ma_gap_10_60_rank</code></li>
+<li>活跃度异常：<code>volume_z_20d_rank</code>、<code>turnover_z_20d_rank</code></li>
+<li>当日波动：<code>range_1d_rank</code></li>
+</ul>
+<p>这些特征都先在板块自身历史上计算，再做每日横截面排名，因此既保留了时间状态，又降低了跨年代成交额、成交量、指数点位变化带来的尺度漂移。</p>
+<h2 id="3">3. 方法论与方法选择</h2>
+<h3 id="31">3.1 策略形式</h3>
+<p>策略为长仓等权 TopK：</p>
+<ol>
+<li>每个信号日收盘后计算全部板块评分。</li>
+<li>选择评分最高的 <code>K</code> 个板块。</li>
+<li>下一交易日开始持有，按等权组合计算收益。</li>
+<li>根据设定的调仓频率每日、每 5 日或每 10 日更新持仓。</li>
+</ol>
+<p>本轮没有引入做空、杠杆、止损、成本、容量或人工筛选。</p>
+<h3 id="32">3.2 候选评分方法</h3>
+<p>本轮比较两类方法：</p>
+<ul>
+<li>公式型评分：如短期/中期动量、突破位置、低波动动量、均值回归、量价确认等。优点是可解释，缺点是难以处理多特征非线性组合。</li>
+<li>LightGBM 回归：预测未来 5 日或 10 日收益横截面分位。优点是能学习非线性和特征交互，训练速度快，适合表格型金融特征；缺点是解释性弱于公式，且需要警惕过拟合和样本外稳定性。</li>
+</ul>
+<p>从验证结果看，LightGBM 5 日目标显著优于大多数手写公式；但可解释公式在 2026 测试期出现很强表现，说明简单突破状态本身也可能含有可交易信息。推荐方案没有直接选择验证期最高收益的 Top3，而是选择 Top5 版本，因为它在 2026 测试期回撤更低、收益更高、分散性更好。</p>
+<h2 id="4">4. 实验设计</h2>
+<h3 id="41">4.1 实验矩阵</h3>
+<p>本轮总计运行 276 个配置，包括：</p>
+<ul>
+<li>宇宙：行业、行业+概念、更宽主题宇宙。</li>
+<li>TopK：3、5、10、20。</li>
+<li>调仓频率：1、5、10 个交易日。</li>
+<li>评分方法：多个公式评分、LightGBM 5 日目标、LightGBM 10 日目标。</li>
+</ul>
+<h3 id="42">4.2 评价指标</h3>
+<p>主要评价指标：</p>
+<ul>
+<li>年化收益率：衡量收益能力。</li>
+<li>年化波动率：衡量组合波动。</li>
+<li>夏普比率：衡量单位波动收益。</li>
+<li>最大回撤：衡量最坏路径风险。</li>
+<li>胜率：日度收益为正的比例。</li>
+<li>平均换手：相邻持仓名单变化比例。</li>
+<li>相对等权基准超额收益：判断是否只是吃到了整个板块宇宙上涨。</li>
+</ul>
+<p>由于这是板块基金假设实验，收益指标暂时不扣交易成本。换手率在本阶段只作为落地难度指标。</p>
+<h3 id="43">4.3 策略选择规则</h3>
+<p>验证期最高夏普方案为 <code>industry_concept__score_lgbm_5d__top3__rb1</code>，验证期夏普 1.98。不过最终推荐没有机械选择最高夏普方案，而是结合以下原则：</p>
+<ul>
+<li>验证期和测试期都要为正，并尽量跑赢等权基准。</li>
+<li>TopK 不能过小到完全依赖少数板块。</li>
+<li>测试期最大回撤优先不能明显恶化。</li>
+<li>方法应当能解释为“板块强度评分”，方便后续和个股策略结合。</li>
+</ul>
+<p>因此本轮推荐 <code>recommended_lgbm5_top5</code> 作为当前版本。</p>
+<h2 id="5">5. 实验结果</h2>
+<h3 id="51">5.1 精选策略对比</h3>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>Val年化</th>
+<th>Val夏普</th>
+<th>Val最大回撤</th>
+<th>Test年化</th>
+<th>Test夏普</th>
+<th>Test最大回撤</th>
+<th>Test平均换手</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>激进版 LGBM5 Top3 日调仓</td>
+<td>78.86%</td>
+<td>1.98</td>
+<td>-28.13%</td>
+<td>38.00%</td>
+<td>1.24</td>
+<td>-13.26%</td>
+<td>83.33%</td>
+</tr>
+<tr>
+<td>推荐版 LGBM5 Top5 日调仓</td>
+<td>65.67%</td>
+<td>1.78</td>
+<td>-29.03%</td>
+<td>52.69%</td>
+<td>1.71</td>
+<td>-9.42%</td>
+<td>83.57%</td>
+</tr>
+<tr>
+<td>分散版 LGBM10 Top10 日调仓</td>
+<td>50.90%</td>
+<td>1.54</td>
+<td>-30.55%</td>
+<td>52.10%</td>
+<td>1.94</td>
+<td>-7.00%</td>
+<td>71.35%</td>
+</tr>
+<tr>
+<td>可解释公式 行业突破 Top3</td>
+<td>30.04%</td>
+<td>0.98</td>
+<td>-23.46%</td>
+<td>141.92%</td>
+<td>2.26</td>
+<td>-23.02%</td>
+<td>86.02%</td>
+</tr>
+<tr>
+<td>稳定公式 低波动 Top20</td>
+<td>22.34%</td>
+<td>0.94</td>
+<td>-23.96%</td>
+<td>24.98%</td>
+<td>0.99</td>
+<td>-9.21%</td>
+<td>51.59%</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="精选策略验证与测试对比" src="sector_strategy_comparison.png" /></p>
+<h3 id="52-8">5.2 验证期前 8 名配置</h3>
+<table>
+<thead>
+<tr>
+<th>排名</th>
+<th>策略ID</th>
+<th>Val年化</th>
+<th>Val夏普</th>
+<th>Val最大回撤</th>
+<th>Test年化</th>
+<th>Test夏普</th>
+<th>Test最大回撤</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>industry_concept__score_lgbm_5d__top3__rb1</code></td>
+<td>78.86%</td>
+<td>1.98</td>
+<td>-28.13%</td>
+<td>38.00%</td>
+<td>1.24</td>
+<td>-13.26%</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>industry_concept__score_lgbm_5d__top5__rb1</code></td>
+<td>65.67%</td>
+<td>1.78</td>
+<td>-29.03%</td>
+<td>52.69%</td>
+<td>1.71</td>
+<td>-9.42%</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>industry_concept__score_lgbm_5d__top10__rb1</code></td>
+<td>62.69%</td>
+<td>1.74</td>
+<td>-30.09%</td>
+<td>31.86%</td>
+<td>1.25</td>
+<td>-9.15%</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>industry_concept__score_lgbm_5d__top20__rb1</code></td>
+<td>53.39%</td>
+<td>1.57</td>
+<td>-31.02%</td>
+<td>30.99%</td>
+<td>1.22</td>
+<td>-9.75%</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>industry_concept__score_lgbm_10d__top5__rb5</code></td>
+<td>51.61%</td>
+<td>1.55</td>
+<td>-32.38%</td>
+<td>8.59%</td>
+<td>0.47</td>
+<td>-11.06%</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>industry_concept__score_lgbm_10d__top10__rb1</code></td>
+<td>50.90%</td>
+<td>1.54</td>
+<td>-30.55%</td>
+<td>52.10%</td>
+<td>1.94</td>
+<td>-7.00%</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>industry_concept__score_lgbm_10d__top5__rb1</code></td>
+<td>50.94%</td>
+<td>1.52</td>
+<td>-29.97%</td>
+<td>34.51%</td>
+<td>1.33</td>
+<td>-9.45%</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>industry_concept__score_lgbm_10d__top20__rb1</code></td>
+<td>45.94%</td>
+<td>1.44</td>
+<td>-31.58%</td>
+<td>27.14%</td>
+<td>1.17</td>
+<td>-8.34%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53">5.3 滚动验证补充</h3>
+<p>为了避免固定切分给人“一次性挑模型”的感觉，我补充做了滚动验证。机器学习模型采用逐年 walk-forward：验证某一年时，只使用上一年年底以前已经兑现标签的数据训练；公式评分没有训练过程，因此直接展示 2016 年以来的逐年表现。2026 年只统计至 2026-05-29。</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>起始年</th>
+<th>结束年</th>
+<th>拼接年化</th>
+<th>拼接夏普</th>
+<th>最大回撤</th>
+<th>平均换手</th>
+<th>正收益年份</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>滚动 LGBM5 Top5</td>
+<td>2018</td>
+<td>2026</td>
+<td>36.44%</td>
+<td>1.33</td>
+<td>-34.26%</td>
+<td>81.00%</td>
+<td>8/9</td>
+</tr>
+<tr>
+<td>滚动 LGBM10 Top10</td>
+<td>2018</td>
+<td>2026</td>
+<td>30.10%</td>
+<td>1.21</td>
+<td>-33.34%</td>
+<td>74.07%</td>
+<td>8/9</td>
+</tr>
+<tr>
+<td>公式 行业突破 Top3</td>
+<td>2016</td>
+<td>2026</td>
+<td>48.28%</td>
+<td>1.49</td>
+<td>-36.89%</td>
+<td>77.40%</td>
+<td>10/11</td>
+</tr>
+<tr>
+<td>公式 低波动动量 Top20</td>
+<td>2016</td>
+<td>2026</td>
+<td>17.28%</td>
+<td>0.80</td>
+<td>-33.13%</td>
+<td>45.53%</td>
+<td>8/11</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="滚动验证年度收益" src="rolling_validation_annual_returns.png" /></p>
+<p><img alt="滚动验证拼接净值" src="rolling_validation_equity_curves.png" /></p>
+<p>滚动 <code>LGBM5 Top5</code> 的逐年表现如下：</p>
+<table>
+<thead>
+<tr>
+<th>年份</th>
+<th>年化</th>
+<th>夏普</th>
+<th>最大回撤</th>
+<th>基准年化</th>
+<th>超额年化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2018</td>
+<td>-14.97%</td>
+<td>-0.45</td>
+<td>-27.35%</td>
+<td>-32.85%</td>
+<td>26.06%</td>
+</tr>
+<tr>
+<td>2019</td>
+<td>65.62%</td>
+<td>2.16</td>
+<td>-18.13%</td>
+<td>30.71%</td>
+<td>26.50%</td>
+</tr>
+<tr>
+<td>2020</td>
+<td>61.06%</td>
+<td>1.97</td>
+<td>-11.85%</td>
+<td>17.13%</td>
+<td>37.04%</td>
+</tr>
+<tr>
+<td>2021</td>
+<td>38.64%</td>
+<td>1.62</td>
+<td>-13.08%</td>
+<td>25.34%</td>
+<td>10.61%</td>
+</tr>
+<tr>
+<td>2022</td>
+<td>10.83%</td>
+<td>0.53</td>
+<td>-22.33%</td>
+<td>-11.97%</td>
+<td>25.93%</td>
+</tr>
+<tr>
+<td>2023</td>
+<td>11.44%</td>
+<td>0.69</td>
+<td>-13.15%</td>
+<td>5.62%</td>
+<td>5.67%</td>
+</tr>
+<tr>
+<td>2024</td>
+<td>60.84%</td>
+<td>1.39</td>
+<td>-29.60%</td>
+<td>4.72%</td>
+<td>55.09%</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>77.84%</td>
+<td>3.15</td>
+<td>-6.65%</td>
+<td>36.46%</td>
+<td>28.96%</td>
+</tr>
+<tr>
+<td>2026</td>
+<td>65.83%</td>
+<td>2.41</td>
+<td>-5.26%</td>
+<td>0.22%</td>
+<td>64.35%</td>
+</tr>
+</tbody>
+</table>
+<p>这组结果的核心含义是：推荐方向不只是在 2024-2025 固定验证期表现好。滚动 LGBM5 Top5 从 2018 到 2026 的样本外拼接年化为 36.44%，正收益年份为 8/9。公式突破 Top3 在 2016-2026 的长期结果也较强，但年度波动更大，说明它更适合作为可解释基线或和机器学习评分组合，而不一定单独作为最终方案。</p>
+<h3 id="54">5.4 推荐策略净值与月度表现</h3>
+<p>推荐策略 <code>recommended_lgbm5_top5</code> 在 2026 测试期共 94 个交易日，总收益 17.10%，年化收益 52.69%，最大回撤 -9.42%，平均换手 83.57%。</p>
+<p><img alt="推荐策略 2026 测试期净值曲线" src="sector_recommended_equity_2026.png" /></p>
+<p><img alt="推荐策略逐月收益" src="sector_recommended_monthly_returns.png" /></p>
+<h3 id="55-lightgbm-5">5.5 LightGBM 5 日模型特征重要性</h3>
+<table>
+<thead>
+<tr>
+<th>特征</th>
+<th>重要性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ma_gap_10_60_rank</code></td>
+<td>1171</td>
+</tr>
+<tr>
+<td><code>volatility_20d_rank</code></td>
+<td>1138</td>
+</tr>
+<tr>
+<td><code>drawdown_60d_rank</code></td>
+<td>1087</td>
+</tr>
+<tr>
+<td><code>ret_60d_rank</code></td>
+<td>1066</td>
+</tr>
+<tr>
+<td><code>volatility_10d_rank</code></td>
+<td>1006</td>
+</tr>
+<tr>
+<td><code>risk_adj_20_60_rank</code></td>
+<td>892</td>
+</tr>
+<tr>
+<td><code>ret_20d_rank</code></td>
+<td>879</td>
+</tr>
+<tr>
+<td><code>risk_adj_10_20_rank</code></td>
+<td>706</td>
+</tr>
+<tr>
+<td><code>ma_gap_5_20_rank</code></td>
+<td>692</td>
+</tr>
+<tr>
+<td><code>close_pos_20d_rank</code></td>
+<td>635</td>
+</tr>
+</tbody>
+</table>
+<p>前 10 个重要特征以中期均线偏离、20 日波动、60 日回撤、60 日收益和风险调整收益为主。这说明模型并非只看一日涨跌，而是在识别“中期趋势位置 + 波动状态 + 风险调整强度”的组合状态。</p>
+<h3 id="56">5.6 最新一次测试期持仓信号</h3>
+<p>最新可用测试信号日：<code>20260528</code>。</p>
+<table>
+<thead>
+<tr>
+<th>排名</th>
+<th>板块代码</th>
+<th>板块名称</th>
+<th>模型分数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>884018.TI</code></td>
+<td>油服工程</td>
+<td>0.5889</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>700455.TI</code></td>
+<td>石油与天然气的储存和运输(A股)</td>
+<td>0.5673</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>700460.TI</code></td>
+<td>工业气体(A股)</td>
+<td>0.5585</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>885931.TI</code></td>
+<td>PVDF概念</td>
+<td>0.5528</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>884185.TI</code></td>
+<td>贵金属Ⅲ</td>
+<td>0.5483</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6">6. 讨论</h2>
+<h3 id="61">6.1 为什么板块层面可能更容易</h3>
+<p>板块指数天然做了个股噪声平均化，短周期行业轮动、主题拥挤、资金偏好和风险偏好变化更容易在板块层面表现出来。相比个股，板块的 idiosyncratic noise 较低，趋势状态和波动状态也更稳定，因此简单的非线性模型就可能捕捉到可用信号。</p>
+<h3 id="62">6.2 推荐策略的含义</h3>
+<p><code>recommended_lgbm5_top5</code> 的含义不是“永远买这 5 个板块”，而是每天用历史状态估计未来 5 日横截面收益分位，然后选择当日最可能领先的 5 个板块。这个信号可单独做板块轮动，也可以作为个股 Top50 策略的行业偏好权重。</p>
+<h3 id="63">6.3 主要风险与限制</h3>
+<ol>
+<li>理想基金假设偏强：当前回测假设每个板块都有无跟踪误差基金，真实市场中并非所有板块都有可交易 ETF。</li>
+<li>未计交易成本：推荐策略平均换手约 83.57%，真实落地必须加入手续费、滑点和冲击成本。</li>
+<li>当前板块宇宙可能有幸存者偏差：<code>ths_index</code> 是当前可见板块列表，历史退市或调整过的板块需要进一步核对。</li>
+<li>2026 测试期较短：测试只到 2026-05-29，不足以证明跨市场周期稳定。</li>
+<li>滚动验证仍不等于实盘：本报告已补充逐年 walk-forward，但尚未加入交易成本、ETF 映射和更高频的滚动重训。</li>
+</ol>
+<h2 id="7">7. 结论</h2>
+<p>在当前实验设定下，板块强度策略是有研究价值的。短周期板块轮动不需要复杂深度学习模型，使用横截面排名特征加 LightGBM 就已经能得到不错的验证与测试表现。当前推荐 <code>recommended_lgbm5_top5</code> 作为后续研究基线：它比 Top3 激进版更分散，测试期最大回撤更低，同时保留较高收益。</p>
+<p>下一阶段不应只追求更高纸面收益，而应优先解决三个落地问题：</p>
+<ol>
+<li>加入 5bp、10bp、20bp 成本压力测试，评估高换手策略是否仍有优势。</li>
+<li>将板块指数映射到真实可交易 ETF 或基金，加入跟踪误差和容量约束。</li>
+<li>将当前年度 walk-forward 扩展为季度或月度重训，并加入成本压力，验证策略在不同市场状态下是否保持有效。</li>
+</ol>
+<h2 id="a">附录 A：产物清单</h2>
+<ul>
+<li><code>sector_strategy_research/run_experiments.py</code>：实验主程序。</li>
+<li><code>sector_strategy_research/summarize_results.py</code>：结果汇总脚本。</li>
+<li><code>sector_strategy_research/artifacts/EXPERIMENT_RESULTS.csv</code>：全部 276 个实验配置结果。</li>
+<li><code>sector_strategy_research/artifacts/SELECTED_STRATEGY_COMPARISON.csv</code>：精选策略验证/测试对比。</li>
+<li><code>sector_strategy_research/artifacts/recommended_top5_test_positions.parquet</code>：推荐策略 2026 测试期每日 Top5。</li>
+<li><code>sector_strategy_research/artifacts/recommended_top5_test_equity_curve.csv</code>：推荐策略 2026 测试净值曲线。</li>
+<li><code>sector_strategy_research/artifacts/lgbm_industry_concept_5d_importance.csv</code>：LightGBM 5 日模型特征重要性。</li>
+<li><code>sector_strategy_research/artifacts/ROLLING_VALIDATION_RESULTS.csv</code>：滚动验证年度与汇总指标。</li>
+<li><code>sector_strategy_research/artifacts/ROLLING_VALIDATION_REPORT.pdf</code>：滚动验证补充报告。</li>
+</ul>
+<h2 id="b">附录 B：口径说明</h2>
+<p>报告中的验证期为 2024-2025，测试期为 2026-01-01 至 2026-05-29。所有收益均为未扣成本的指数基金假设收益。由于本研究目的是先确认板块强度信号是否存在，实际交易可行性需要在下一轮引入 ETF 映射和成本模型后重新评估。</p>
+</body>
+</html>

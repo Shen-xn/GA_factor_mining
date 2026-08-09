@@ -1,0 +1,576 @@
+<!doctype html><html lang='zh-CN'><head><meta charset='utf-8'><style>
+    @page { size: A4; margin: 18mm 16mm; }
+    body { font-family: "Microsoft YaHei", "SimSun", Arial, sans-serif; color: #20242a; line-height: 1.6; font-size: 12.5px; }
+    h1 { color: #17365d; border-bottom: 2px solid #17365d; padding-bottom: 8px; }
+    h2 { color: #17365d; border-left: 5px solid #5b8cc0; padding-left: 10px; margin-top: 24px; }
+    h3 { color: #2f4f6f; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 9.5px; }
+    th { background: #eaf1f8; color: #17365d; }
+    th, td { border: 1px solid #cfd8e3; padding: 4px 5px; vertical-align: middle; }
+    tr:nth-child(even) td { background: #fbfcfe; }
+    code, pre { background: #f4f6f8; border: 1px solid #e5e8ec; border-radius: 3px; }
+    code { padding: 1px 4px; }
+    pre { padding: 8px 10px; white-space: pre-wrap; }
+    img { display: block; max-width: 94%; margin: 12px auto 18px; }
+    </style></head><body><h1>板块高 Alpha 因子挖掘报告</h1>
+<p>生成日期：2026-07-01</p>
+<h2>目的</h2>
+<p>本轮只做板块因子挖掘，不训练滚动模型。目标是找到一批能够提示板块未来 10 个交易日进入主升浪的高 alpha 因子。评价标准优先看 Top10 板块未来 10 日相对全板块均值的超额收益，而不是单纯 IC。</p>
+<h2>数据与目标</h2>
+<ul>
+<li>宇宙：同花顺行业 + 概念板块，类型为 <code>I, N</code>。</li>
+<li>发现期：20150101 至 20231231。</li>
+<li>验证期：20240101 至 20251231。</li>
+<li>观察期：20260101 至 20260529，不参与筛选。</li>
+<li>主标签：<code>future_ret_10d</code>。</li>
+<li>主目标：Top10 未来 10 日 alpha。</li>
+</ul>
+<h2>遗传搜索设置</h2>
+<pre><code class="language-text">population_size = 96
+generations = 24
+elite_size = 16
+tournament_size = 5
+crossover_rate = 0.55
+mutation_rate = 0.35
+max_depth = 3
+library_size = 30
+</code></pre>
+<p>fitness 使用 robust 版：</p>
+<pre><code class="language-text">1.50 * mean(monthly_top10_alpha)
++ 0.50 * min(best_contiguous_2_month_alpha, 3%)
++ 0.50 * min(mean(top3 monthly_top10_alpha), 3%)
++ 0.02 * (positive_month_ratio - 50%)
+- 0.10 * std(daily_top10_alpha)
+- 0.0005 * expression_nodes
+</code></pre>
+<h2>因子库概览</h2>
+<ul>
+<li>最终因子数：30</li>
+<li>core 因子数：6</li>
+<li>diagnostic 因子数：24</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>因子</th>
+<th>状态</th>
+<th>类别</th>
+<th>发现期Top10 alpha</th>
+<th>验证期Top10 alpha</th>
+<th>验证期正月份</th>
+<th>验证期Rank IC</th>
+<th>峰值月</th>
+<th>公式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sector_factor_26</td>
+<td>core</td>
+<td>trend</td>
+<td>0.28%</td>
+<td>0.29%</td>
+<td>58.33%</td>
+<td>-0.0120</td>
+<td>201704</td>
+<td>min(drawdown_60d_rank, div(div(volatility_60d, risk_adj_10_20_rank), ret_10d_rank))</td>
+</tr>
+<tr>
+<td>sector_factor_25</td>
+<td>core</td>
+<td>raw_state</td>
+<td>0.43%</td>
+<td>0.22%</td>
+<td>62.50%</td>
+<td>0.0176</td>
+<td>201704</td>
+<td>mul(neg(zscore_20(risk_adj_5_20_rank)), mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d))</td>
+</tr>
+<tr>
+<td>sector_factor_08</td>
+<td>core</td>
+<td>breakout</td>
+<td>0.39%</td>
+<td>0.18%</td>
+<td>50.00%</td>
+<td>0.0215</td>
+<td>201802</td>
+<td>add(risk_adj_10_20_rank, signed_sqrt(neg(ma_gap_10_60_rank)))</td>
+</tr>
+<tr>
+<td>sector_factor_18</td>
+<td>core</td>
+<td>raw_state</td>
+<td>0.29%</td>
+<td>0.13%</td>
+<td>54.17%</td>
+<td>0.0186</td>
+<td>201506</td>
+<td>add(signed_sqrt(sub(volatility_60d, ma_gap_10_60_rank)), ret_5d_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_22</td>
+<td>core</td>
+<td>breakout</td>
+<td>0.18%</td>
+<td>0.02%</td>
+<td>50.00%</td>
+<td>0.0111</td>
+<td>202004</td>
+<td>sub(drawdown_60d_rank, mean_5(volatility_10d_rank))</td>
+</tr>
+<tr>
+<td>sector_factor_03</td>
+<td>core</td>
+<td>trend</td>
+<td>0.67%</td>
+<td>0.00%</td>
+<td>58.33%</td>
+<td>0.0441</td>
+<td>201505</td>
+<td>mul(mul(mul(ret_3d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_12</td>
+<td>diagnostic</td>
+<td>breakout</td>
+<td>0.24%</td>
+<td>0.29%</td>
+<td>45.83%</td>
+<td>0.0493</td>
+<td>201506</td>
+<td>mul(std_20(volatility_10d_rank), neg(ma_gap_10_60_rank))</td>
+</tr>
+<tr>
+<td>sector_factor_13</td>
+<td>diagnostic</td>
+<td>breakout</td>
+<td>0.18%</td>
+<td>0.20%</td>
+<td>41.67%</td>
+<td>0.0000</td>
+<td>201506</td>
+<td>zscore_20(ma_gap_5_20_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_05</td>
+<td>diagnostic</td>
+<td>raw_state</td>
+<td>0.56%</td>
+<td>0.05%</td>
+<td>45.83%</td>
+<td>0.0206</td>
+<td>201505</td>
+<td>mul(mul(ret_3d, volume_z_20d), ret_3d_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_01</td>
+<td>diagnostic</td>
+<td>trend</td>
+<td>0.82%</td>
+<td>-0.01%</td>
+<td>62.50%</td>
+<td>0.0325</td>
+<td>201702</td>
+<td>mul(sub(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_16</td>
+<td>diagnostic</td>
+<td>raw_state</td>
+<td>0.23%</td>
+<td>-0.05%</td>
+<td>41.67%</td>
+<td>0.0071</td>
+<td>202107</td>
+<td>mul(slope_5(risk_adj_20_60_rank), ret_20d)</td>
+</tr>
+<tr>
+<td>sector_factor_04</td>
+<td>diagnostic</td>
+<td>raw_state</td>
+<td>0.66%</td>
+<td>-0.09%</td>
+<td>45.83%</td>
+<td>0.0205</td>
+<td>201505</td>
+<td>mul(ret_5d, sub(close_pos_20d_rank, volume_z_20d))</td>
+</tr>
+<tr>
+<td>sector_factor_27</td>
+<td>diagnostic</td>
+<td>breakout</td>
+<td>0.29%</td>
+<td>-0.09%</td>
+<td>45.83%</td>
+<td>0.0079</td>
+<td>201703</td>
+<td>slope_5(close_pos_20d_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_02</td>
+<td>diagnostic</td>
+<td>breakout</td>
+<td>0.73%</td>
+<td>-0.10%</td>
+<td>58.33%</td>
+<td>0.0449</td>
+<td>201702</td>
+<td>mul(sub(close_pos_20d_rank, volume_z_20d), risk_adj_5_20_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_23</td>
+<td>diagnostic</td>
+<td>raw_state</td>
+<td>0.25%</td>
+<td>-0.12%</td>
+<td>41.67%</td>
+<td>0.0259</td>
+<td>201707</td>
+<td>mul(volatility_60d, zscore_20(volatility_20d))</td>
+</tr>
+<tr>
+<td>sector_factor_07</td>
+<td>diagnostic</td>
+<td>breakout</td>
+<td>0.34%</td>
+<td>-0.18%</td>
+<td>50.00%</td>
+<td>-0.0001</td>
+<td>201703</td>
+<td>mul(delta_5(close_pos_20d_rank), risk_adj_5_20_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_29</td>
+<td>diagnostic</td>
+<td>trend</td>
+<td>0.20%</td>
+<td>-0.18%</td>
+<td>41.67%</td>
+<td>0.0372</td>
+<td>202012</td>
+<td>std_20(ret_60d_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_09</td>
+<td>diagnostic</td>
+<td>trend</td>
+<td>0.27%</td>
+<td>-0.24%</td>
+<td>58.33%</td>
+<td>0.0062</td>
+<td>202001</td>
+<td>delta_5(ret_10d_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_30</td>
+<td>diagnostic</td>
+<td>breakout</td>
+<td>0.34%</td>
+<td>-0.27%</td>
+<td>33.33%</td>
+<td>0.0061</td>
+<td>202107</td>
+<td>mul(mul(close_pos_20d_rank, volume_z_20d), sub(ma_gap_10_60_rank, std_20(range_1d_rank)))</td>
+</tr>
+<tr>
+<td>sector_factor_06</td>
+<td>diagnostic</td>
+<td>trend</td>
+<td>0.71%</td>
+<td>-0.28%</td>
+<td>50.00%</td>
+<td>0.0072</td>
+<td>201702</td>
+<td>mul(max(sub(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_15</td>
+<td>diagnostic</td>
+<td>breakout</td>
+<td>0.52%</td>
+<td>-0.30%</td>
+<td>33.33%</td>
+<td>0.0478</td>
+<td>201509</td>
+<td>std_20(range_1d_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_14</td>
+<td>diagnostic</td>
+<td>raw_state</td>
+<td>0.31%</td>
+<td>-0.36%</td>
+<td>33.33%</td>
+<td>0.0143</td>
+<td>202001</td>
+<td>volatility_60d</td>
+</tr>
+<tr>
+<td>sector_factor_17</td>
+<td>diagnostic</td>
+<td>trend</td>
+<td>0.28%</td>
+<td>-0.38%</td>
+<td>37.50%</td>
+<td>-0.0078</td>
+<td>202012</td>
+<td>delta_5(ret_5d_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_10</td>
+<td>diagnostic</td>
+<td>breakout</td>
+<td>0.30%</td>
+<td>-0.41%</td>
+<td>29.17%</td>
+<td>0.0217</td>
+<td>202001</td>
+<td>std_20(ma_gap_10_60_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_28</td>
+<td>diagnostic</td>
+<td>breakout</td>
+<td>0.12%</td>
+<td>-0.44%</td>
+<td>33.33%</td>
+<td>-0.0604</td>
+<td>202305</td>
+<td>std_20(close_pos_20d_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_19</td>
+<td>diagnostic</td>
+<td>trend</td>
+<td>0.18%</td>
+<td>-0.45%</td>
+<td>29.17%</td>
+<td>-0.0534</td>
+<td>202109</td>
+<td>std_20(risk_adj_10_20_rank)</td>
+</tr>
+<tr>
+<td>sector_factor_24</td>
+<td>diagnostic</td>
+<td>raw_state</td>
+<td>0.07%</td>
+<td>-0.56%</td>
+<td>33.33%</td>
+<td>-0.0395</td>
+<td>201701</td>
+<td>ts_rank_20(ret_60d)</td>
+</tr>
+<tr>
+<td>sector_factor_20</td>
+<td>diagnostic</td>
+<td>raw_state</td>
+<td>0.27%</td>
+<td>-0.72%</td>
+<td>29.17%</td>
+<td>0.0055</td>
+<td>201701</td>
+<td>zscore_20(ret_3d)</td>
+</tr>
+<tr>
+<td>sector_factor_21</td>
+<td>diagnostic</td>
+<td>raw_state</td>
+<td>0.16%</td>
+<td>-0.80%</td>
+<td>16.67%</td>
+<td>0.0053</td>
+<td>201703</td>
+<td>slope_5(range_1d)</td>
+</tr>
+<tr>
+<td>sector_factor_11</td>
+<td>diagnostic</td>
+<td>raw_state</td>
+<td>0.29%</td>
+<td>-0.94%</td>
+<td>20.83%</td>
+<td>-0.0127</td>
+<td>202012</td>
+<td>delta_5(ret_3d)</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="验证期Top10 Alpha" src="validation_top10_alpha.png" /></p>
+<p><img alt="验证期月度Alpha热力图" src="validation_monthly_alpha_heatmap.png" /></p>
+<h2>代表性因子说明</h2>
+<h3>sector_factor_26</h3>
+<pre><code class="language-text">min(drawdown_60d_rank, div(div(volatility_60d, risk_adj_10_20_rank), ret_10d_rank))
+</code></pre>
+<ul>
+<li>方向：<code>-1</code></li>
+<li>类别：<code>trend</code></li>
+<li>验证期 Top10 alpha：0.29%</li>
+<li>验证期 Top5 alpha：0.05%</li>
+<li>验证期 Top20 alpha：0.22%</li>
+<li>验证期正 alpha 月份比例：58.33%</li>
+<li>验证期 Rank IC：-0.0120</li>
+<li>发现期峰值月份：<code>201704</code></li>
+<li>状态：<code>core</code></li>
+</ul>
+<h3>sector_factor_25</h3>
+<pre><code class="language-text">mul(neg(zscore_20(risk_adj_5_20_rank)), mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d))
+</code></pre>
+<ul>
+<li>方向：<code>1</code></li>
+<li>类别：<code>raw_state</code></li>
+<li>验证期 Top10 alpha：0.22%</li>
+<li>验证期 Top5 alpha：0.25%</li>
+<li>验证期 Top20 alpha：0.24%</li>
+<li>验证期正 alpha 月份比例：62.50%</li>
+<li>验证期 Rank IC：0.0176</li>
+<li>发现期峰值月份：<code>201704</code></li>
+<li>状态：<code>core</code></li>
+</ul>
+<h3>sector_factor_08</h3>
+<pre><code class="language-text">add(risk_adj_10_20_rank, signed_sqrt(neg(ma_gap_10_60_rank)))
+</code></pre>
+<ul>
+<li>方向：<code>1</code></li>
+<li>类别：<code>breakout</code></li>
+<li>验证期 Top10 alpha：0.18%</li>
+<li>验证期 Top5 alpha：0.09%</li>
+<li>验证期 Top20 alpha：0.23%</li>
+<li>验证期正 alpha 月份比例：50.00%</li>
+<li>验证期 Rank IC：0.0215</li>
+<li>发现期峰值月份：<code>201802</code></li>
+<li>状态：<code>core</code></li>
+</ul>
+<h3>sector_factor_18</h3>
+<pre><code class="language-text">add(signed_sqrt(sub(volatility_60d, ma_gap_10_60_rank)), ret_5d_rank)
+</code></pre>
+<ul>
+<li>方向：<code>1</code></li>
+<li>类别：<code>raw_state</code></li>
+<li>验证期 Top10 alpha：0.13%</li>
+<li>验证期 Top5 alpha：0.07%</li>
+<li>验证期 Top20 alpha：0.24%</li>
+<li>验证期正 alpha 月份比例：54.17%</li>
+<li>验证期 Rank IC：0.0186</li>
+<li>发现期峰值月份：<code>201506</code></li>
+<li>状态：<code>core</code></li>
+</ul>
+<h3>sector_factor_22</h3>
+<pre><code class="language-text">sub(drawdown_60d_rank, mean_5(volatility_10d_rank))
+</code></pre>
+<ul>
+<li>方向：<code>-1</code></li>
+<li>类别：<code>breakout</code></li>
+<li>验证期 Top10 alpha：0.02%</li>
+<li>验证期 Top5 alpha：-0.18%</li>
+<li>验证期 Top20 alpha：0.15%</li>
+<li>验证期正 alpha 月份比例：50.00%</li>
+<li>验证期 Rank IC：0.0111</li>
+<li>发现期峰值月份：<code>202004</code></li>
+<li>状态：<code>core</code></li>
+</ul>
+<h3>sector_factor_03</h3>
+<pre><code class="language-text">mul(mul(mul(ret_3d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)
+</code></pre>
+<ul>
+<li>方向：<code>-1</code></li>
+<li>类别：<code>trend</code></li>
+<li>验证期 Top10 alpha：0.00%</li>
+<li>验证期 Top5 alpha：-0.13%</li>
+<li>验证期 Top20 alpha：0.04%</li>
+<li>验证期正 alpha 月份比例：58.33%</li>
+<li>验证期 Rank IC：0.0441</li>
+<li>发现期峰值月份：<code>201505</code></li>
+<li>状态：<code>core</code></li>
+</ul>
+<h3>sector_factor_12</h3>
+<pre><code class="language-text">mul(std_20(volatility_10d_rank), neg(ma_gap_10_60_rank))
+</code></pre>
+<ul>
+<li>方向：<code>1</code></li>
+<li>类别：<code>breakout</code></li>
+<li>验证期 Top10 alpha：0.29%</li>
+<li>验证期 Top5 alpha：0.40%</li>
+<li>验证期 Top20 alpha：0.32%</li>
+<li>验证期正 alpha 月份比例：45.83%</li>
+<li>验证期 Rank IC：0.0493</li>
+<li>发现期峰值月份：<code>201506</code></li>
+<li>状态：<code>diagnostic</code></li>
+</ul>
+<h3>sector_factor_13</h3>
+<pre><code class="language-text">zscore_20(ma_gap_5_20_rank)
+</code></pre>
+<ul>
+<li>方向：<code>1</code></li>
+<li>类别：<code>breakout</code></li>
+<li>验证期 Top10 alpha：0.20%</li>
+<li>验证期 Top5 alpha：0.21%</li>
+<li>验证期 Top20 alpha：0.26%</li>
+<li>验证期正 alpha 月份比例：41.67%</li>
+<li>验证期 Rank IC：0.0000</li>
+<li>发现期峰值月份：<code>201506</code></li>
+<li>状态：<code>diagnostic</code></li>
+</ul>
+<h3>sector_factor_05</h3>
+<pre><code class="language-text">mul(mul(ret_3d, volume_z_20d), ret_3d_rank)
+</code></pre>
+<ul>
+<li>方向：<code>-1</code></li>
+<li>类别：<code>raw_state</code></li>
+<li>验证期 Top10 alpha：0.05%</li>
+<li>验证期 Top5 alpha：0.02%</li>
+<li>验证期 Top20 alpha：0.03%</li>
+<li>验证期正 alpha 月份比例：45.83%</li>
+<li>验证期 Rank IC：0.0206</li>
+<li>发现期峰值月份：<code>201505</code></li>
+<li>状态：<code>diagnostic</code></li>
+</ul>
+<h3>sector_factor_01</h3>
+<pre><code class="language-text">mul(sub(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)
+</code></pre>
+<ul>
+<li>方向：<code>-1</code></li>
+<li>类别：<code>trend</code></li>
+<li>验证期 Top10 alpha：-0.01%</li>
+<li>验证期 Top5 alpha：-0.10%</li>
+<li>验证期 Top20 alpha：0.03%</li>
+<li>验证期正 alpha 月份比例：62.50%</li>
+<li>验证期 Rank IC：0.0325</li>
+<li>发现期峰值月份：<code>201702</code></li>
+<li>状态：<code>diagnostic</code></li>
+</ul>
+<h3>sector_factor_16</h3>
+<pre><code class="language-text">mul(slope_5(risk_adj_20_60_rank), ret_20d)
+</code></pre>
+<ul>
+<li>方向：<code>-1</code></li>
+<li>类别：<code>raw_state</code></li>
+<li>验证期 Top10 alpha：-0.05%</li>
+<li>验证期 Top5 alpha：-0.07%</li>
+<li>验证期 Top20 alpha：0.00%</li>
+<li>验证期正 alpha 月份比例：41.67%</li>
+<li>验证期 Rank IC：0.0071</li>
+<li>发现期峰值月份：<code>202107</code></li>
+<li>状态：<code>diagnostic</code></li>
+</ul>
+<h3>sector_factor_04</h3>
+<pre><code class="language-text">mul(ret_5d, sub(close_pos_20d_rank, volume_z_20d))
+</code></pre>
+<ul>
+<li>方向：<code>1</code></li>
+<li>类别：<code>raw_state</code></li>
+<li>验证期 Top10 alpha：-0.09%</li>
+<li>验证期 Top5 alpha：0.00%</li>
+<li>验证期 Top20 alpha：-0.04%</li>
+<li>验证期正 alpha 月份比例：45.83%</li>
+<li>验证期 Rank IC：0.0205</li>
+<li>发现期峰值月份：<code>201505</code></li>
+<li>状态：<code>diagnostic</code></li>
+</ul>
+<h2>结论</h2>
+<p>本轮因子挖掘把未来 10 日 Top10 alpha 作为主目标，更贴近“板块主升浪入场信号”。<code>core</code> 因子表示发现期和验证期都有正向 Top10 alpha，<code>diagnostic</code> 因子表示发现期强但验证期不完全达标，后续可以作为模型输入或人工观察项。</p>
+<p>下一步建议先不要急着扩大模型复杂度，而是用这些因子做两件事：</p>
+<ol>
+<li>看 Top10 alpha 在 2024、2025、2026 各月份是否集中在少数行情阶段。</li>
+<li>用 core 因子构造简单投票或 LightGBM 滚动模型，比较是否优于之前直接使用原始板块特征。</li>
+</ol></body></html>

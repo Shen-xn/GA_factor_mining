@@ -1,0 +1,97 @@
+{
+  "seed": 42,
+  "paths": {
+    "feature_panel": "../../outputs/sector/rotation/sector_feature_panel.parquet",
+    "artifacts": "../../outputs/sector/factor_mining",
+    "reports": "../../reports/sector/factor_mining"
+  },
+  "split": {
+    "discovery_start": "20150101",
+    "discovery_end": "20231231",
+    "validation_start": "20240101",
+    "validation_end": "20251231",
+    "test_start": "20260101",
+    "test_end": "20260529"
+  },
+  "universe": {
+    "main": ["I", "N"],
+    "industry_only": ["I"]
+  },
+  "target": {
+    "horizon": 10,
+    "return_column": "future_ret_10d",
+    "rank_column": "future_ret_10d_rank",
+    "primary_top_k": 10,
+    "diagnostic_top_k": [5, 10, 20],
+    "relevance_edges": [0.9, 0.95, 0.98, 0.99]
+  },
+  "ga": {
+    "population_size": 96,
+    "generations": 24,
+    "elite_size": 16,
+    "tournament_size": 5,
+    "mutation_rate": 0.35,
+    "crossover_rate": 0.55,
+    "random_immigrant_rate": 0.15,
+    "max_depth": 3,
+    "candidate_keep": 800,
+    "library_size": 30,
+    "corr_prune_threshold": 0.8,
+    "max_factors_per_peak_month": 3,
+    "min_daily_sectors": 80,
+    "min_month_days": 12,
+    "daily_alpha_volatility_penalty": 0.1,
+    "complexity_penalty": 0.0005
+  },
+  "terminal_groups": {
+    "trend": [
+      "ret_1d_rank",
+      "ret_3d_rank",
+      "ret_5d_rank",
+      "ret_10d_rank",
+      "ret_20d_rank",
+      "ret_60d_rank",
+      "risk_adj_5_20_rank",
+      "risk_adj_10_20_rank",
+      "risk_adj_20_60_rank"
+    ],
+    "breakout": [
+      "close_pos_20d_rank",
+      "drawdown_60d_rank",
+      "ma_gap_5_20_rank",
+      "ma_gap_10_60_rank",
+      "range_1d_rank"
+    ],
+    "volatility": [
+      "volatility_10d_rank",
+      "volatility_20d_rank",
+      "range_1d_rank"
+    ],
+    "activity": [
+      "volume_z_20d_rank",
+      "turnover_z_20d_rank"
+    ],
+    "raw_state": [
+      "ret_3d",
+      "ret_5d",
+      "ret_10d",
+      "ret_20d",
+      "ret_60d",
+      "volatility_10d",
+      "volatility_20d",
+      "volatility_60d",
+      "volume_z_20d",
+      "turnover_z_20d",
+      "range_1d"
+    ]
+  },
+  "operators": {
+    "unary": ["neg", "abs", "signed_log", "signed_sqrt"],
+    "binary": ["add", "sub", "mul", "div", "min", "max"],
+    "temporal": ["delta_5", "slope_5", "mean_5", "std_20", "zscore_20", "ts_rank_20"]
+  },
+  "selection": {
+    "core_validation_top10_alpha_min": 0.0,
+    "core_validation_positive_month_ratio_min": 0.5
+  }
+}

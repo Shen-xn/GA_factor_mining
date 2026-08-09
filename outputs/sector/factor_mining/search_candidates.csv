@@ -1,0 +1,351 @@
+﻿expression_text,fitness,direction,peak_month,nodes,depth,category,duplicate_corr,selected,factor_name,reject_reason
+"mul(sub(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)",0.04200996138808065,-1,201702,7,3,trend,0.0,True,sector_factor_01,
+"mul(mul(sub(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)",0.04188661378004202,1,201505,7,3,trend,0.8260333789028191,False,,correlation_duplicate
+"mul(sub(mul(ret_3d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)",0.041576822298973456,-1,201702,7,3,trend,0.9013792840793897,False,,correlation_duplicate
+"mul(sub(close_pos_20d_rank, volume_z_20d), risk_adj_5_20_rank)",0.04134717271177579,1,201702,5,2,breakout,0.7964590671287666,True,sector_factor_02,
+"mul(risk_adj_5_20_rank, sub(close_pos_20d_rank, volume_z_20d))",0.04134717271177579,1,201702,5,2,breakout,1.0,False,,correlation_duplicate
+"mul(mul(sub(close_pos_20d_rank, volume_z_20d), ret_10d_rank), risk_adj_5_20_rank)",0.04121283364808666,1,201505,7,3,trend,0.9318334859784522,False,,correlation_duplicate
+"mul(sub(ret_3d_rank, volume_z_20d), risk_adj_5_20_rank)",0.041124750505842377,1,201505,5,2,trend,0.8835536342886516,False,,correlation_duplicate
+"mul(mul(sub(close_pos_20d_rank, volume_z_20d), close_pos_20d_rank), risk_adj_5_20_rank)",0.040489661492125684,1,201505,7,3,breakout,0.8136611329286169,False,,correlation_duplicate
+"mul(mul(sub(close_pos_20d_rank, volume_z_20d), ret_3d_rank), ret_3d_rank)",0.04017961032627642,1,201505,7,3,trend,0.8351451323272043,False,,correlation_duplicate
+"mul(mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)",0.040096239000100696,-1,201505,7,3,trend,0.8081826119984191,False,,correlation_duplicate
+"mul(mul(sub(close_pos_20d_rank, volume_z_20d), ret_3d_rank), abs(mul(ret_5d, risk_adj_10_20_rank)))",0.039836393793843815,1,201505,10,3,trend,0.8018191648398398,False,,correlation_duplicate
+"mul(risk_adj_5_20_rank, sub(mean_5(ret_1d_rank), volume_z_20d))",0.03976346016725622,1,201702,6,3,trend,0.809942191888708,False,,correlation_duplicate
+"mul(mul(sub(close_pos_20d_rank, volume_z_20d), ret_3d_rank), close_pos_20d_rank)",0.0394709345315303,1,201505,7,3,breakout,0.8742983767774577,False,,correlation_duplicate
+"mul(mul(volume_z_20d, ret_3d_rank), risk_adj_5_20_rank)",0.039398848615935685,-1,201505,5,2,trend,0.8185687441993882,False,,correlation_duplicate
+"mul(mul(mul(ret_3d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)",0.039383842568084734,-1,201505,7,3,trend,0.7842147143341145,True,sector_factor_03,
+"mul(ret_5d, sub(close_pos_20d_rank, volume_z_20d))",0.03933639467832465,1,201505,5,2,raw_state,0.46271003472052363,True,sector_factor_04,
+"mul(mul(close_pos_20d_rank, volume_z_20d), risk_adj_5_20_rank)",0.03909491735997909,-1,201505,5,2,breakout,0.8260860704323733,False,,correlation_duplicate
+"mul(mul(volume_z_20d, ret_3d_rank), abs(mul(ret_5d, risk_adj_10_20_rank)))",0.038983482196525324,-1,201505,8,3,raw_state,0.8915509685938064,False,,correlation_duplicate
+"sub(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank)",0.0387982719000999,-1,201702,5,2,breakout,0.8995175536553162,False,,correlation_duplicate
+"mul(sub(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), close_pos_20d_rank)",0.038680753749072795,-1,201702,7,3,breakout,0.9024591132281242,False,,correlation_duplicate
+"sub(mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), ret_3d_rank)",0.03866648964206726,-1,201702,7,3,trend,0.8921891850420948,False,,correlation_duplicate
+"mul(mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), ret_3d_rank)",0.03858769599202642,-1,201505,7,3,trend,0.9725951496086226,False,,correlation_duplicate
+"mul(mul(ret_3d, volume_z_20d), ret_3d_rank)",0.03849571518720088,-1,201505,5,2,raw_state,0.5084793307843679,True,sector_factor_05,
+"mul(mul(volume_z_20d, ret_3d_rank), ret_3d)",0.03849571518720088,-1,201505,5,2,raw_state,1.0,False,,peak_month_limit
+"mul(max(sub(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)",0.03847897943770738,1,201702,7,3,trend,0.473816906018483,True,sector_factor_06,
+"mul(mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), volatility_20d_rank)",0.03844756123371038,-1,201505,7,3,breakout,0.899082604348282,False,,peak_month_limit
+"mul(mul(sub(close_pos_20d_rank, volume_z_20d), volatility_10d), risk_adj_5_20_rank)",0.03836537734853934,1,201505,7,3,raw_state,0.9755105594884681,False,,peak_month_limit
+"mul(mul(mul(ret_3d_rank, volume_z_20d), ret_3d_rank), ret_3d)",0.03823357655999152,-1,201505,7,3,raw_state,0.9681822361249502,False,,peak_month_limit
+"mul(mul(mul(ret_3d, volume_z_20d), ret_3d_rank), ret_3d_rank)",0.03823357655999152,-1,201505,7,3,raw_state,0.9681822361249502,False,,peak_month_limit
+"mul(mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), ret_3d)",0.038201809833663045,-1,201505,7,3,raw_state,0.9351894180811161,False,,peak_month_limit
+"mul(mul(ma_gap_5_20_rank, volume_z_20d), ret_3d_rank)",0.03817578209132302,-1,201505,5,2,breakout,0.9127588238010191,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank)",0.03791138435959372,-1,201505,5,2,breakout,0.9471460183616549,False,,peak_month_limit
+"mul(mul(mul(close_pos_20d_rank, volume_z_20d), ret_5d), risk_adj_5_20_rank)",0.037853633832587275,-1,201505,7,3,raw_state,0.6359717128782518,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d)",0.037758934452702994,-1,201505,5,2,raw_state,0.8875433000246442,False,,peak_month_limit
+"mul(mul(ret_3d, volume_z_20d), close_pos_20d_rank)",0.037758934452702994,-1,201505,5,2,raw_state,0.8875433000246442,False,,peak_month_limit
+"mul(sub(mul(close_pos_20d_rank, volume_z_20d), zscore_20(ret_10d)), risk_adj_5_20_rank)",0.03764419872502142,-1,201505,8,3,raw_state,0.40853804519926545,False,,peak_month_limit
+"mul(volume_z_20d, ret_3d)",0.03757923234661385,-1,201505,3,1,raw_state,0.8808432803489382,False,,peak_month_limit
+"mul(ret_3d, volume_z_20d)",0.03757923234661385,-1,201505,3,1,raw_state,0.8808432803489382,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, mul(close_pos_20d_rank, volume_z_20d)), ret_3d_rank)",0.03750482792790388,-1,201505,7,3,breakout,0.916188517526681,False,,peak_month_limit
+"mul(mul(mul(close_pos_20d_rank, volume_z_20d), close_pos_20d_rank), ret_3d_rank)",0.03750482792790388,-1,201505,7,3,breakout,0.916188517526681,False,,peak_month_limit
+"mul(mul(mul(ret_3d_rank, volume_z_20d), ret_3d_rank), ret_3d_rank)",0.03750005089186554,-1,201505,7,3,trend,0.9824059784217752,False,,peak_month_limit
+"mul(mul(ret_20d_rank, volume_z_20d), ret_3d_rank)",0.037483576446666986,-1,201505,5,2,trend,0.9153098586320214,False,,peak_month_limit
+"mul(risk_adj_5_20_rank, volume_z_20d)",0.037442857991673725,-1,201505,3,1,raw_state,0.8460518333801221,False,,peak_month_limit
+"mul(volume_z_20d, risk_adj_5_20_rank)",0.037442857991673725,-1,201505,3,1,raw_state,0.8460518333801221,False,,peak_month_limit
+"mul(mul(ret_10d, mul(close_pos_20d_rank, volume_z_20d)), ret_3d_rank)",0.037381334072546436,-1,201505,7,3,raw_state,0.42008715450059697,False,,peak_month_limit
+"mul(min(close_pos_20d_rank, volume_z_20d), ret_3d)",0.037374123000513806,-1,201505,5,2,raw_state,0.8472071424733856,False,,peak_month_limit
+"mul(volume_z_20d, ret_3d_rank)",0.03730522999813068,-1,201505,3,1,raw_state,0.9475076654681588,False,,peak_month_limit
+"mul(mul(ma_gap_5_20_rank, volume_z_20d), risk_adj_5_20_rank)",0.037233622775770865,-1,201505,5,2,breakout,0.8019754446287015,False,,peak_month_limit
+"mul(mul(ret_3d, mul(ret_3d, volume_z_20d)), ret_3d_rank)",0.03715842135929763,-1,201702,7,3,raw_state,0.7654846834459852,False,,peak_month_limit
+"mul(mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d), ret_3d)",0.037150600576596436,-1,201702,7,3,raw_state,0.6958805052792961,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, mul(volume_z_20d, ret_3d)), ret_3d)",0.037150600576596436,-1,201702,7,3,raw_state,0.6958805052792961,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, volume_z_20d), range_1d)",0.03707985164848352,-1,201702,5,2,raw_state,0.8121920804876624,False,,peak_month_limit
+"signed_log(mul(volume_z_20d, ret_3d))",0.03707923234661385,-1,201505,4,2,raw_state,0.8808432803489382,False,,peak_month_limit
+"mul(mul(ret_3d_rank, volume_z_20d), ret_3d_rank)",0.03704499008671973,-1,201505,5,2,trend,0.9787633016118199,False,,peak_month_limit
+"mul(mul(volume_z_20d, ret_3d_rank), ret_3d_rank)",0.03704499008671973,-1,201505,5,2,trend,0.9787633016118199,False,,peak_month_limit
+"mul(neg(risk_adj_5_20_rank), volume_z_20d)",0.036942857991673725,1,201505,4,2,raw_state,0.8460518333801221,False,,peak_month_limit
+"min(mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), close_pos_20d_rank)",0.036916444134828814,-1,201505,7,3,breakout,0.9407945694274918,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, volume_z_20d), signed_sqrt(volatility_20d_rank))",0.036768145648129046,-1,201505,6,2,breakout,0.8017262364143872,False,,peak_month_limit
+"add(min(div(ret_1d_rank, close_pos_20d_rank), close_pos_20d_rank), signed_log(sub(close_pos_20d_rank, volume_z_20d_rank)))",0.036582735813643165,1,201702,10,3,breakout,0.610694133292329,False,,peak_month_limit
+"mul(mul(abs(ret_3d_rank), volume_z_20d), ret_3d_rank)",0.03654499008671973,-1,201505,6,3,trend,0.9787633016118199,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, mul(close_pos_20d_rank, volume_z_20d)), ret_3d)",0.03645102563927156,-1,201505,7,3,breakout,0.8466398084028138,False,,peak_month_limit
+"mul(mul(mul(close_pos_20d_rank, volume_z_20d), drawdown_60d_rank), ret_3d_rank)",0.03635007682935925,-1,201505,7,3,breakout,0.9071522893688155,False,,peak_month_limit
+"mul(mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), mul(mul(close_pos_20d_rank, ret_20d_rank), ret_3d_rank))",0.03623453312726451,-1,201505,11,3,trend,0.9215514895367833,False,,peak_month_limit
+"mul(drawdown_60d_rank, mul(volume_z_20d, ret_3d))",0.03563852859594946,-1,201505,5,2,raw_state,0.875228824644369,False,,peak_month_limit
+"mul(volume_z_20d, mul(drawdown_60d_rank, ret_3d))",0.03563852859594946,-1,201505,5,2,raw_state,0.875228824644369,False,,peak_month_limit
+"mul(mul(ret_3d, volume_z_20d), drawdown_60d_rank)",0.03563852859594946,-1,201505,5,2,raw_state,0.875228824644369,False,,peak_month_limit
+"mul(mul(mul(volatility_20d, volume_z_20d), ret_3d_rank), ret_3d_rank)",0.03554334815031669,-1,201505,7,3,raw_state,0.9751711945614486,False,,peak_month_limit
+"sub(mul(close_pos_20d_rank, volume_z_20d), ret_20d_rank)",0.03549360244647028,-1,201702,5,2,breakout,0.7317657827636255,False,,peak_month_limit
+"mul(mul(volatility_60d, volume_z_20d), ret_3d)",0.03533074680732033,-1,201505,5,2,raw_state,0.8698369471503485,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, volume_z_20d), abs(volatility_60d))",0.03527689596007717,-1,201704,6,2,raw_state,0.8180139808280924,False,,correlation_duplicate
+"mul(sub(mul(volume_z_20d, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)",0.03527547072123787,-1,201702,7,3,raw_state,0.49872990800893463,False,,peak_month_limit
+"mul(mul(mul(volatility_10d, volume_z_20d), ret_3d_rank), ret_3d_rank)",0.035262994959350404,-1,201505,7,3,raw_state,0.9738214087930557,False,,peak_month_limit
+"mul(mul(volume_z_20d_rank, volume_z_20d), ret_3d_rank)",0.03513277936302872,-1,201505,5,2,raw_state,0.9290162818028203,False,,peak_month_limit
+"mul(volume_z_20d, mul(close_pos_20d_rank, signed_sqrt(volatility_10d)))",0.035049459741065096,-1,201704,6,3,raw_state,0.8194731371910703,False,,correlation_duplicate
+"mul(mul(close_pos_20d_rank, volume_z_20d), signed_log(ma_gap_5_20_rank))",0.03487374361648083,-1,201505,6,2,breakout,0.7984204400319023,False,,peak_month_limit
+"mul(div(close_pos_20d_rank, volume_z_20d), ret_3d)",0.034860305848817816,-1,201702,5,2,raw_state,0.5943797551160177,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, volume_z_20d), close_pos_20d_rank)",0.03482920948672945,-1,201704,5,2,breakout,0.8299430080780693,False,,correlation_duplicate
+"mul(mul(mul(ret_3d, volume_z_20d), ret_3d_rank), mul(mul(close_pos_20d_rank, ma_gap_10_60_rank), ret_3d_rank))",0.03482733712681876,-1,201505,11,3,breakout,0.8896535929517498,False,,peak_month_limit
+"mul(mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), ma_gap_10_60_rank)",0.03477664379415253,-1,201505,7,3,breakout,0.8873385903484741,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, volume_z_20d), volume_z_20d_rank)",0.034719437802209714,-1,201505,5,2,breakout,0.820768420683184,False,,peak_month_limit
+"mul(volume_z_20d, ret_10d_rank)",0.034156182936750816,-1,201505,3,1,raw_state,0.8135114030655695,False,,peak_month_limit
+"mul(ret_10d_rank, volume_z_20d)",0.034156182936750816,-1,201505,3,1,raw_state,0.8135114030655695,False,,peak_month_limit
+ts_rank_20(risk_adj_10_20_rank),0.034127812132920814,1,201505,2,1,trend,0.48067076757423877,False,,peak_month_limit
+"mul(mul(ma_gap_10_60_rank, volume_z_20d), ret_3d_rank)",0.03404590888442496,-1,201505,5,2,breakout,0.8769903762437464,False,,peak_month_limit
+"mul(volume_z_20d, add(close_pos_20d_rank, ma_gap_5_20_rank))",0.03399285557903055,-1,201505,5,2,breakout,0.7905254552139878,False,,peak_month_limit
+slope_5(ret_20d),0.03379929956343682,1,201505,2,1,raw_state,0.47965876138767216,False,,peak_month_limit
+"mul(mul(min(ma_gap_5_20_rank, ret_20d_rank), volume_z_20d), ret_3d)",0.033745984855751136,-1,201505,7,3,raw_state,0.854427797149694,False,,peak_month_limit
+"mul(close_pos_20d_rank, ret_3d)",0.03373572117725856,1,201505,3,1,breakout,0.4902839253697589,False,,peak_month_limit
+"mul(mul(turnover_z_20d, ret_3d_rank), risk_adj_5_20_rank)",0.03372010443604744,-1,201505,5,2,trend,0.8171861913075252,False,,peak_month_limit
+signed_log(ts_rank_20(risk_adj_10_20_rank)),0.03362781213292081,1,201505,3,2,trend,0.48067076757423877,False,,peak_month_limit
+signed_sqrt(ts_rank_20(risk_adj_10_20_rank)),0.03362781213292081,1,201505,3,2,trend,0.48067076757423877,False,,peak_month_limit
+"mul(volume_z_20d, ret_1d_rank)",0.033619630196437864,-1,201505,3,1,raw_state,0.7948491049353626,False,,peak_month_limit
+"mul(drawdown_60d_rank, ret_3d)",0.0335787267802021,1,201505,3,1,breakout,0.5134252863541949,False,,peak_month_limit
+ts_rank_20(ret_20d),0.03352315662945809,1,201505,2,1,raw_state,0.40273303601463256,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, ret_3d_rank), ret_3d)",0.033520067361530764,1,201505,5,2,breakout,0.3900758986810585,False,,peak_month_limit
+"mul(mul(mul(ret_20d, ret_3d), volume_z_20d), ret_3d)",0.03350485831576939,-1,201702,7,3,raw_state,0.30774847259123866,False,,peak_month_limit
+"mul(delta_5(close_pos_20d_rank), risk_adj_5_20_rank)",0.03346131197915681,1,201703,4,2,breakout,0.4535332396322489,True,sector_factor_07,
+"add(risk_adj_10_20_rank, signed_sqrt(neg(ma_gap_10_60_rank)))",0.033439741194613695,1,201802,5,3,breakout,0.4233212406121773,True,sector_factor_08,
+signed_log(slope_5(ret_20d)),0.03329929956343682,1,201505,3,2,raw_state,0.47965876130895996,False,,peak_month_limit
+delta_5(risk_adj_20_60_rank),0.033286973879173475,1,201505,2,1,trend,0.536504120520184,False,,peak_month_limit
+"mul(mul(neg(close_pos_20d_rank), ret_20d_rank), mul(volatility_20d_rank, zscore_20(risk_adj_5_20_rank)))",0.03324584601602956,-1,201505,9,3,trend,0.6301809752619146,False,,peak_month_limit
+std_20(ret_3d),0.03322578442871374,1,201702,2,1,raw_state,0.10999924947762799,False,,peak_month_limit
+"mul(mul(volume_z_20d, ret_3d), ret_3d)",0.033208858131540994,-1,201702,5,2,raw_state,0.6243791163352157,False,,peak_month_limit
+"mul(mul(ret_3d, volume_z_20d), ret_3d)",0.033208858131540994,-1,201702,5,2,raw_state,0.6243791163352157,False,,peak_month_limit
+"mul(signed_log(ret_10d_rank), volume_z_20d)",0.033174380798723556,-1,201505,4,2,raw_state,0.8098758770610602,False,,peak_month_limit
+risk_adj_5_20_rank,0.03316847918019936,1,201505,1,0,trend,0.851371160950175,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, ret_3d), ret_3d)",0.03307254981310734,1,201702,5,2,raw_state,0.3278837817666942,False,,peak_month_limit
+"mul(volume_z_20d, ma_gap_5_20_rank)",0.03306194394823662,-1,201505,3,1,raw_state,0.7394344836718301,False,,peak_month_limit
+"sub(mul(close_pos_20d_rank, volume_z_20d), drawdown_60d_rank)",0.03304539539693832,-1,201702,5,2,breakout,0.736122412847415,False,,peak_month_limit
+"mul(ret_5d, ret_3d_rank)",0.03303812084508764,1,201505,3,1,raw_state,0.5918250532171251,False,,peak_month_limit
+delta_5(close_pos_20d_rank),0.033035820135809774,1,201703,2,1,breakout,0.934337312073321,False,,correlation_duplicate
+signed_log(ts_rank_20(ret_20d)),0.03302315662945809,1,201505,3,2,raw_state,0.5643654812416808,False,,peak_month_limit
+neg(ts_rank_20(ret_20d)),0.03302315662945809,-1,201505,3,2,raw_state,0.5643654812416808,False,,peak_month_limit
+"mul(mul(ma_gap_5_20_rank, turnover_z_20d), risk_adj_5_20_rank)",0.032973264778606876,-1,201505,5,2,breakout,0.8004402824158249,False,,peak_month_limit
+"mul(ret_20d_rank, ret_3d)",0.03297041369087933,1,201505,3,1,raw_state,0.505531114123901,False,,peak_month_limit
+"mul(sub(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), slope_5(ret_3d))",0.032952704461643265,-1,201505,8,3,raw_state,0.3310180774031805,False,,peak_month_limit
+"sub(mul(volume_z_20d, close_pos_20d_rank), ret_3d)",0.03291978429148154,-1,201505,5,2,raw_state,0.8308108811575375,False,,peak_month_limit
+"mul(ret_3d, ret_3d)",0.032825784174143835,1,201702,3,1,raw_state,0.26805350356415214,False,,peak_month_limit
+"mul(mean_5(ret_1d_rank), add(close_pos_20d_rank, ma_gap_5_20_rank))",0.03281122332967257,1,201505,6,2,breakout,0.6671729940792674,False,,peak_month_limit
+signed_log(zscore_20(ret_20d)),0.03275259161255798,1,201505,3,2,raw_state,0.600050327673902,False,,peak_month_limit
+"abs(signed_log(min(risk_adj_10_20_rank, ret_3d)))",0.032717656269338806,1,201702,5,3,raw_state,0.2689015130610686,False,,peak_month_limit
+signed_sqrt(risk_adj_5_20_rank),0.03266847918019936,1,201505,2,1,trend,0.851371160950175,False,,peak_month_limit
+std_20(ret_5d),0.032656994048732214,1,201702,2,1,raw_state,0.11013342276614878,False,,peak_month_limit
+"mul(close_pos_20d_rank, volume_z_20d)",0.03265575099452948,-1,201505,3,1,breakout,0.8241243715364394,False,,peak_month_limit
+"mul(volume_z_20d, close_pos_20d_rank)",0.03265575099452948,-1,201505,3,1,raw_state,0.8241243715364394,False,,peak_month_limit
+"mul(sub(ret_20d, ret_3d_rank), risk_adj_5_20_rank)",0.03257454430182277,-1,201505,5,2,trend,0.8201078555847934,False,,peak_month_limit
+"mul(volatility_60d, ret_3d)",0.03255644472289344,1,201505,3,1,raw_state,0.6363081093476726,False,,peak_month_limit
+delta_5(ret_20d),0.032541093743407024,1,201505,2,1,raw_state,0.5307889988031205,False,,peak_month_limit
+"mul(volatility_10d_rank, risk_adj_5_20_rank)",0.03253046936938124,1,201505,3,1,trend,0.6076105494018021,False,,peak_month_limit
+signed_log(neg(ts_rank_20(ret_20d))),0.03252315662945809,-1,201505,4,3,raw_state,0.5643654812416808,False,,peak_month_limit
+"min(ret_3d_rank, ret_5d_rank)",0.03251520049585817,1,201505,3,1,trend,0.7815915427246477,False,,peak_month_limit
+"mul(ma_gap_5_20_rank, ret_3d)",0.03250814822154161,1,201505,3,1,breakout,0.518394485642576,False,,peak_month_limit
+"mul(ret_10d_rank, ret_3d)",0.0325061220181739,1,201505,3,1,raw_state,0.5050541403334374,False,,peak_month_limit
+"mul(volatility_10d_rank, mul(drawdown_60d_rank, ret_3d))",0.032454739263460146,1,201702,5,2,breakout,0.47668697213193795,False,,peak_month_limit
+ret_5d,0.03242562524778808,1,201505,1,0,raw_state,0.8030943070235856,False,,peak_month_limit
+ret_5d_rank,0.03242562524673375,1,201505,1,0,trend,0.8030943114735953,False,,peak_month_limit
+"mul(delta_5(ret_20d), risk_adj_5_20_rank)",0.03237636717664025,1,201702,4,2,raw_state,0.3783157943199957,False,,peak_month_limit
+ret_3d_rank,0.032367131671754534,1,201505,1,0,trend,0.6897411439527285,False,,peak_month_limit
+ret_3d,0.032367131671754534,1,201505,1,0,raw_state,0.689741136811435,False,,peak_month_limit
+"mul(ret_3d_rank, ret_3d)",0.03235930751516523,1,201505,3,1,raw_state,0.47420702969148015,False,,peak_month_limit
+"mul(ret_3d, ret_3d_rank)",0.03235930751516523,1,201505,3,1,raw_state,0.47420702969148015,False,,peak_month_limit
+delta_5(ret_10d_rank),0.032305868217778234,1,202001,2,1,trend,0.570019878208758,True,sector_factor_09,
+"mul(mul(ret_5d, ret_3d_rank), risk_adj_5_20_rank)",0.03226792207952306,1,201505,5,2,trend,0.44382249775226773,False,,peak_month_limit
+"max(mul(close_pos_20d_rank, volume_z_20d), volume_z_20d)",0.0322589305638837,-1,201505,5,2,raw_state,0.8106432321211045,False,,peak_month_limit
+"min(risk_adj_5_20_rank, ret_3d_rank)",0.03222804040703793,1,201505,3,1,trend,0.8166251576706326,False,,peak_month_limit
+"div(abs(div(ret_20d_rank, risk_adj_20_60_rank)), ret_10d_rank)",0.03222729769783094,-1,201505,6,3,trend,0.6554858257600563,False,,peak_month_limit
+"add(mul(range_1d_rank, zscore_20(close_pos_20d_rank)), abs(drawdown_60d_rank))",0.03222017859325159,1,201702,7,3,breakout,0.5742274470200044,False,,peak_month_limit
+"mul(ret_3d_rank, risk_adj_5_20_rank)",0.03221759080335652,1,201505,3,1,trend,0.8333897819095266,False,,peak_month_limit
+"mul(risk_adj_5_20_rank, ret_3d_rank)",0.03221759080335652,1,201505,3,1,trend,0.8333897819095266,False,,peak_month_limit
+"mul(std_20(ret_5d), ret_3d)",0.03217278255386355,1,201505,4,2,raw_state,0.6232249555863577,False,,peak_month_limit
+"mul(risk_adj_5_20_rank, risk_adj_5_20_rank)",0.03216847918019936,1,201505,3,1,trend,0.851371160950175,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, ret_5d), ret_3d_rank)",0.03213380889869621,1,201505,5,2,breakout,0.49170504611539123,False,,peak_month_limit
+"mul(mul(mul(close_pos_20d_rank, ret_3d_rank), ret_3d_rank), ret_3d)",0.03213165111407343,1,201505,7,3,trend,0.36425075594950607,False,,peak_month_limit
+"mul(volume_z_20d, slope_5(ret_20d))",0.03210220922309446,-1,201702,4,2,raw_state,0.4640136977236754,False,,peak_month_limit
+"mul(ret_5d, risk_adj_5_20_rank)",0.032069614704789744,1,201505,3,1,raw_state,0.49938602801621745,False,,peak_month_limit
+signed_log(delta_5(ret_20d)),0.03204109374340702,1,201505,3,2,raw_state,0.5307890003817289,False,,peak_month_limit
+std_20(ma_gap_10_60_rank),0.031989008923489805,-1,202001,2,1,breakout,0.0253457888814434,True,sector_factor_10,
+"mul(mul(close_pos_20d_rank, close_pos_20d_rank), ret_3d)",0.031980110299724585,1,201505,5,2,breakout,0.4136760007004909,False,,peak_month_limit
+"mul(drawdown_60d_rank, mul(drawdown_60d_rank, ret_3d))",0.03196636259595272,1,201505,5,2,breakout,0.43665015434330934,False,,peak_month_limit
+"mul(mul(ma_gap_10_60_rank, volume_z_20d), ret_3d)",0.031948798112749324,-1,201505,5,2,raw_state,0.8304165790434548,False,,peak_month_limit
+neg(ret_5d),0.03192562524778808,-1,201505,2,1,raw_state,0.8030943070235856,False,,peak_month_limit
+signed_sqrt(ret_5d),0.03192562524778808,1,201505,2,1,raw_state,0.8030943070235856,False,,peak_month_limit
+signed_log(ret_5d_rank),0.03192562524673375,1,201505,2,1,trend,0.8030943114735953,False,,peak_month_limit
+delta_5(ret_20d_rank),0.031908205990346925,1,201505,2,1,trend,0.5235864679357807,False,,peak_month_limit
+delta_5(risk_adj_10_20_rank),0.031883895386563076,1,201505,2,1,trend,0.9160485493658127,False,,peak_month_limit
+signed_sqrt(ret_3d_rank),0.031867131671754534,1,201505,2,1,trend,0.6897411439527285,False,,peak_month_limit
+signed_log(ret_3d),0.031867131671754534,1,201505,2,1,raw_state,0.689741136811435,False,,peak_month_limit
+neg(ret_3d_rank),0.031867131671754534,-1,201505,2,1,trend,0.6897411439527285,False,,peak_month_limit
+signed_log(ret_3d_rank),0.031867131671754534,1,201505,2,1,trend,0.6897411439527285,False,,peak_month_limit
+signed_sqrt(ret_3d),0.031867131671754534,1,201505,2,1,raw_state,0.689741136811435,False,,peak_month_limit
+"mul(mul(ret_3d, ret_3d_rank), risk_adj_5_20_rank)",0.03186105812643863,1,201505,5,2,trend,0.3508383885463718,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, close_pos_20d_rank), abs(ret_5d))",0.03186012666538533,1,201505,6,2,breakout,0.5363831485821058,False,,peak_month_limit
+"mul(close_pos_20d_rank, ret_3d_rank)",0.031852009195146996,1,201505,3,1,breakout,0.728003088171253,False,,peak_month_limit
+slope_5(risk_adj_20_60_rank),0.031845221179237486,1,201505,2,1,trend,0.4794645093776539,False,,peak_month_limit
+slope_5(ret_5d),0.031829459500852184,1,201505,2,1,raw_state,0.501834215095861,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, ret_3d_rank), risk_adj_5_20_rank)",0.03182852354883352,1,201505,5,2,trend,0.8207349878008953,False,,peak_month_limit
+"mul(signed_log(ts_rank_20(risk_adj_10_20_rank)), ret_3d)",0.03182766134349035,1,201702,5,3,raw_state,0.5294553979877953,False,,peak_month_limit
+"sub(add(zscore_20(close_pos_20d_rank), volatility_20d_rank), ret_5d)",0.03181118889224506,1,201505,6,3,breakout,0.6412326589219415,False,,peak_month_limit
+"min(risk_adj_20_60_rank, abs(min(ret_5d, ret_10d_rank)))",0.03180982258278807,1,201505,6,3,trend,0.2747511995834751,False,,peak_month_limit
+"mul(mul(mean_5(turnover_z_20d), ret_3d_rank), risk_adj_5_20_rank)",0.03176971283441581,-1,201505,6,3,trend,0.6623356011008377,False,,peak_month_limit
+"mul(mul(risk_adj_5_20_rank, ret_3d_rank), risk_adj_5_20_rank)",0.031754318229067977,1,201505,5,2,trend,0.8565668773765913,False,,peak_month_limit
+"mul(div(add(ret_10d_rank, range_1d_rank), sub(volume_z_20d_rank, volatility_10d)), risk_adj_5_20_rank)",0.03173356117407182,1,201702,9,3,trend,0.7178879318666983,False,,peak_month_limit
+"mul(mul(ret_3d, ret_10d_rank), ret_3d_rank)",0.03172301821353126,1,201505,5,2,trend,0.41106350841002853,False,,peak_month_limit
+"mul(neg(risk_adj_5_20_rank), ret_3d_rank)",0.03171759080335652,-1,201505,4,2,trend,0.8333897819095266,False,,peak_month_limit
+"mul(ts_rank_20(risk_adj_10_20_rank), ret_3d)",0.031705247087449796,1,201702,4,2,raw_state,0.5125157409892602,False,,peak_month_limit
+std_20(ret_10d),0.03168831414651427,1,201702,2,1,raw_state,0.10701603872370345,False,,peak_month_limit
+"mul(volatility_20d, ret_3d_rank)",0.031682552521106265,1,201505,3,1,raw_state,0.6542761798493826,False,,peak_month_limit
+"mul(mul(sub(risk_adj_5_20_rank, volume_z_20d), ret_3d_rank), ret_60d)",0.03166870056363731,1,201505,7,3,raw_state,0.18006307226340057,False,,peak_month_limit
+neg(neg(abs(risk_adj_5_20_rank))),0.03166847918019936,1,201505,4,3,trend,0.851371160950175,False,,peak_month_limit
+"min(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank)",0.031659327882078085,-1,201505,5,2,breakout,0.8475625989207797,False,,peak_month_limit
+abs(ret_20d),0.03160344736226494,1,201505,2,1,raw_state,0.10459990299588742,False,,peak_month_limit
+"sub(sub(abs(volume_z_20d_rank), abs(ret_10d_rank)), mul(signed_log(volatility_20d_rank), ret_10d_rank))",0.03159897384437872,-1,201505,10,3,trend,0.47214307943399025,False,,peak_month_limit
+"max(risk_adj_5_20_rank, range_1d_rank)",0.03156005196409752,1,201702,3,1,breakout,0.47594434887071635,False,,peak_month_limit
+"mul(risk_adj_10_20_rank, ret_3d)",0.03152951695358337,1,201505,3,1,raw_state,0.4981158089425136,False,,peak_month_limit
+"add(mul(close_pos_20d_rank, ret_3d_rank), ret_5d_rank)",0.03150545133446021,1,201505,5,2,trend,0.8197798940659204,False,,peak_month_limit
+"div(neg(ret_5d), zscore_20(ma_gap_5_20_rank))",0.03142870595692154,-1,201505,5,2,raw_state,0.15629288495535146,False,,peak_month_limit
+"mul(volatility_10d, ret_3d)",0.031418175019391176,1,201505,3,1,raw_state,0.6228162679280632,False,,peak_month_limit
+abs(abs(signed_sqrt(ret_10d))),0.03141638170911086,1,201505,4,3,raw_state,0.18901504161975036,False,,peak_month_limit
+"mul(close_pos_20d_rank, risk_adj_5_20_rank)",0.031413008355922194,1,201505,3,1,breakout,0.8020245682341255,False,,peak_month_limit
+signed_log(delta_5(risk_adj_10_20_rank)),0.031387213835584155,1,202001,3,2,trend,0.9160485999096369,False,,correlation_duplicate
+"mul(mul(ret_3d, ret_3d_rank), ret_3d_rank)",0.03136968076239346,1,201505,5,2,trend,0.39848281839573657,False,,peak_month_limit
+"min(ret_3d_rank, ret_3d_rank)",0.03136713167175453,1,201505,3,1,trend,0.6897411439527285,False,,peak_month_limit
+signed_log(signed_sqrt(ret_3d_rank)),0.03136713167175453,1,201505,3,2,trend,0.6897411439527285,False,,peak_month_limit
+"mul(ret_3d_rank, ret_3d_rank)",0.03136713167175453,1,201505,3,1,trend,0.6897411439527285,False,,peak_month_limit
+neg(signed_sqrt(ret_3d_rank)),0.03136713167175453,-1,201505,3,2,trend,0.6897411439527285,False,,peak_month_limit
+"mul(signed_log(volatility_60d), ret_1d_rank)",0.03136660126690784,1,201505,4,2,raw_state,0.36904455726966456,False,,peak_month_limit
+ret_1d_rank,0.03132063496056209,1,201702,1,0,trend,0.38786700319095613,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, ret_3d_rank), ret_3d_rank)",0.03130497888810672,1,201505,5,2,trend,0.7329867561639927,False,,peak_month_limit
+delta_5(ret_3d),0.0313023659541363,1,202012,2,1,raw_state,0.4738033410835243,True,sector_factor_11,
+"mul(std_20(volatility_10d_rank), neg(ma_gap_10_60_rank))",0.03128788442546975,1,201506,5,2,breakout,0.30052686788682254,True,sector_factor_12,
+delta_5(ret_5d),0.03127318093488559,1,201505,2,1,raw_state,0.7286892836047322,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, abs(ret_10d_rank)), ret_3d)",0.03126731815776996,1,201505,6,3,breakout,0.4441699205448921,False,,peak_month_limit
+"add(volatility_20d, signed_sqrt(ret_5d))",0.031243526150245254,1,201505,4,2,raw_state,0.8049334619077315,False,,peak_month_limit
+"mul(ret_1d_rank, abs(ts_rank_20(risk_adj_5_20_rank)))",0.03121347233929064,1,201505,5,3,trend,0.6262142921938502,False,,peak_month_limit
+mean_5(ret_3d),0.031173328276916663,1,201505,2,1,raw_state,0.6698111482662344,False,,peak_month_limit
+zscore_20(ma_gap_5_20_rank),0.03113550607442491,1,201506,2,1,breakout,0.704934113326621,True,sector_factor_13,
+slope_5(ret_10d),0.031131719995465622,1,201505,2,1,raw_state,0.789617778044013,False,,peak_month_limit
+"mul(mul(mul(close_pos_20d_rank, close_pos_20d_rank), ret_3d_rank), ret_3d)",0.031114433913533326,1,201505,7,3,breakout,0.37619441662168235,False,,peak_month_limit
+"signed_log(neg(max(ret_1d_rank, ret_5d_rank)))",0.031064399913388812,-1,201505,5,3,trend,0.6462403043445594,False,,peak_month_limit
+"min(mul(drawdown_60d_rank, ret_3d), ret_3d)",0.031056663438485222,1,201505,5,2,raw_state,0.6661557796522248,False,,peak_month_limit
+"max(ret_5d, min(zscore_20(volatility_20d_rank), sub(range_1d, ret_5d)))",0.03104398491503613,1,201702,8,3,raw_state,0.3372140445994835,False,,peak_month_limit
+"sub(ret_20d_rank, min(max(ret_10d, volume_z_20d_rank), div(volume_z_20d_rank, ma_gap_5_20_rank)))",0.031037196941230482,1,201702,9,3,activity,0.5397931915841704,False,,peak_month_limit
+"add(ret_1d_rank, signed_log(signed_log(ret_5d_rank)))",0.03103352206783715,1,201505,5,3,trend,0.601050047475087,False,,peak_month_limit
+"min(ret_1d_rank, min(mul(ret_10d_rank, ret_1d_rank), signed_log(ret_3d_rank)))",0.03100047978298087,1,201702,8,3,trend,0.6012401960498563,False,,peak_month_limit
+volatility_60d,0.030994151793034608,1,202001,1,0,raw_state,0.1027446156740718,True,sector_factor_14,
+"mul(mul(drawdown_60d_rank, ret_3d), ret_3d)",0.03095458421446268,1,201702,5,2,raw_state,0.32496052818132765,False,,peak_month_limit
+"mul(mul(div(close_pos_20d_rank, volume_z_20d), ret_3d_rank), ret_3d_rank)",0.030937444619044244,-1,201505,7,3,trend,0.8372238337085307,False,,peak_month_limit
+"add(ret_1d_rank, signed_log(risk_adj_10_20_rank))",0.030909389758901465,1,201505,4,2,trend,0.5619206153968224,False,,peak_month_limit
+slope_5(ret_10d_rank),0.03088714926600318,1,202001,2,1,trend,0.8413033115029519,False,,peak_month_limit
+"mul(mul(ret_3d_rank, ret_3d_rank), risk_adj_5_20_rank)",0.030885656209546457,1,201702,5,2,trend,0.7975625646405355,False,,peak_month_limit
+"mul(drawdown_60d_rank, signed_log(ts_rank_20(risk_adj_10_20_rank)))",0.030881094252921373,1,201702,5,3,breakout,0.5415679193158336,False,,peak_month_limit
+ts_rank_20(ret_10d),0.030877912468232557,1,201505,2,1,raw_state,0.714084161489156,False,,peak_month_limit
+signed_sqrt(signed_log(signed_sqrt(ret_3d_rank))),0.030867131671754533,1,201505,4,3,trend,0.6897411439527285,False,,peak_month_limit
+signed_sqrt(signed_log(signed_log(ret_3d_rank))),0.030867131671754533,1,201505,4,3,trend,0.6897411439527285,False,,peak_month_limit
+"mul(neg(ret_3d_rank), ret_3d_rank)",0.030867131671754533,-1,201505,4,2,trend,0.6897411439527285,False,,peak_month_limit
+"mul(mul(mul(close_pos_20d_rank, ret_3d_rank), ret_3d_rank), risk_adj_5_20_rank)",0.030841157473457597,1,201505,7,3,trend,0.805103646254863,False,,peak_month_limit
+std_20(range_1d_rank),0.030824711936572685,-1,201509,2,1,breakout,0.2507115557631912,True,sector_factor_15,
+abs(ret_1d_rank),0.030820634960562088,1,201702,2,1,trend,0.38786700319095613,False,,peak_month_limit
+signed_sqrt(ret_1d_rank),0.030820634960562088,1,201702,2,1,trend,0.38786700319095613,False,,peak_month_limit
+neg(ret_1d_rank),0.030820634960562088,-1,201702,2,1,trend,0.38786700319095613,False,,peak_month_limit
+"sub(ret_3d, slope_5(ret_60d))",0.030804699116095326,1,201505,4,2,raw_state,0.5828611247713987,False,,peak_month_limit
+"mul(slope_5(risk_adj_20_60_rank), ret_20d)",0.03078037296400076,-1,202107,4,2,raw_state,0.1385877617964548,True,sector_factor_16,
+"mul(risk_adj_10_20_rank, risk_adj_5_20_rank)",0.0307754246122888,1,201505,3,1,trend,0.7768118387187744,False,,peak_month_limit
+zscore_20(ret_5d),0.030766870253416456,1,201505,2,1,raw_state,0.6782382045759572,False,,peak_month_limit
+"min(ret_1d_rank, min(ret_3d, signed_log(ret_3d_rank)))",0.030765401087424534,1,201505,6,3,trend,0.687310497299394,False,,peak_month_limit
+delta_5(ret_5d_rank),0.030758881429410072,1,202012,2,1,trend,0.70200298761209,True,sector_factor_17,
+"mul(risk_adj_10_20_rank, ret_3d_rank)",0.030685430428915077,1,201505,3,1,trend,0.7253595183710289,False,,peak_month_limit
+"neg(mul(add(ret_20d, ret_1d_rank), volatility_20d_rank))",0.03057196581353226,-1,201505,6,3,raw_state,0.4508858500724507,False,,peak_month_limit
+"add(ret_1d_rank, signed_log(close_pos_20d_rank))",0.030558279829260966,1,201505,4,2,breakout,0.5619352460583065,False,,peak_month_limit
+"add(signed_sqrt(sub(volatility_60d, ma_gap_10_60_rank)), ret_5d_rank)",0.030548590897156728,1,201506,6,3,raw_state,0.6956670692001551,True,sector_factor_18,
+mean_5(ret_3d_rank),0.030546059810892257,1,201505,2,1,trend,0.6761303171556667,False,,peak_month_limit
+"mul(min(ret_5d, div(ret_20d_rank, ret_10d)), ret_20d_rank)",0.030526969588151476,1,201505,7,3,raw_state,0.35806592751247013,False,,peak_month_limit
+"sub(add(mul(risk_adj_20_60_rank, ret_1d_rank), max(ret_3d_rank, ret_5d)), ret_10d_rank)",0.030525114989112406,1,201505,9,3,trend,0.6672638049781137,False,,peak_month_limit
+"add(abs(max(ret_1d_rank, ret_3d_rank)), risk_adj_5_20_rank)",0.0305039409443907,1,201505,6,3,trend,0.8108187077570874,False,,peak_month_limit
+"max(risk_adj_5_20_rank, sub(ret_20d, ts_rank_20(close_pos_20d_rank)))",0.030499933665562338,1,201505,6,3,breakout,0.8508010531397634,False,,peak_month_limit
+signed_sqrt(volatility_60d),0.030494151793034607,1,202001,2,1,raw_state,0.9999999999999998,False,,peak_month_limit
+neg(volatility_60d),0.030494151793034607,-1,202001,2,1,raw_state,0.9999999999999998,False,,peak_month_limit
+signed_log(volatility_60d),0.030494151793034607,1,202001,2,1,raw_state,0.9999999999999998,False,,peak_month_limit
+"min(ret_1d_rank, min(mul(ret_10d_rank, ret_20d_rank), signed_log(ret_3d_rank)))",0.030485065844313968,1,201505,8,3,trend,0.5811755286011983,False,,peak_month_limit
+"mul(ts_rank_20(ret_20d_rank), risk_adj_5_20_rank)",0.030480620451497548,1,201505,4,2,trend,0.7008102553445987,False,,peak_month_limit
+"mul(ret_3d, ret_60d)",0.030478978323215958,1,201505,3,1,raw_state,0.15889146401925736,False,,peak_month_limit
+"mul(signed_sqrt(ts_rank_20(ret_20d_rank)), ret_3d)",0.030452229478442307,1,201505,5,3,raw_state,0.5893431000015183,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, close_pos_20d_rank), risk_adj_5_20_rank)",0.030444461517511495,1,201505,5,2,breakout,0.7538057105669534,False,,peak_month_limit
+std_20(risk_adj_10_20_rank),0.03043140447440429,1,202109,2,1,trend,0.18356384416991112,True,sector_factor_19,
+ma_gap_10_60_rank,0.030430199203172716,-1,201506,1,0,breakout,0.7547023707026909,False,,peak_month_limit
+neg(signed_log(delta_5(ma_gap_5_20_rank))),0.030422651572413854,-1,201505,4,3,breakout,0.7642489460165268,False,,peak_month_limit
+"mul(sub(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), mul(sub(close_pos_20d_rank, volume_z_20d), ret_3d_rank))",0.03040856197281145,-1,201505,11,3,breakout,0.5413766045124705,False,,peak_month_limit
+"max(delta_5(ret_20d_rank), neg(volume_z_20d_rank))",0.03040835318888947,1,201505,5,2,activity,0.5892035689839817,False,,peak_month_limit
+"max(neg(mul(volatility_60d, ret_60d_rank)), ret_5d)",0.030382613451046942,1,201505,6,3,raw_state,0.6909124680721845,False,,peak_month_limit
+signed_log(ts_rank_20(ret_10d)),0.030377912468232557,1,201505,3,2,raw_state,0.714084161489156,False,,peak_month_limit
+"mul(mul(mul(ret_3d_rank, ret_3d_rank), ret_3d_rank), ret_3d)",0.03036968076239346,1,201505,7,3,trend,0.37455142996573504,False,,peak_month_limit
+"mul(mul(ret_3d_rank, ret_3d_rank), ret_3d_rank)",0.030367131671754536,1,201505,5,2,trend,0.6897411439527285,False,,peak_month_limit
+"mul(ret_10d_rank, ret_3d_rank)",0.03032655050736867,1,201505,3,1,trend,0.7007771326125376,False,,peak_month_limit
+neg(abs(ret_1d_rank)),0.030320634960562087,-1,201702,3,2,trend,0.38786700319095613,False,,peak_month_limit
+"signed_sqrt(add(volatility_60d, ret_1d_rank))",0.030319817261388875,1,201505,4,2,raw_state,0.3878355208284459,False,,peak_month_limit
+"mul(ts_rank_20(risk_adj_10_20_rank), risk_adj_5_20_rank)",0.03030864609432475,1,201505,4,2,trend,0.7562275081516775,False,,peak_month_limit
+"mul(std_20(volatility_10d_rank), neg(add(ma_gap_10_60_rank, ma_gap_10_60_rank)))",0.030287884425469754,1,201506,7,3,breakout,1.0,False,,peak_month_limit
+mean_5(volatility_20d),0.030268354429803933,1,202001,2,1,raw_state,0.8511257551744993,False,,peak_month_limit
+"mul(volume_z_20d, mul(drawdown_60d_rank, volatility_20d_rank))",0.030174015966215734,-1,201505,5,2,raw_state,0.7240219889197965,False,,peak_month_limit
+"add(slope_5(ret_5d), std_20(volatility_20d))",0.03016399716342297,1,202012,5,2,raw_state,0.8727932975992607,False,,correlation_duplicate
+"add(ts_rank_20(ret_20d), signed_log(risk_adj_10_20_rank))",0.030140578547582033,1,201505,5,2,raw_state,0.7332573187893495,False,,peak_month_limit
+"max(abs(ret_1d_rank), delta_5(drawdown_60d_rank))",0.030127346685089738,1,201505,5,2,breakout,0.4006258236155817,False,,peak_month_limit
+zscore_20(ret_3d),0.030091565216434947,1,201701,2,1,raw_state,0.656014642359799,True,sector_factor_20,
+"mul(mul(sub(close_pos_20d_rank, volatility_10d), ret_3d_rank), ret_3d_rank)",0.030050332781492443,1,201505,7,3,trend,0.7319051738973222,False,,peak_month_limit
+"mul(div(mul(ret_60d_rank, risk_adj_5_20_rank), signed_sqrt(ret_10d_rank)), abs(div(ret_5d, volatility_10d)))",0.030035773896463593,1,201505,11,3,trend,0.5050668886309202,False,,peak_month_limit
+"mul(std_20(ret_60d_rank), ret_3d)",0.0300292800535107,1,201505,4,2,raw_state,0.6493213795094726,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, ret_60d), ret_3d)",0.03001815300576004,1,201505,5,2,raw_state,0.14315419564564777,False,,peak_month_limit
+"sub(ret_10d, add(add(ret_5d_rank, range_1d), close_pos_20d_rank))",0.030003136226180203,-1,201505,7,3,raw_state,0.78818699621024,False,,peak_month_limit
+ts_rank_20(ma_gap_5_20_rank),0.029983113621621874,1,201505,2,1,breakout,0.9622964409276717,False,,peak_month_limit
+"min(max(max(ret_10d_rank, ret_3d), volatility_20d), ret_3d)",0.029943462739511272,1,201505,7,3,raw_state,0.8188755508479648,False,,peak_month_limit
+signed_sqrt(ma_gap_10_60_rank),0.029930199203172716,-1,201506,2,1,breakout,0.7547023707026909,False,,peak_month_limit
+abs(ma_gap_10_60_rank),0.029930199203172716,-1,201506,2,1,breakout,0.7547023707026909,False,,peak_month_limit
+"add(neg(ret_5d_rank), volatility_60d)",0.029928755273956373,-1,201505,4,2,raw_state,0.8028459330719705,False,,peak_month_limit
+"max(delta_5(ma_gap_5_20_rank), slope_5(volatility_20d))",0.029927259808704667,1,201505,5,2,breakout,0.6760413081165823,False,,peak_month_limit
+volatility_20d_rank,0.029923775909119845,1,202001,1,0,volatility,0.8333590064852374,False,,peak_month_limit
+volatility_20d,0.029923775909119845,1,202001,1,0,raw_state,0.8333588672465064,False,,peak_month_limit
+mean_5(volatility_20d_rank),0.02992239027492498,1,202001,2,1,volatility,0.8501663963343739,False,,peak_month_limit
+"mul(zscore_20(ret_3d_rank), abs(risk_adj_10_20_rank))",0.029916710061372188,1,201505,5,2,trend,0.8242725680264104,False,,peak_month_limit
+slope_5(range_1d),0.029897943631597788,1,201703,2,1,raw_state,0.18186410819233517,True,sector_factor_21,
+"sub(drawdown_60d_rank, mean_5(volatility_10d_rank))",0.02987922578350302,-1,202004,4,2,breakout,0.6600548030224731,True,sector_factor_22,
+"mul(mul(range_1d, ret_3d_rank), risk_adj_5_20_rank)",0.0298787552868874,1,201702,5,2,trend,0.7976395482663761,False,,peak_month_limit
+mean_5(range_1d_rank),0.029870545476788815,1,201702,2,1,breakout,0.7215833595944618,False,,peak_month_limit
+"mul(mul(risk_adj_10_20_rank, risk_adj_5_20_rank), risk_adj_5_20_rank)",0.029868548431216748,1,201505,5,2,trend,0.816098182963016,False,,peak_month_limit
+"mul(mean_5(turnover_z_20d), risk_adj_5_20_rank)",0.02986760225372946,-1,201505,4,2,raw_state,0.6356204345547918,False,,peak_month_limit
+"mul(volatility_60d, zscore_20(volatility_20d))",0.029855413922389426,1,201707,4,2,raw_state,0.12708867209109878,True,sector_factor_23,
+"max(ret_1d_rank, signed_log(min(ret_10d, range_1d_rank)))",0.029852058472377412,1,201702,6,3,breakout,0.4887024216204858,False,,peak_month_limit
+signed_sqrt(neg(abs(ret_1d_rank))),0.029820634960562087,-1,201702,4,3,trend,0.4877062871935679,False,,peak_month_limit
+ts_rank_20(ret_60d),0.02976730000675621,1,201701,2,1,raw_state,0.4067176945115612,True,sector_factor_24,
+std_20(volatility_20d_rank),0.029763854777224905,-1,202001,2,1,volatility,0.38634635130896117,False,,peak_month_limit
+"signed_log(min(ret_1d_rank, div(volatility_60d, volatility_10d)))",0.029743243031573916,1,201505,6,3,raw_state,0.48096901144584603,False,,peak_month_limit
+close_pos_20d_rank,0.02973309855406862,1,201505,1,0,breakout,0.6153058670370398,False,,peak_month_limit
+"max(volatility_20d_rank, ret_60d)",0.029732863940176584,1,201505,3,1,raw_state,0.8334830782782827,False,,peak_month_limit
+"mul(abs(ret_1d_rank), ret_20d_rank)",0.029651172080251226,1,201505,4,2,trend,0.49207580351584584,False,,peak_month_limit
+"mul(max(sub(close_pos_20d_rank, volatility_20d), ret_3d_rank), risk_adj_5_20_rank)",0.029648160085359438,1,201505,7,3,trend,0.8519681603226676,False,,peak_month_limit
+"mul(neg(zscore_20(risk_adj_5_20_rank)), mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d))",0.029632950415443473,1,201704,9,3,raw_state,0.30755900643524703,True,sector_factor_25,
+"neg(add(sub(ret_60d, ma_gap_10_60_rank), delta_5(ret_5d_rank)))",0.02961633383621959,-1,201505,7,3,raw_state,0.8713437190569776,False,,peak_month_limit
+"mul(drawdown_60d_rank, ret_5d_rank)",0.029600737503642574,1,201505,3,1,breakout,0.6905089289694448,False,,peak_month_limit
+"neg(max(ret_3d_rank, ret_60d_rank))",0.029572297644786992,-1,201505,4,2,trend,0.521449726706323,False,,peak_month_limit
+"add(volatility_20d_rank, signed_log(risk_adj_10_20_rank))",0.029546249092373654,1,201505,4,2,trend,0.6722946456389679,False,,peak_month_limit
+"mul(mul(sub(close_pos_20d_rank, range_1d_rank), ret_3d_rank), risk_adj_5_20_rank)",0.029538087846870908,1,201505,7,3,breakout,0.4501509445377527,False,,peak_month_limit
+"min(drawdown_60d_rank, div(div(volatility_60d, risk_adj_10_20_rank), ret_10d_rank))",0.02950380995270192,-1,201704,7,3,trend,0.7170230299468056,True,sector_factor_26,
+"sub(max(max(volatility_20d, ma_gap_10_60_rank), max(volatility_10d, volatility_60d)), abs(ret_10d_rank))",0.029487616882892937,-1,201904,10,3,raw_state,0.8995158123244703,False,,correlation_duplicate
+abs(ts_rank_20(ma_gap_5_20_rank)),0.029483113621621874,1,201505,3,2,breakout,0.9622964409276717,False,,peak_month_limit
+signed_log(signed_sqrt(ma_gap_10_60_rank)),0.029430199203172715,-1,201506,3,2,breakout,0.7547023707026909,False,,peak_month_limit
+neg(volatility_20d_rank),0.029423775909119845,-1,202001,2,1,volatility,0.8333590064852374,False,,peak_month_limit
+abs(volatility_20d),0.029423775909119845,1,202001,2,1,raw_state,0.8333588672465064,False,,peak_month_limit
+signed_log(volatility_20d_rank),0.029423775909119845,1,202001,2,1,volatility,0.8333590064852374,False,,peak_month_limit
+abs(volatility_20d_rank),0.029423775909119845,1,202001,2,1,volatility,0.8333590064852374,False,,peak_month_limit
+signed_log(volatility_20d),0.029423775909119845,1,202001,2,1,raw_state,0.8333588672465064,False,,peak_month_limit
+neg(volatility_20d),0.029423775909119845,-1,202001,2,1,raw_state,0.8333588672465064,False,,peak_month_limit
+signed_sqrt(volatility_20d_rank),0.029423775909119845,1,202001,2,1,volatility,0.8333590064852374,False,,peak_month_limit
+"min(ret_20d_rank, delta_5(close_pos_20d_rank))",0.02940685910454475,1,201703,4,2,breakout,0.9282376414669105,False,,correlation_duplicate
+"mul(mul(mul(close_pos_20d_rank, volume_z_20d), ret_60d), risk_adj_5_20_rank)",0.0293938553538509,-1,201505,7,3,raw_state,0.17277517663684308,False,,peak_month_limit
+"mul(mul(risk_adj_10_20_rank, ret_3d_rank), ret_3d_rank)",0.029376941887602512,1,201505,5,2,trend,0.733741927179672,False,,peak_month_limit
+"min(ret_3d, add(neg(range_1d), abs(ret_3d_rank)))",0.029367131671754535,1,201505,7,3,raw_state,0.8177848605000914,False,,peak_month_limit
+slope_5(close_pos_20d_rank),0.029365502407811276,1,201703,2,1,breakout,0.7108675424904563,True,sector_factor_27,
+risk_adj_10_20_rank,0.029357628427849794,1,201505,1,0,trend,0.8109606447247348,False,,peak_month_limit
+std_20(close_pos_20d_rank),0.029340128490076136,1,202305,2,1,breakout,0.6386607078837657,True,sector_factor_28,
+"mul(mul(sub(close_pos_20d_rank, volume_z_20d), volume_z_20d), ret_3d_rank)",0.029339303293971598,1,202001,7,3,raw_state,0.4060076454569149,False,,peak_month_limit
+"min(mean_5(drawdown_60d_rank), signed_log(signed_log(ret_3d_rank)))",0.02928684681237662,1,201505,6,3,breakout,0.5742020602191863,False,,peak_month_limit
+signed_sqrt(std_20(volatility_20d_rank)),0.029263854777224905,-1,202001,3,2,volatility,0.3863462373847798,False,,peak_month_limit
+abs(std_20(volatility_20d_rank)),0.029263854777224905,-1,202001,3,2,volatility,0.38634635130896117,False,,peak_month_limit
+"mul(mul(mul(close_pos_20d_rank, ret_3d_rank), ret_3d_rank), ret_3d_rank)",0.029258407312442402,1,201505,7,3,trend,0.7476204458570302,False,,peak_month_limit
+range_1d,0.029254909930585292,1,201702,1,0,raw_state,0.5419971792174428,False,,peak_month_limit
+range_1d_rank,0.029254909930585292,1,201702,1,0,breakout,0.5419971831627148,False,,peak_month_limit
+"sub(mul(ret_3d, ret_3d_rank), ret_3d_rank)",0.029254886568824436,-1,201505,5,2,trend,0.8172748542087009,False,,peak_month_limit
+std_20(ret_60d_rank),0.029244493622805977,-1,202012,2,1,trend,0.5128240105192106,True,sector_factor_29,
+signed_sqrt(close_pos_20d_rank),0.02923309855406862,1,201505,2,1,breakout,0.6153058670370398,False,,peak_month_limit
+abs(close_pos_20d_rank),0.02923309855406862,1,201505,2,1,breakout,0.6153058670370398,False,,peak_month_limit
+"mul(mul(close_pos_20d_rank, volume_z_20d), sub(ma_gap_10_60_rank, std_20(range_1d_rank)))",0.02923149726473401,-1,202107,8,3,breakout,0.5668650981291544,True,sector_factor_30,
