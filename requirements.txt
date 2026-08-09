@@ -1,0 +1,7 @@
+numpy
+pandas
+pyarrow
+scipy
+scikit-learn>=1.9
+joblib
+lightgbm>=4.6

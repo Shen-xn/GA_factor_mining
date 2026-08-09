@@ -1,0 +1,39 @@
+{
+  "mode": "regression",
+  "lightgbm_model": {
+    "lookback_days": 30,
+    "validation_days": 5,
+    "rebalance_days": 5,
+    "n_estimators": 200,
+    "learning_rate": 0.03,
+    "early_stopping_rounds": 15,
+    "rank_eval_at": 500,
+    "max_bin": 63,
+    "reg_alpha": 0.1,
+    "reg_lambda": 10.0,
+    "min_split_gain": 0.0001,
+    "feature_fraction": 0.8,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 1,
+    "candidates": [
+      {
+        "max_depth": 2,
+        "num_leaves": 4,
+        "min_child_samples": 5000
+      },
+      {
+        "max_depth": 3,
+        "num_leaves": 7,
+        "min_child_samples": 3000
+      }
+    ],
+    "random_state": 42
+  },
+  "test_days": 90,
+  "mean_rank_ic": 0.004100700885518924,
+  "rank_ic_ir": 0.032095756726965956,
+  "mean_top_return_5d": -0.0008629111248041471,
+  "mean_bottom_return_5d": 0.00039025275226286436,
+  "mean_long_short_5d": -0.0012531638770670124,
+  "long_short_win_rate": 0.4666666666666667
+}

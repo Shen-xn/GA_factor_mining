@@ -1,0 +1,546 @@
+{
+  "options": {
+    "experiment_id": "F02",
+    "objective": "top3_ndcg",
+    "months": "all",
+    "temporal": [],
+    "selection_mode": "elite_uniform",
+    "crossover_mode": "insert_parent",
+    "mutation_mode": "subtree",
+    "initialization": "free",
+    "quick": false
+  },
+  "factors": [
+    {
+      "name": "factor_01",
+      "expression": [
+        "div",
+        [
+          "min",
+          "open_gap",
+          [
+            "max",
+            "net_mf_amount_ratio",
+            "ret_1d_rank_cs"
+          ]
+        ],
+        "liquidity_rank_cs"
+      ],
+      "expression_text": "div(min(open_gap,max(net_mf_amount_ratio,ret_1d_rank_cs)),liquidity_rank_cs)",
+      "direction": 1,
+      "category": "price_tech",
+      "score": 0.7584568069302984,
+      "peak_month": "201505",
+      "depth": 3,
+      "nodes": 7,
+      "sampled_search_score": 0.6098209960278771
+    },
+    {
+      "name": "factor_02",
+      "expression": [
+        "signed_log",
+        "liquidity_rank_cs"
+      ],
+      "expression_text": "signed_log(liquidity_rank_cs)",
+      "direction": -1,
+      "category": "liquidity",
+      "score": 0.7508266245284534,
+      "peak_month": "201505",
+      "depth": 1,
+      "nodes": 2,
+      "sampled_search_score": 0.5869747362052833
+    },
+    {
+      "name": "factor_03",
+      "expression": [
+        "div",
+        [
+          "min",
+          [
+            "signed_sqrt",
+            "amount_rank_cs"
+          ],
+          [
+            "max",
+            "net_mf_amount_ratio",
+            "ret_1d_rank_cs"
+          ]
+        ],
+        "liquidity_rank_cs"
+      ],
+      "expression_text": "div(min(signed_sqrt(amount_rank_cs),max(net_mf_amount_ratio,ret_1d_rank_cs)),liquidity_rank_cs)",
+      "direction": 1,
+      "category": "liquidity",
+      "score": 0.745568111540842,
+      "peak_month": "201505",
+      "depth": 3,
+      "nodes": 8,
+      "sampled_search_score": 0.5873085919614577
+    },
+    {
+      "name": "factor_04",
+      "expression": [
+        "max",
+        [
+          "add",
+          [
+            "signed_sqrt",
+            "lg_sell_amount_ratio"
+          ],
+          [
+            "mul",
+            "boll_position",
+            "lg_buy_amount_ratio"
+          ]
+        ],
+        [
+          "min",
+          "liquidity_rank_cs",
+          [
+            "div",
+            "macd_rank_cs",
+            "elg_net_rank_cs"
+          ]
+        ]
+      ],
+      "expression_text": "max(add(signed_sqrt(lg_sell_amount_ratio),mul(boll_position,lg_buy_amount_ratio)),min(liquidity_rank_cs,div(macd_rank_cs,elg_net_rank_cs)))",
+      "direction": -1,
+      "category": "moneyflow",
+      "score": 0.7025988485587638,
+      "peak_month": "201702",
+      "depth": 3,
+      "nodes": 12,
+      "sampled_search_score": 0.5694165266884363
+    },
+    {
+      "name": "factor_05",
+      "expression": [
+        "signed_log",
+        [
+          "sub",
+          [
+            "min",
+            "close_position_rank_cs",
+            "vol_rank_cs"
+          ],
+          "rsi_6_rank_cs"
+        ]
+      ],
+      "expression_text": "signed_log(sub(min(close_position_rank_cs,vol_rank_cs),rsi_6_rank_cs))",
+      "direction": -1,
+      "category": "price_tech",
+      "score": 0.689460019784473,
+      "peak_month": "201702",
+      "depth": 3,
+      "nodes": 6,
+      "sampled_search_score": 0.5614596295081615
+    },
+    {
+      "name": "factor_06",
+      "expression": [
+        "add",
+        "turnover_rate_f",
+        [
+          "abs",
+          [
+            "mul",
+            "ps_ttm_rank_cs",
+            "total_mv_rank_cs"
+          ]
+        ]
+      ],
+      "expression_text": "add(turnover_rate_f,abs(mul(ps_ttm_rank_cs,total_mv_rank_cs)))",
+      "direction": -1,
+      "category": "valuation",
+      "score": 0.6745929679972414,
+      "peak_month": "201506",
+      "depth": 3,
+      "nodes": 6,
+      "sampled_search_score": 0.5790384641013919
+    },
+    {
+      "name": "factor_07",
+      "expression": [
+        "sub",
+        [
+          "abs",
+          [
+            "neg",
+            "boll_position"
+          ]
+        ],
+        "open_gap"
+      ],
+      "expression_text": "sub(abs(neg(boll_position)),open_gap)",
+      "direction": -1,
+      "category": "price_tech",
+      "score": 0.6602831433968255,
+      "peak_month": "201702",
+      "depth": 3,
+      "nodes": 5,
+      "sampled_search_score": 0.5398536664516881
+    },
+    {
+      "name": "factor_08",
+      "expression": [
+        "add",
+        [
+          "signed_sqrt",
+          "total_mv_rank_cs"
+        ],
+        [
+          "neg",
+          [
+            "neg",
+            "sm_net_amount_ratio"
+          ]
+        ]
+      ],
+      "expression_text": "add(signed_sqrt(total_mv_rank_cs),neg(neg(sm_net_amount_ratio)))",
+      "direction": -1,
+      "category": "valuation",
+      "score": 0.635514046657528,
+      "peak_month": "201506",
+      "depth": 3,
+      "nodes": 6,
+      "sampled_search_score": 0.5300039167819478
+    },
+    {
+      "name": "factor_09",
+      "expression": [
+        "add",
+        [
+          "signed_log",
+          [
+            "signed_sqrt",
+            "liquidity_rank_cs"
+          ]
+        ],
+        [
+          "sub",
+          [
+            "abs",
+            "net_mf_rank_cs"
+          ],
+          [
+            "mul",
+            "pb_rank_cs",
+            "md_net_amount_ratio"
+          ]
+        ]
+      ],
+      "expression_text": "add(signed_log(signed_sqrt(liquidity_rank_cs)),sub(abs(net_mf_rank_cs),mul(pb_rank_cs,md_net_amount_ratio)))",
+      "direction": -1,
+      "category": "moneyflow",
+      "score": 0.6283554661713705,
+      "peak_month": "201506",
+      "depth": 3,
+      "nodes": 10,
+      "sampled_search_score": 0.5426545979183726
+    },
+    {
+      "name": "factor_10",
+      "expression": [
+        "neg",
+        [
+          "neg",
+          [
+            "sub",
+            "elg_sell_amount_ratio",
+            "macd_rank_cs"
+          ]
+        ]
+      ],
+      "expression_text": "neg(neg(sub(elg_sell_amount_ratio,macd_rank_cs)))",
+      "direction": -1,
+      "category": "price_tech",
+      "score": 0.47591836760572176,
+      "peak_month": "201611",
+      "depth": 3,
+      "nodes": 5,
+      "sampled_search_score": 0.41716688380453376
+    },
+    {
+      "name": "factor_11",
+      "expression": [
+        "max",
+        "boll_width",
+        [
+          "signed_sqrt",
+          [
+            "abs",
+            "volume_ratio"
+          ]
+        ]
+      ],
+      "expression_text": "max(boll_width,signed_sqrt(abs(volume_ratio)))",
+      "direction": -1,
+      "category": "liquidity",
+      "score": 0.455225539703843,
+      "peak_month": "201701",
+      "depth": 3,
+      "nodes": 5,
+      "sampled_search_score": 0.3917735616560258
+    },
+    {
+      "name": "factor_12",
+      "expression": [
+        "sub",
+        [
+          "add",
+          [
+            "neg",
+            "ret_20d"
+          ],
+          "ret_1d_rank_cs"
+        ],
+        [
+          "max",
+          [
+            "signed_sqrt",
+            "md_net_amount_ratio"
+          ],
+          "upper_shadow"
+        ]
+      ],
+      "expression_text": "sub(add(neg(ret_20d),ret_1d_rank_cs),max(signed_sqrt(md_net_amount_ratio),upper_shadow))",
+      "direction": 1,
+      "category": "price_tech",
+      "score": 0.4415759051016045,
+      "peak_month": "201611",
+      "depth": 3,
+      "nodes": 9,
+      "sampled_search_score": 0.3822981994415515
+    },
+    {
+      "name": "factor_13",
+      "expression": [
+        "max",
+        [
+          "add",
+          [
+            "div",
+            "elg_net_amount_ratio_5d",
+            "dv_ttm_rank_cs"
+          ],
+          "liquidity_rank_cs"
+        ],
+        [
+          "add",
+          [
+            "abs",
+            "upper_shadow"
+          ],
+          [
+            "abs",
+            "boll_width"
+          ]
+        ]
+      ],
+      "expression_text": "max(add(div(elg_net_amount_ratio_5d,dv_ttm_rank_cs),liquidity_rank_cs),add(abs(upper_shadow),abs(boll_width)))",
+      "direction": -1,
+      "category": "price_tech",
+      "score": 0.43588864549449274,
+      "peak_month": "201701",
+      "depth": 3,
+      "nodes": 11,
+      "sampled_search_score": 0.34090434252466545
+    },
+    {
+      "name": "factor_14",
+      "expression": [
+        "mul",
+        "ret_5d_rank_cs",
+        "turnover_rank_cs"
+      ],
+      "expression_text": "mul(ret_5d_rank_cs,turnover_rank_cs)",
+      "direction": -1,
+      "category": "liquidity",
+      "score": 0.4349210767550147,
+      "peak_month": "201701",
+      "depth": 1,
+      "nodes": 3,
+      "sampled_search_score": 0.4217857580834572
+    },
+    {
+      "name": "factor_15",
+      "expression": [
+        "add",
+        [
+          "abs",
+          [
+            "add",
+            "ret_1d_rank_cs",
+            "elg_net_amount_ratio"
+          ]
+        ],
+        [
+          "signed_sqrt",
+          [
+            "sub",
+            "macd",
+            "elg_buy_amount_ratio"
+          ]
+        ]
+      ],
+      "expression_text": "add(abs(add(ret_1d_rank_cs,elg_net_amount_ratio)),signed_sqrt(sub(macd,elg_buy_amount_ratio)))",
+      "direction": 1,
+      "category": "price_tech",
+      "score": 0.4269151592843186,
+      "peak_month": "201608",
+      "depth": 3,
+      "nodes": 9,
+      "sampled_search_score": 0.3943101989189712
+    },
+    {
+      "name": "factor_16",
+      "expression": [
+        "min",
+        [
+          "signed_log",
+          [
+            "add",
+            "pe_ttm_rank_cs",
+            "ret_5d_rank_cs"
+          ]
+        ],
+        [
+          "mul",
+          [
+            "signed_log",
+            "liquidity_rank_cs"
+          ],
+          "ret_20d_rank_cs"
+        ]
+      ],
+      "expression_text": "min(signed_log(add(pe_ttm_rank_cs,ret_5d_rank_cs)),mul(signed_log(liquidity_rank_cs),ret_20d_rank_cs))",
+      "direction": -1,
+      "category": "price_tech",
+      "score": 0.4190834098164202,
+      "peak_month": "201612",
+      "depth": 3,
+      "nodes": 9,
+      "sampled_search_score": 0.4170940468487883
+    },
+    {
+      "name": "factor_17",
+      "expression": [
+        "div",
+        [
+          "mul",
+          [
+            "neg",
+            "net_mf_rank_cs"
+          ],
+          "ret_1d_rank_cs"
+        ],
+        "main_force_rank_cs"
+      ],
+      "expression_text": "div(mul(neg(net_mf_rank_cs),ret_1d_rank_cs),main_force_rank_cs)",
+      "direction": 1,
+      "category": "moneyflow",
+      "score": 0.4189241269354126,
+      "peak_month": "201512",
+      "depth": 3,
+      "nodes": 6,
+      "sampled_search_score": 0.43825911443314475
+    },
+    {
+      "name": "factor_18",
+      "expression": [
+        "max",
+        "macd_dea",
+        [
+          "add",
+          [
+            "mul",
+            "turnover_rate_f",
+            "dv_ttm_rank_cs"
+          ],
+          [
+            "max",
+            "intraday_ret",
+            "macd_dea"
+          ]
+        ]
+      ],
+      "expression_text": "max(macd_dea,add(mul(turnover_rate_f,dv_ttm_rank_cs),max(intraday_ret,macd_dea)))",
+      "direction": -1,
+      "category": "price_tech",
+      "score": 0.4080844584631015,
+      "peak_month": "201504",
+      "depth": 3,
+      "nodes": 9,
+      "sampled_search_score": 0.39575881485828
+    },
+    {
+      "name": "factor_19",
+      "expression": [
+        "add",
+        [
+          "add",
+          "elg_net_amount_ratio_5d",
+          [
+            "add",
+            "ret_20d",
+            "macd"
+          ]
+        ],
+        [
+          "div",
+          [
+            "sub",
+            "elg_net_amount_ratio_5d",
+            "close_position_rank_cs"
+          ],
+          [
+            "max",
+            "ps_ttm_rank_cs",
+            "ret_5d_rank_cs"
+          ]
+        ]
+      ],
+      "expression_text": "add(add(elg_net_amount_ratio_5d,add(ret_20d,macd)),div(sub(elg_net_amount_ratio_5d,close_position_rank_cs),max(ps_ttm_rank_cs,ret_5d_rank_cs)))",
+      "direction": 1,
+      "category": "price_tech",
+      "score": 0.40614383594915465,
+      "peak_month": "201512",
+      "depth": 3,
+      "nodes": 13,
+      "sampled_search_score": 0.39659103193662026
+    },
+    {
+      "name": "factor_20",
+      "expression": [
+        "add",
+        [
+          "signed_log",
+          [
+            "sub",
+            "pb_rank_cs",
+            "macd_dif"
+          ]
+        ],
+        [
+          "neg",
+          [
+            "neg",
+            "sm_net_amount_ratio"
+          ]
+        ]
+      ],
+      "expression_text": "add(signed_log(sub(pb_rank_cs,macd_dif)),neg(neg(sm_net_amount_ratio)))",
+      "direction": -1,
+      "category": "price_tech",
+      "score": 0.38436466895539717,
+      "peak_month": "201608",
+      "depth": 3,
+      "nodes": 8,
+      "sampled_search_score": 0.4045473759690624
+    }
+  ],
+  "search_rows": 1532300,
+  "unique_expressions": 916,
+  "full_cross_section_candidates_reviewed": 600,
+  "seconds": 891.5815806388855
+}

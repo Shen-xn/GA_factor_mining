@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 本地原始数据与元数据，不上传远端仓库。
+data/
+
+# 大型预处理、预测和模型产物。
+*.parquet
+*.joblib
+*.pkl
+*.pickle
+*.npy
+*.npz
+**/latest_model.txt
+
+# 常见临时文件和日志。
+*.log
+*.tmp
+*.bak
