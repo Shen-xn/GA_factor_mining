@@ -14,6 +14,7 @@ from ga_factor_mining.sector.rotation.product_backtest import (
     latest_market_risk_snapshot,
     prepare_product_panel,
     product_feature_columns,
+    run_product_backtest,
     summarize_backtest_period,
     write_latest_advice,
 )
@@ -21,6 +22,69 @@ from ga_factor_mining.sector.rotation.strategy import StrategyPolicy
 
 
 class ProductBacktestTests(unittest.TestCase):
+    @staticmethod
+    def _three_day_live_tail_panel() -> pd.DataFrame:
+        rows = []
+        dates = ["20240102", "20240103", "20240104"]
+        for day_index, date in enumerate(dates):
+            for sector_index in range(5):
+                rows.append(
+                    {
+                        "ts_code": f"S{sector_index}",
+                        "trade_date": date,
+                        "type": "I",
+                        "open": 10.0 + day_index + sector_index,
+                        "close": 10.1 + day_index + sector_index,
+                        "forward_open_ret_1d": 0.01 if day_index == 0 else np.nan,
+                        "next_open_date": dates[day_index + 1] if day_index < 2 else np.nan,
+                        "return_end_date": dates[day_index + 2] if day_index == 0 else np.nan,
+                        "ret_1d": 0.01,
+                        "ret_5d": 0.02,
+                        "ret_20d": 0.03,
+                        "ret_60d": 0.04,
+                        "volatility_20d": 0.02,
+                        "ret_5d_rank": (sector_index + 1) / 5,
+                        "volatility_20d_rank": (sector_index + 1) / 5,
+                        "model_score": float(sector_index + day_index / 10),
+                    }
+                )
+        return pd.DataFrame(rows)
+
+    def test_live_tail_separates_executed_unsettled_and_planned(self):
+        panel = self._three_day_live_tail_panel()
+        plan = {}
+        daily, _, _ = run_product_backtest(
+            panel,
+            "model_score",
+            "20240102",
+            "20240104",
+            use_market_regime=False,
+            use_drawdown_cap=False,
+            latest_plan_sink=plan,
+            planned_execution_date="20240105",
+        )
+        self.assertEqual(daily.iloc[-1]["date"], "20240104")
+        self.assertEqual(daily.iloc[-1]["signal_date"], "20240103")
+        self.assertEqual(plan["signal_date"], "20240104")
+        self.assertEqual(plan["planned_execution_date"], "20240105")
+        self.assertEqual(plan["stage"], "planned")
+        self.assertEqual(plan["simulated_portfolio_asof_date"], "20240104")
+
+        poisoned = panel.copy()
+        poisoned.loc[poisoned["trade_date"].eq("20240103"), "return_end_date"] = "20991231"
+        poisoned_plan = {}
+        run_product_backtest(
+            poisoned,
+            "model_score",
+            "20240102",
+            "20240104",
+            use_market_regime=False,
+            use_drawdown_cap=False,
+            latest_plan_sink=poisoned_plan,
+            planned_execution_date="20240105",
+        )
+        self.assertEqual(plan["target_weights"], poisoned_plan["target_weights"])
+
     def test_latest_risk_uses_panel_asof_not_last_backtest_signal(self):
         dates = pd.bdate_range("2024-01-02", periods=90).strftime("%Y%m%d")
         rows = []
@@ -144,8 +208,8 @@ class ProductBacktestTests(unittest.TestCase):
             status = pd.read_csv(output_dir / "LATEST_STATUS.csv")
         self.assertTrue(latest.empty)
         self.assertEqual(last_rebalance["指令"].tolist(), ["买入", "卖出"])
-        self.assertEqual(status.loc[0, "策略动作"], "持有不动")
-        self.assertEqual(status.loc[0, "执行提示"], "无需交易")
+        self.assertEqual(status.loc[0, "策略动作"], "信号尚未推进到最新行情")
+        self.assertEqual(status.loc[0, "执行提示"], "策略信号滞后于行情，禁止执行")
         self.assertEqual(portfolio["目标权重"].tolist(), ["70.00%", "30.00%"])
         self.assertEqual(set(portfolio["板块代码"]), {"A.TI", "LOW_RISK"})
 
@@ -190,8 +254,96 @@ class ProductBacktestTests(unittest.TestCase):
             status = pd.read_csv(output_dir / "LATEST_STATUS.csv")
         self.assertTrue(result["data_stale"])
         self.assertTrue(latest.empty)
-        self.assertEqual(status.loc[0, "策略动作"], "有新调仓建议")
+        self.assertEqual(status.loc[0, "策略动作"], "信号尚未推进到最新行情")
         self.assertEqual(status.loc[0, "执行提示"], "数据已过期，禁止执行")
+
+    def test_historical_action_on_data_end_is_never_reissued(self):
+        daily = pd.DataFrame(
+            {
+                "date": ["20240104"],
+                "signal_date": ["20240103"],
+                "regime": ["RISK_ON"],
+                "exposure": [1.0],
+                "low_risk_weight": [0.0],
+                "position_count": [1],
+            }
+        )
+        actions = pd.DataFrame(
+            [
+                {
+                    "signal_date": "20240103",
+                    "execution_date": "20240104",
+                    "ts_code": "A.TI",
+                    "action": "buy",
+                    "trade_type": "entry",
+                    "reason": "vacancy_and_strong_signal",
+                    "current_weight": 0.0,
+                    "target_weight": 1.0,
+                    "weight_change": 1.0,
+                    "regime": "RISK_ON",
+                    "etf_code": None,
+                }
+            ]
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            result = write_latest_advice(
+                daily,
+                actions,
+                Path(temp_dir),
+                {"A.TI": "A板块"},
+                asof_date="20240104",
+                market_data_end_date="20240104",
+            )
+            latest = pd.read_csv(Path(temp_dir) / "LATEST_ACTIONS.csv")
+            status = pd.read_csv(Path(temp_dir) / "LATEST_STATUS.csv")
+        self.assertFalse(result["instruction_current"])
+        self.assertFalse(result["execution_allowed"])
+        self.assertTrue(latest.empty)
+        self.assertEqual(status.loc[0, "指令状态"], "禁止执行")
+
+    def test_only_latest_close_future_plan_can_be_reviewed(self):
+        daily = pd.DataFrame(
+            {
+                "date": ["20240103"],
+                "signal_date": ["20240103"],
+                "regime": ["RISK_ON"],
+                "exposure": [1.0],
+                "low_risk_weight": [0.0],
+                "position_count": [1],
+            }
+        )
+        actions = pd.DataFrame(
+            [
+                {
+                    "signal_date": "20240103",
+                    "execution_date": "20240104",
+                    "ts_code": "A.TI",
+                    "action": "buy",
+                    "trade_type": "entry",
+                    "reason": "vacancy_and_strong_signal",
+                    "current_weight": 0.0,
+                    "target_weight": 1.0,
+                    "weight_change": 1.0,
+                    "regime": "RISK_ON",
+                    "etf_code": None,
+                }
+            ]
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            result = write_latest_advice(
+                daily,
+                actions,
+                Path(temp_dir),
+                {"A.TI": "A板块"},
+                asof_date="20240103",
+                market_data_end_date="20240103",
+                etf_execution_ready=True,
+            )
+            latest = pd.read_csv(Path(temp_dir) / "LATEST_ACTIONS.csv")
+        self.assertTrue(result["instruction_current"])
+        self.assertTrue(result["action_plan_valid"])
+        self.assertTrue(result["execution_allowed"])
+        self.assertEqual(latest["板块代码"].tolist(), ["A.TI"])
 
     def test_prepare_product_panel_drops_unused_features(self):
         panel = pd.DataFrame(

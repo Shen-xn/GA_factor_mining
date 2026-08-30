@@ -5,6 +5,7 @@ import pandas as pd
 
 from ga_factor_mining.sector.rotation.etf_mapping import (
     MappingPolicy,
+    build_latest_execution_readiness,
     build_strategy_allocation_audit,
     build_strategy_coverage_audit,
     build_monthly_mapping,
@@ -134,6 +135,48 @@ class EtfMappingTests(unittest.TestCase):
         self.assertEqual(resolved.iloc[0]["etf_code"], "511880.SH")
         self.assertEqual(resolved.iloc[0]["allocation_reason"], "unmapped_to_low_risk")
 
+    def test_last_mapping_expires_after_its_monthly_review_cycle(self):
+        mapping = pd.DataFrame(
+            {
+                "asof_date": ["20260430"],
+                "sector_code": ["A.TI"],
+                "etf_code": ["512480.SH"],
+                "effective_from": ["20260506"],
+                "effective_to": [pd.NA],
+                "mapping_score": [0.9],
+                "median_amount20": [200_000.0],
+                "selected": [True],
+            }
+        )
+        current = resolve_target_weights({"A.TI": 0.5}, mapping, "20260529")
+        stale = resolve_target_weights({"A.TI": 0.5}, mapping, "20260810")
+        self.assertEqual(current.iloc[0]["final_asset_code"], "512480.SH")
+        self.assertEqual(stale.iloc[0]["final_asset_code"], "511880.SH")
+        self.assertEqual(stale.iloc[0]["allocation_reason"], "unmapped_to_low_risk")
+
+    def test_duplicate_etf_resolution_is_independent_of_input_order(self):
+        mapping = pd.DataFrame(
+            {
+                "sector_code": ["A.TI", "B.TI"],
+                "etf_code": ["512480.SH", "512480.SH"],
+                "effective_from": ["20240101", "20240101"],
+                "effective_to": [pd.NA, pd.NA],
+                "mapping_score": [0.9, 0.8],
+                "median_amount20": [200_000.0, 180_000.0],
+                "selected": [True, True],
+            }
+        )
+        first = resolve_target_weights({"A.TI": 0.2, "B.TI": 0.2}, mapping, "20240501")
+        reversed_input = resolve_target_weights(
+            {"B.TI": 0.2, "A.TI": 0.2}, mapping, "20240501"
+        )
+        columns = ["sector_code", "final_asset_code", "allocation_reason"]
+        self.assertEqual(first[columns].to_dict("records"), reversed_input[columns].to_dict("records"))
+        self.assertEqual(
+            first.set_index("sector_code").loc["A.TI", "final_asset_code"],
+            "512480.SH",
+        )
+
     def test_strategy_coverage_audit_reconstructs_target_weights(self):
         mapping = pd.DataFrame(
             {
@@ -165,3 +208,39 @@ class EtfMappingTests(unittest.TestCase):
         self.assertEqual(
             first_day.set_index("sector_code").loc["B.TI", "etf_code"], "511880.SH"
         )
+
+    def test_execution_readiness_blocks_stale_mapping_and_preserves_weights(self):
+        mapping = pd.DataFrame(
+            {
+                "asof_date": ["20260430"],
+                "sector_code": ["A.TI"],
+                "sector_name": ["半导体"],
+                "etf_code": ["512480.SH"],
+                "etf_name": ["半导体ETF"],
+                "effective_from": ["20260506"],
+                "effective_to": [pd.NA],
+                "mapping_score": [0.9],
+                "median_amount20": [200_000.0],
+                "selected": [True],
+            }
+        )
+        plan = {
+            "stage": "planned",
+            "market_data_asof": "20260810",
+            "signal_date": "20260810",
+            "planned_execution_date": "20260811",
+            "target_weights": {"A.TI": 0.3, "LOW_RISK": 0.7},
+        }
+        payload, resolution, portfolio = build_latest_execution_readiness(
+            plan,
+            mapping,
+            equity_quote_date="20260529",
+            low_risk_quote_date="20260810",
+            reference_date="20260810",
+        )
+        self.assertEqual(payload["overall_status"], "blocked")
+        self.assertIn("mapping_stale", payload["operational_blockers"])
+        self.assertIn("equity_etf_quotes_stale", payload["operational_blockers"])
+        self.assertEqual(resolution.iloc[0]["final_asset_code"], "511880.SH")
+        self.assertAlmostEqual(float(portfolio["final_target_weight"].sum()), 1.0)
+        self.assertEqual(portfolio["etf_code"].tolist(), ["511880.SH"])

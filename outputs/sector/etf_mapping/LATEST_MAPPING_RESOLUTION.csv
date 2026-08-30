@@ -1,0 +1,4 @@
+﻿signal_date,planned_execution_date,sector_code,requested_weight,mapped_etf_code,fallback_code,final_asset_code,etf_code,allocated_weight,allocation_reason,sector_name,etf_name,asof_date,effective_from,effective_to,corr120,corr60,beta,tracking_error,median_amount20,mapping_review_due,latest_quote_date,mapping_status
+20260810,,700421.TI,0.09999999999999999,,511880.SH,511880.SH,511880.SH,0.09999999999999999,unmapped_to_low_risk,,,,,,,,,,,20260531,20260529,unmapped_to_low_risk
+20260810,,700582.TI,0.09999999999999999,,511880.SH,511880.SH,511880.SH,0.09999999999999999,unmapped_to_low_risk,,,,,,,,,,,20260531,20260529,unmapped_to_low_risk
+20260810,,700584.TI,0.09999999999999999,,511880.SH,511880.SH,511880.SH,0.09999999999999999,unmapped_to_low_risk,,,,,,,,,,,20260531,20260529,unmapped_to_low_risk

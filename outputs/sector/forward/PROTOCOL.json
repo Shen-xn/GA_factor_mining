@@ -1,17 +1,17 @@
 {
-  "created_at": "2026-08-31T01:14:30+08:00",
-  "protocol_hash": "c77cbec4c7c0a19c17aab2a60ae8d4c2f120f5cfd710af9ca9f75f11e98bb187",
+  "created_at": "2026-08-31T01:48:02+08:00",
+  "protocol_hash": "184f76b4cd138001fe296be9e584570ec6f7c4b0fb7fae6a88feee1d64cb564f",
   "payload": {
     "config": {
-      "version": 7,
+      "version": 8,
       "freeze_data_end": "20260810",
       "first_unseen_after": "20260810",
-      "evidence_name": "sector_simple_quarterly_forward_v7",
-      "execution_layer": "sector_index_research_with_511880_low_risk_leg",
+      "evidence_name": "sector_simple_quarterly_forward_v8",
+      "execution_layer": "planned_executed_settled_sector_reference_with_etf_safety_interlock",
       "cost_bps": 20.0,
       "model_retraining_schedule": "quarterly_expanding_window",
       "policy_name": "simple_v1",
-      "notes": "模型、simple_v1和冻结日不变；v7增加板块广度健康解释、统一验收门和单线程内存保护，未晋级候选不改变正式决策。2026-08-10及以前均已被看到，只有之后的数据可作为前向证据。"
+      "notes": "模型、simple_v1和冻结日不变；v8拆分planned、executed_unsettled和settled时间轴，移除未来开盘可用性对信号的影响，增加未来交易日历、缺报价事件和ETF执行安全联锁。2026-08-10及以前均已被看到，只有之后的数据可作为前向证据。"
     },
     "model": {
       "variant": "expanding_quarterly",
@@ -41,10 +41,12 @@
     "source_sha256": {
       "src/ga_factor_mining/sector/rotation/run_experiments.py": "dbd2d48a1c60761fdf22ec597daa1c07454737b263bdff32e4288432af953f2e",
       "src/ga_factor_mining/sector/rotation/rolling_validation.py": "32ae70523c76bd583435188e0e53edda6a8aa065a8b8a5c92e14f2f7c054e0fd",
-      "src/ga_factor_mining/sector/rotation/strategy.py": "4d1d0a09d28e695be68187abaebb52e2b893e1d5c75603a80049f1dc5caa169b",
+      "src/ga_factor_mining/sector/rotation/strategy.py": "49bb7bfaf75bfac61c45344433e3d9850aeabe8a2ca89ec152047442ce4d3921",
       "src/ga_factor_mining/sector/rotation/risk.py": "1cb0bc2eccac3f13a6c0d2630d4aac744dbcd8b7aab700822ee4f9370c870c30",
       "src/ga_factor_mining/sector/rotation/low_risk.py": "6ccee3b89125ddca4ba92c982a97f7351c4925a354ec50701d9e46f4579a75b0",
-      "src/ga_factor_mining/sector/rotation/product_backtest.py": "acfdb58d042cb8a106459363954d8994b2b08ad6e3c16b615a5d74f48a817663"
+      "src/ga_factor_mining/sector/rotation/product_backtest.py": "612cd235c9e981cd653bc8acc3555a24c2281c38f432756f7d18729185df6243",
+      "src/ga_factor_mining/sector/rotation/etf_mapping.py": "ee9546ff574b069741cd7129508fb543b6d8ea68d1c72a4a7b2aeaf137bbd599",
+      "src/ga_factor_mining/sector/rotation/refresh_data.py": "5d972947187174a986ad8a8f497b89256cf9282330bc721292189f18a7db96bd"
     }
   }
 }

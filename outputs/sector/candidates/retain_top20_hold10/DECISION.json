@@ -1,0 +1,35 @@
+{
+  "candidate": "simple_v1_retain_top20_hold10",
+  "sequential_changes": {
+    "retain_rank": {
+      "baseline": 10,
+      "candidate": 20
+    },
+    "min_hold_sessions": {
+      "baseline": 5,
+      "candidate": 10
+    }
+  },
+  "selection_end": "20251231",
+  "observation_used_for_selection": false,
+  "input_max_trade_date": "20251231",
+  "cost_bps": 20.0,
+  "accepted_at_20bp": false,
+  "cost_stress_run": false,
+  "promotion": "rejected",
+  "gates": {
+    "cumulative_return": false,
+    "annualized_return": false,
+    "development_return": false,
+    "selection_return": true,
+    "selection_years_positive": true,
+    "maximum_drawdown": true,
+    "positive_years": true,
+    "years_above_3pct": false,
+    "worst_calendar_year": true,
+    "average_daily_turnover": true,
+    "annualized_turnover": true,
+    "trade_day_ratio": true,
+    "median_holding_sessions": true
+  }
+}

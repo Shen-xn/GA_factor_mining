@@ -1,0 +1,12 @@
+﻿action,reason,action_count,median_held_sessions
+buy,low_risk_residual_allocation,297,
+buy,vacancy_and_strong_signal,870,0.0
+buy,weight_rebalance,943,
+sell,hard_position_loss,8,8.0
+sell,left_retain_zone,683,7.0
+sell,low_risk_residual_allocation,310,
+sell,market_risk_off,50,4.0
+sell,position_limit_reduction,34,6.0
+sell,trailing_stop,15,9.0
+sell,volatility_shock,75,2.0
+sell,weight_rebalance,933,

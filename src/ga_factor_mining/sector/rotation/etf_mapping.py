@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 import hashlib
 import json
 import re
@@ -378,17 +379,46 @@ def resolve_target_weights(
     low_risk_code: str = DEFAULT_LOW_RISK_CODE,
 ) -> pd.DataFrame:
     """将未映射或冲突的板块权重透明地转入低风险ETF。"""
+    review_due = (
+        pd.to_datetime(mapping["asof_date"].astype(str), format="%Y%m%d", errors="coerce")
+        + pd.offsets.MonthEnd(1)
+        if "asof_date" in mapping.columns
+        else pd.Series(pd.NaT, index=mapping.index)
+    )
     active = mapping[
         mapping.get("selected", False).astype(bool)
         & mapping["effective_from"].astype(str).le(signal_date)
         & (mapping["effective_to"].isna() | mapping["effective_to"].astype(str).gt(signal_date))
+        & (review_due.isna() | review_due.ge(pd.to_datetime(signal_date, format="%Y%m%d")))
     ].copy()
     active = active.sort_values(["mapping_score", "median_amount20"], ascending=False)
     active = active.drop_duplicates("sector_code").set_index("sector_code", drop=False)
+    # 同一ETF冲突由映射质量决定，不能依赖target_weights的插入顺序。
+    mapped_candidates = []
+    for sector_code, requested_weight in target_weights.items():
+        if sector_code in active.index:
+            row = active.loc[sector_code]
+            mapped_candidates.append(
+                (
+                    str(sector_code),
+                    float(requested_weight),
+                    str(row["etf_code"]),
+                    float(row["mapping_score"]),
+                    float(row["median_amount20"]),
+                )
+            )
+    mapped_candidates.sort(key=lambda item: (-item[3], -item[4], item[0]))
+    mapped_winners: dict[str, str] = {}
+    used_for_selection: set[str] = set()
+    for sector_code, _, etf_code, _, _ in mapped_candidates:
+        if etf_code not in used_for_selection:
+            mapped_winners[sector_code] = etf_code
+            used_for_selection.add(etf_code)
+
     used_etfs: set[str] = set()
     rows: list[dict] = []
     low_risk_weight = 0.0
-    for sector_code, requested_weight in target_weights.items():
+    for sector_code, requested_weight in sorted(target_weights.items()):
         weight = float(requested_weight)
         if sector_code not in active.index:
             low_risk_weight += weight
@@ -396,6 +426,9 @@ def resolve_target_weights(
                 {
                     "sector_code": sector_code,
                     "requested_weight": weight,
+                    "mapped_etf_code": None,
+                    "fallback_code": low_risk_code,
+                    "final_asset_code": low_risk_code,
                     "etf_code": low_risk_code,
                     "allocated_weight": weight,
                     "allocation_reason": "unmapped_to_low_risk",
@@ -403,12 +436,15 @@ def resolve_target_weights(
             )
             continue
         etf_code = str(active.loc[sector_code, "etf_code"])
-        if etf_code in used_etfs:
+        if mapped_winners.get(str(sector_code)) != etf_code or etf_code in used_etfs:
             low_risk_weight += weight
             rows.append(
                 {
                     "sector_code": sector_code,
                     "requested_weight": weight,
+                    "mapped_etf_code": etf_code,
+                    "fallback_code": low_risk_code,
+                    "final_asset_code": low_risk_code,
                     "etf_code": low_risk_code,
                     "allocated_weight": weight,
                     "allocation_reason": "duplicate_etf_to_low_risk",
@@ -420,6 +456,9 @@ def resolve_target_weights(
             {
                 "sector_code": sector_code,
                 "requested_weight": weight,
+                "mapped_etf_code": etf_code,
+                "fallback_code": None,
+                "final_asset_code": etf_code,
                 "etf_code": etf_code,
                 "allocated_weight": weight,
                 "allocation_reason": "mapped_equity_etf",
@@ -430,6 +469,9 @@ def resolve_target_weights(
         columns=[
             "sector_code",
             "requested_weight",
+            "mapped_etf_code",
+            "fallback_code",
+            "final_asset_code",
             "etf_code",
             "allocated_weight",
             "allocation_reason",
@@ -437,6 +479,244 @@ def resolve_target_weights(
     )
     result.attrs["low_risk_weight_from_unmapped"] = low_risk_weight
     return result
+
+
+def build_latest_execution_readiness(
+    plan: dict,
+    mapping: pd.DataFrame,
+    *,
+    equity_quote_date: str | None,
+    low_risk_quote_date: str | None,
+    reference_date: str | None = None,
+) -> tuple[dict, pd.DataFrame, pd.DataFrame]:
+    """把指数目标解析成ETF参考组合，并对所有执行前提做硬阻断。"""
+    signal_date = str(plan.get("signal_date") or "")
+    data_end = str(plan.get("market_data_asof") or "")
+    reference = pd.Timestamp(reference_date or pd.Timestamp.today()).normalize()
+    data_age = (
+        int((reference - pd.to_datetime(data_end, format="%Y%m%d")).days)
+        if data_end
+        else None
+    )
+    targets = {str(code): float(weight) for code, weight in plan.get("target_weights", {}).items()}
+    original_low_risk = float(targets.pop("LOW_RISK", 0.0))
+    risk_weight = float(sum(targets.values()))
+
+    selected = mapping[mapping.get("selected", False).astype(bool)].copy()
+    latest_mapping_asof = str(selected["asof_date"].astype(str).max()) if not selected.empty else None
+    latest_mapping = (
+        selected[selected["asof_date"].astype(str).eq(latest_mapping_asof)].copy()
+        if latest_mapping_asof
+        else selected
+    )
+    review_due = (
+        (
+            pd.to_datetime(latest_mapping_asof, format="%Y%m%d") + pd.offsets.MonthEnd(1)
+        ).strftime("%Y%m%d")
+        if latest_mapping_asof
+        else None
+    )
+    resolved = resolve_target_weights(targets, mapping, signal_date) if targets else pd.DataFrame()
+    metadata_columns = [
+        "sector_code",
+        "sector_name",
+        "etf_name",
+        "asof_date",
+        "effective_from",
+        "effective_to",
+        "corr120",
+        "corr60",
+        "beta",
+        "tracking_error",
+        "median_amount20",
+    ]
+    available_metadata = [column for column in metadata_columns if column in latest_mapping.columns]
+    if not resolved.empty and available_metadata:
+        latest_by_sector = latest_mapping[available_metadata].drop_duplicates("sector_code")
+        resolution = resolved.merge(latest_by_sector, on="sector_code", how="left")
+    else:
+        resolution = resolved.copy()
+    if resolution.empty:
+        resolution = pd.DataFrame(
+            columns=[
+                "sector_code",
+                "requested_weight",
+                "mapped_etf_code",
+                "fallback_code",
+                "final_asset_code",
+                "allocation_reason",
+            ]
+        )
+    resolution.insert(0, "planned_execution_date", plan.get("planned_execution_date"))
+    resolution.insert(0, "signal_date", signal_date)
+    resolution["mapping_review_due"] = review_due
+    resolution["latest_quote_date"] = equity_quote_date
+    resolution["mapping_status"] = resolution.get(
+        "allocation_reason", pd.Series(index=resolution.index, dtype=str)
+    )
+
+    portfolio_rows: list[dict] = []
+    for row in resolution.to_dict("records"):
+        final_code = str(row["final_asset_code"])
+        fallback_weight = (
+            float(row["allocated_weight"])
+            if row["allocation_reason"] != "mapped_equity_etf"
+            else 0.0
+        )
+        portfolio_rows.append(
+            {
+                "etf_code": final_code,
+                "equity_mapping_weight": float(row["allocated_weight"]) - fallback_weight,
+                "original_low_risk_weight": 0.0,
+                "fallback_weight": fallback_weight,
+                "source_sector": str(row["sector_code"]),
+            }
+        )
+    if original_low_risk > 1e-12 or not portfolio_rows:
+        portfolio_rows.append(
+            {
+                "etf_code": DEFAULT_LOW_RISK_CODE,
+                "equity_mapping_weight": 0.0,
+                "original_low_risk_weight": original_low_risk if portfolio_rows else 1.0,
+                "fallback_weight": 0.0,
+                "source_sector": "LOW_RISK",
+            }
+        )
+    raw_portfolio = pd.DataFrame(portfolio_rows)
+    portfolio = (
+        raw_portfolio.groupby("etf_code", as_index=False)
+        .agg(
+            equity_mapping_weight=("equity_mapping_weight", "sum"),
+            original_low_risk_weight=("original_low_risk_weight", "sum"),
+            fallback_weight=("fallback_weight", "sum"),
+            source_sectors=("source_sector", lambda values: "|".join(sorted(set(values)))),
+        )
+        .sort_values("etf_code")
+    )
+    portfolio["final_target_weight"] = portfolio[
+        ["equity_mapping_weight", "original_low_risk_weight", "fallback_weight"]
+    ].sum(axis=1)
+    weights_valid = bool(
+        (portfolio["final_target_weight"] >= -1e-12).all()
+        and abs(float(portfolio["final_target_weight"].sum()) - 1.0) <= 1e-9
+        and portfolio["etf_code"].is_unique
+    )
+    mapped_weight = float(
+        resolution.loc[
+            resolution.get("allocation_reason", pd.Series(index=resolution.index)).eq(
+                "mapped_equity_etf"
+            ),
+            "allocated_weight",
+        ].sum()
+    ) if not resolution.empty else 0.0
+    coverage = mapped_weight / risk_weight if risk_weight > 1e-12 else 1.0
+
+    operational_blockers = []
+    if data_age is None or data_age > 7:
+        operational_blockers.append("strategy_data_stale")
+    if signal_date != data_end:
+        operational_blockers.append("signal_not_aligned_with_market_data")
+    if plan.get("stage") != "planned" or not plan.get("planned_execution_date"):
+        operational_blockers.append("next_trade_calendar_missing")
+    if risk_weight > 1e-12 and (review_due is None or signal_date > review_due):
+        operational_blockers.append("mapping_stale")
+    if risk_weight > 1e-12 and (not equity_quote_date or equity_quote_date < signal_date):
+        operational_blockers.append("equity_etf_quotes_stale")
+    if not low_risk_quote_date or low_risk_quote_date < signal_date:
+        operational_blockers.append("low_risk_quote_stale")
+    if risk_weight > 1e-12 and coverage < 1.0 - 1e-12:
+        operational_blockers.append("mapping_coverage_incomplete")
+    if not weights_valid:
+        operational_blockers.append("resolved_weights_invalid")
+    research_blockers = [
+        "etf_master_not_point_in_time",
+        "sector_catalog_not_point_in_time",
+        "resolved_etf_backtest_missing",
+    ]
+    overall_status = "blocked" if operational_blockers else "reference_only"
+    payload = {
+        "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "overall_status": overall_status,
+        "execution_ready": False,
+        "strategy_data_end": data_end,
+        "strategy_data_age_days": data_age,
+        "signal_date": signal_date,
+        "planned_execution_date": plan.get("planned_execution_date"),
+        "mapping_asof": latest_mapping_asof,
+        "mapping_review_due": review_due,
+        "equity_quote_date": equity_quote_date,
+        "low_risk_quote_date": low_risk_quote_date,
+        "current_selected_sectors": int(latest_mapping["sector_code"].nunique()) if not latest_mapping.empty else 0,
+        "current_distinct_etfs": int(latest_mapping["etf_code"].nunique()) if not latest_mapping.empty else 0,
+        "historical_selected_rows": int(len(selected)),
+        "risk_target_weight": risk_weight,
+        "mapped_equity_weight": mapped_weight,
+        "current_target_coverage": coverage,
+        "weights_valid": weights_valid,
+        "operational_blockers": operational_blockers,
+        "research_blockers": research_blockers,
+        "blockers": operational_blockers + research_blockers,
+    }
+    portfolio["status"] = overall_status
+    return payload, resolution, portfolio
+
+
+def write_latest_execution_readiness(
+    strategy_output_dir: Path,
+    mapping_output_dir: Path,
+    *,
+    reference_date: str | None = None,
+) -> dict:
+    """根据当前结构化产物生成ETF执行层状态，不重跑历史映射。"""
+    plan_path = strategy_output_dir / "LATEST_PLAN.json"
+    mapping_path = mapping_output_dir / "MONTHLY_MAPPING.parquet"
+    if not plan_path.exists() or not mapping_path.exists():
+        payload = {
+            "overall_status": "blocked",
+            "execution_ready": False,
+            "blockers": ["latest_plan_or_mapping_missing"],
+        }
+        (mapping_output_dir / "ETF_EXECUTION_READINESS.json").write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        return payload
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    mapping = pd.read_parquet(mapping_path)
+    equity_quote_date = (
+        str(pd.read_parquet(ETF_DAILY_PATH, columns=["trade_date"])["trade_date"].astype(str).max())
+        if ETF_DAILY_PATH.exists()
+        else None
+    )
+    low_risk_path = DATA_ROOT / "sector" / "low_risk_fund_daily.parquet"
+    low_risk_quote_date = (
+        str(pd.read_parquet(low_risk_path, columns=["trade_date"])["trade_date"].astype(str).max())
+        if low_risk_path.exists()
+        else None
+    )
+    payload, resolution, portfolio = build_latest_execution_readiness(
+        plan,
+        mapping,
+        equity_quote_date=equity_quote_date,
+        low_risk_quote_date=low_risk_quote_date,
+        reference_date=reference_date,
+    )
+    mapping_output_dir.mkdir(parents=True, exist_ok=True)
+    resolution.to_csv(
+        mapping_output_dir / "LATEST_MAPPING_RESOLUTION.csv", index=False, encoding="utf-8-sig"
+    )
+    portfolio.to_csv(
+        mapping_output_dir / "RESOLVED_ETF_TARGET_PORTFOLIO.csv",
+        index=False,
+        encoding="utf-8-sig",
+    )
+    preview = portfolio.copy() if payload["overall_status"] == "ready_for_manual_review" else portfolio.iloc[0:0]
+    blocked = portfolio.copy() if payload["overall_status"] != "ready_for_manual_review" else portfolio.iloc[0:0]
+    preview.to_csv(mapping_output_dir / "ORDER_PREVIEW.csv", index=False, encoding="utf-8-sig")
+    blocked.to_csv(mapping_output_dir / "BLOCKED_ORDERS.csv", index=False, encoding="utf-8-sig")
+    (mapping_output_dir / "ETF_EXECUTION_READINESS.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return payload
 
 
 def build_strategy_coverage_audit(

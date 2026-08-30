@@ -1,11 +1,11 @@
 {
-  "version": 7,
+  "version": 8,
   "freeze_data_end": "20260810",
   "first_unseen_after": "20260810",
-  "evidence_name": "sector_simple_quarterly_forward_v7",
-  "execution_layer": "sector_index_research_with_511880_low_risk_leg",
+  "evidence_name": "sector_simple_quarterly_forward_v8",
+  "execution_layer": "planned_executed_settled_sector_reference_with_etf_safety_interlock",
   "cost_bps": 20.0,
   "model_retraining_schedule": "quarterly_expanding_window",
   "policy_name": "simple_v1",
-  "notes": "模型、simple_v1和冻结日不变；v7增加板块广度健康解释、统一验收门和单线程内存保护，未晋级候选不改变正式决策。2026-08-10及以前均已被看到，只有之后的数据可作为前向证据。"
+  "notes": "模型、simple_v1和冻结日不变；v8拆分planned、executed_unsettled和settled时间轴，移除未来开盘可用性对信号的影响，增加未来交易日历、缺报价事件和ETF执行安全联锁。2026-08-10及以前均已被看到，只有之后的数据可作为前向证据。"
 }

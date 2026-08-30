@@ -1,0 +1,31 @@
+{
+  "candidate": "simple_v1_retain_top20",
+  "single_change": {
+    "retain_rank": {
+      "baseline": 10,
+      "candidate": 20
+    }
+  },
+  "selection_end": "20251231",
+  "observation_used_for_selection": false,
+  "input_max_trade_date": "20251231",
+  "cost_bps": 20.0,
+  "accepted_at_20bp": false,
+  "cost_stress_run": false,
+  "promotion": "rejected",
+  "gates": {
+    "cumulative_return": true,
+    "annualized_return": true,
+    "development_return": true,
+    "selection_return": true,
+    "selection_years_positive": true,
+    "maximum_drawdown": true,
+    "positive_years": true,
+    "years_above_3pct": true,
+    "worst_calendar_year": true,
+    "average_daily_turnover": false,
+    "annualized_turnover": false,
+    "trade_day_ratio": false,
+    "median_holding_sessions": false
+  }
+}

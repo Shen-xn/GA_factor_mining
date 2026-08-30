@@ -69,14 +69,16 @@ python -m ga_factor_mining.sector
 
 正常完成后，终端最后会显示 `outputs/sector/strategy/SUMMARY.csv`。优先查看：
 
-1. `LATEST_STATUS.csv`：先确认数据状态不是过期；
-2. `LATEST_ACTIONS.csv`：查看本次是否需要操作；
-3. `LATEST_TARGET_PORTFOLIO.csv`：核对完整目标权重；
-4. `SUMMARY.csv` 和 `ANNUAL_RESULTS.csv`：查看历史表现。
+1. `LATEST_STATUS.csv`：先确认数据、信号和指令状态；
+2. `LATEST_PLAN.json`：核对最新收盘计划、下一交易日和阻断原因；
+3. `outputs/sector/etf_mapping/ETF_EXECUTION_READINESS.json`：确认ETF执行层状态；
+4. `LATEST_ACTIONS.csv`：只有全部安全门通过后才可能出现动作；
+5. `LATEST_TARGET_PORTFOLIO.csv`：核对板块层完整目标权重；
+6. `SUMMARY.csv` 和 `ANNUAL_RESULTS.csv`：查看历史表现。
 
-`LATEST_ACTIONS.csv`为空不等于程序失败，通常表示当前无需交易。上一批操作只保存在 `LAST_REBALANCE_ACTIONS.csv`，不能重复执行。
+`LATEST_ACTIONS.csv`为空不等于程序失败，可能是无需交易，也可能是数据、未来交易日历或ETF映射安全门阻止了执行。必须结合`LATEST_STATUS.csv`和`ETF_EXECUTION_READINESS.json`判断。上一批操作只保存在 `LAST_REBALANCE_ACTIONS.csv`，不能重复执行。
 
-普通板块代码目前是研究建议，不保证存在一一对应、历史可交易且流动性充足的ETF。实际交易前必须人工完成产品映射和可交易性检查。
+普通板块代码目前是研究建议。系统会把ETF解析结果单独写到`outputs/sector/etf_mapping/`，但时点目录、真实ETF回放或行情新鲜度任一不完整时，只生成`BLOCKED_ORDERS.csv`，不会伪装成可执行订单。
 
 ## 4. 增量更新
 
@@ -102,7 +104,7 @@ python -m ga_factor_mining.sector --update
 python -m ga_factor_mining.sector --update --token-file "D:\private\tushare_token.txt"
 ```
 
-更新使用临时文件完成尾部校验后才替换正式缓存。若网络或数据校验失败，原文件应保持不变。更新不会重新搜索模型参数或策略规则。
+更新会额外缓存请求日之后至少31个自然日的交易日历，用于生成严格晚于最新信号日的下一开市日。行情、特征、评分和日历通过尾部校验后才替换正式缓存；网络或数据校验失败时原文件保持不变。更新不会重新搜索模型参数或策略规则。
 
 ## 5. 运行测试
 
@@ -124,7 +126,7 @@ python -m unittest discover -s tests -t . -v
 
 ### `LATEST_ACTIONS.csv`只有表头
 
-先看 `LATEST_STATUS.csv`。可能是无需交易，也可能是数据超过7天而被安全门禁止执行。
+先看 `LATEST_STATUS.csv`、`LATEST_PLAN.json`和`ETF_EXECUTION_READINESS.json`。可能是无需交易，也可能是数据超过7天、最新计划没有可信下一交易日、ETF映射过期或覆盖不足而被安全门禁止执行。
 
 ### 安装LightGBM失败
 

@@ -1,0 +1,2 @@
+﻿etf_code,equity_mapping_weight,original_low_risk_weight,fallback_weight,source_sectors,final_target_weight,status
+511880.SH,0.0,0.7,0.3,700421.TI|700582.TI|700584.TI|LOW_RISK,1.0,blocked

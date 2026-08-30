@@ -1,0 +1,61 @@
+{
+  "candidate": "health_score_staircase_keep_five",
+  "selection_end": "20251231",
+  "observation_used_for_selection": false,
+  "input_max_trade_date": "20251231",
+  "score_bands": {
+    "CASH": [
+      null,
+      35.0
+    ],
+    "DEFENSIVE": [
+      35.0,
+      50.0
+    ],
+    "NEUTRAL": [
+      50.0,
+      65.0
+    ],
+    "RISK_ON": [
+      65.0,
+      null
+    ]
+  },
+  "exposures": {
+    "CASH": 0.0,
+    "DEFENSIVE": 0.3,
+    "NEUTRAL": 0.7,
+    "RISK_ON": 1.0
+  },
+  "confirmation": {
+    "worsen_sessions": 2,
+    "improve_sessions": 5
+  },
+  "position_limits": {
+    "CASH": 0,
+    "DEFENSIVE": 5,
+    "NEUTRAL": 5,
+    "RISK_ON": 5
+  },
+  "cost_bps": 20.0,
+  "cost_stress_run": false,
+  "cost_stress_reason": "20bp基础门未全部通过时不继续做成本压力回放",
+  "accepted_at_20bp": false,
+  "accepted": false,
+  "promotion": "rejected",
+  "gates": {
+    "cumulative_return": false,
+    "annualized_return": false,
+    "development_return": false,
+    "selection_return": false,
+    "selection_years_positive": false,
+    "maximum_drawdown": true,
+    "positive_years": false,
+    "years_above_3pct": false,
+    "worst_calendar_year": true,
+    "average_daily_turnover": true,
+    "annualized_turnover": true,
+    "trade_day_ratio": true,
+    "median_holding_sessions": false
+  }
+}

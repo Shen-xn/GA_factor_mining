@@ -155,6 +155,9 @@ def step_portfolio(
 
     # 至少持有5日；跌出Top10才退出，但不拖延已经走弱的持仓。
     for code in list(current):
+        if code not in daily.index:
+            # 当日无报价时只延续持仓，不能用未来可用性提前卖出。
+            continue
         row = daily.loc[code]
         state = current[code]
         if not bool(row.get("execution_allowed", True)):

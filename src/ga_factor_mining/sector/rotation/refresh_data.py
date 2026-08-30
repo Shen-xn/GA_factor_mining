@@ -9,7 +9,7 @@ import json
 import os
 import tempfile
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -39,6 +39,7 @@ LOW_RISK_ADJ_PATH = DATA_DIR / "low_risk_fund_adj.parquet"
 SELECTED_DIR = REPOSITORY_ROOT / "outputs" / "sector" / "adaptation"
 SELECTED_SCORE_PATH = SELECTED_DIR / "SELECTED_SCORES.parquet"
 SELECTED_META_PATH = SELECTED_DIR / "SELECTED.json"
+TRADE_CALENDAR_PATH = DATA_DIR / "trade_calendar.parquet"
 
 
 def _max_date(path: Path, column: str = "trade_date") -> str:
@@ -144,16 +145,47 @@ def _updated_index(pro, old_end: str) -> pd.DataFrame:
     return pd.concat([current, additions], ignore_index=True).drop_duplicates("ts_code", keep="first")
 
 
-def _calendar_and_dates(pro, old_end: str, requested_end: str) -> tuple[list[str], list[str]]:
+def _calendar_and_dates(
+    pro,
+    old_end: str,
+    requested_end: str,
+) -> tuple[pd.DataFrame, list[str], list[str]]:
+    """下载行情区间并额外缓存未来交易日，供下一交易日计划使用。"""
+    calendar_end = (
+        pd.to_datetime(requested_end, format="%Y%m%d") + timedelta(days=31)
+    ).strftime("%Y%m%d")
     calendar = _query(
         pro.trade_cal,
         exchange="SSE",
         start_date="20240101",
-        end_date=requested_end,
-        is_open="1",
+        end_date=calendar_end,
     )
-    open_dates = sorted(calendar["cal_date"].astype(str).unique().tolist())
-    return open_dates, [date for date in open_dates if date > old_end]
+    required = {"cal_date", "is_open"}
+    if required - set(calendar.columns):
+        raise RuntimeError("交易日历缺少cal_date或is_open字段")
+    calendar = calendar.copy()
+    calendar["cal_date"] = calendar["cal_date"].astype(str)
+    calendar["is_open"] = pd.to_numeric(calendar["is_open"], errors="coerce").fillna(0).astype(int)
+    calendar = calendar.drop_duplicates("cal_date", keep="last").sort_values("cal_date")
+    open_dates = calendar.loc[calendar["is_open"].eq(1), "cal_date"].tolist()
+    update_dates = [date for date in open_dates if old_end < date <= requested_end]
+    if not any(date > requested_end for date in open_dates):
+        raise RuntimeError("交易日历没有覆盖请求日后的下一交易日")
+    return calendar, open_dates, update_dates
+
+
+def next_trade_date(signal_date: str, calendar_path: Path = TRADE_CALENDAR_PATH) -> str | None:
+    """只从可信交易日历返回严格晚于信号日的下一开市日。"""
+    if not calendar_path.exists():
+        return None
+    calendar = pd.read_parquet(calendar_path, columns=["cal_date", "is_open"])
+    calendar["cal_date"] = calendar["cal_date"].astype(str)
+    future = calendar.loc[
+        calendar["cal_date"].gt(str(signal_date))
+        & pd.to_numeric(calendar["is_open"], errors="coerce").eq(1),
+        "cal_date",
+    ]
+    return str(future.min()) if not future.empty else None
 
 
 def _validate_overlap(tail: pd.DataFrame, cutoff: str, old_end: str) -> None:
@@ -242,7 +274,8 @@ def _new_scores(
             & train_panel["future_ret_5d_rank"].notna()
         ][["trade_date", *FEATURE_COLS, "future_ret_5d_rank"]]
         train = train.replace([np.inf, -np.inf], np.nan).dropna()
-        model = make_lgbm_model(5).set_params(n_jobs=4)
+        # 增量更新优先保证内存和本机稳定性，避免多线程再次触发Python崩溃。
+        model = make_lgbm_model(5).set_params(n_jobs=1)
         model.fit(train[FEATURE_COLS], train["future_ret_5d_rank"])
         del train, train_panel
         gc.collect()
@@ -267,24 +300,28 @@ def _new_scores(
 
 
 def _transactional_replace(replacements: list[tuple[Path, Path]]) -> None:
-    backups: list[tuple[Path, Path]] = []
+    backups: list[tuple[Path, Path | None]] = []
     try:
         for target, staged in replacements:
             backup = target.with_name(f".{target.name}.refresh-backup")
-            if backup.exists():
-                raise RuntimeError(f"发现未清理的更新备份: {backup}")
-            os.replace(target, backup)
-            backups.append((target, backup))
+            if target.exists():
+                if backup.exists():
+                    raise RuntimeError(f"发现未清理的更新备份: {backup}")
+                os.replace(target, backup)
+                backups.append((target, backup))
+            else:
+                backups.append((target, None))
             os.replace(staged, target)
     except Exception:
         for target, backup in reversed(backups):
             if target.exists():
                 target.unlink()
-            if backup.exists():
+            if backup is not None and backup.exists():
                 os.replace(backup, target)
         raise
     for _, backup in backups:
-        backup.unlink(missing_ok=True)
+        if backup is not None:
+            backup.unlink(missing_ok=True)
 
 
 def refresh(end_date: str, token_file: str | None = None) -> dict:
@@ -294,7 +331,7 @@ def refresh(end_date: str, token_file: str | None = None) -> dict:
     if end_date <= old_end:
         return {"updated": False, "old_end": old_end, "new_end": old_end, "new_dates": 0}
     pro = ts.pro_api(_token_from(token_file))
-    open_dates, dates = _calendar_and_dates(pro, old_end, end_date)
+    calendar, open_dates, dates = _calendar_and_dates(pro, old_end, end_date)
     if not dates:
         return {"updated": False, "old_end": old_end, "new_end": old_end, "new_dates": 0}
 
@@ -340,12 +377,14 @@ def refresh(end_date: str, token_file: str | None = None) -> dict:
         staged_low_adj = staging / LOW_RISK_ADJ_PATH.name
         staged_feature = staging / FEATURE_PATH.name
         staged_scores = staging / SELECTED_SCORE_PATH.name
+        staged_calendar = staging / TRADE_CALENDAR_PATH.name
 
         _append_parquet(SECTOR_DAILY_PATH, sector_updates, staged_sector)
         _append_parquet(LOW_RISK_DAILY_PATH, low_daily, staged_low_daily)
         _append_parquet(LOW_RISK_ADJ_PATH, low_adj, staged_low_adj)
         updated_index = _updated_index(pro, old_end)
         updated_index.to_parquet(staged_index, index=False)
+        calendar.to_parquet(staged_calendar, index=False)
 
         print(f"[features] 尾部重算 {warmup_start} 起，替换 {replace_start} 起")
         raw_tail = pd.read_parquet(staged_sector, filters=[("trade_date", ">=", warmup_start)])
@@ -378,6 +417,7 @@ def refresh(end_date: str, token_file: str | None = None) -> dict:
                 (LOW_RISK_ADJ_PATH, staged_low_adj),
                 (FEATURE_PATH, staged_feature),
                 (SELECTED_SCORE_PATH, staged_scores),
+                (TRADE_CALENDAR_PATH, staged_calendar),
             ]
         )
 

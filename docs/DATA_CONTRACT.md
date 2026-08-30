@@ -17,6 +17,17 @@
 | `outputs/sector/rotation/sector_feature_panel.parquet` | 见下文 | 冻结特征缓存 |
 | `outputs/sector/adaptation/SELECTED_SCORES.parquet` | `ts_code,trade_date,score_frozen_selected_5d` | 正式季度LightGBM评分 |
 
+要生成下一交易日计划并解析ETF，还需要执行层数据：
+
+| 文件 | 必要字段 | 用途 |
+|---|---|---|
+| `data/sector/trade_calendar.parquet` | `cal_date,is_open` | 从可信交易所日历取得下一开市日 |
+| `data/sector/etf_basic.parquet` | `ts_code,index_code,index_name,list_date,list_status,etf_type` | 权益ETF候选目录 |
+| `data/sector/equity_etf_daily.parquet` | `ts_code,trade_date,open,close,amount` | 映射验收与ETF行情新鲜度 |
+| `data/sector/equity_etf_adj.parquet` | `ts_code,trade_date,adj_factor` | 权益ETF复权 |
+
+缺少这四个文件不妨碍历史研究回放，但执行层必须标记`blocked`，不得猜下一自然日或沿用过期ETF映射。
+
 下面两个小型元数据文件已经提交Git，必须与上述Parquet来自同一版本：
 
 - `outputs/sector/rotation/sector_feature_panel.meta.json`；
@@ -31,6 +42,7 @@
 - 价格、成交量、换手率和复权因子必须可转换为数值；
 - 同一 `ts_code + trade_date` 在日行情和复权因子中必须唯一；
 - 缺失开盘价不能填成前值或0；
+- 回测形成信号时不能查看未来开盘价是否存在；实际成交/估值日遇到缺报价时，账本分别记录未成交或价格持平估值计数；
 - 原始数据更新后必须同步更新特征和评分缓存，不能手工修改指纹。
 
 正式特征缓存至少应包含：
@@ -73,7 +85,7 @@ Tushare Token只允许通过以下方式提供：
 1. 在正式代码版本上完成增量更新；
 2. 执行 `python -m ga_factor_mining.sector --check`；
 3. 执行一次默认回放并核对 `LATEST_STATUS.csv`；
-4. 只分发本页列出的8个Parquet，不包含Token、日志和临时文件；
+4. 历史回放包分发前8个Parquet；需要最新计划与ETF参考解析时，再包含执行层4个Parquet；
 5. 同时告知接收者对应的Git提交号。
 
 没有运行数据包时，用户仍可以安装项目、查看报告和运行全部单元测试，但不能复现正式策略净值。这是数据授权边界，不应通过把原始行情提交到Git来绕过。

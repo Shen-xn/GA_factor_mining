@@ -326,6 +326,9 @@ def write_latest_advice(
     output_dir,
     sector_name_lookup: dict[str, str] | None = None,
     asof_date=None,
+    market_data_end_date: str | None = None,
+    latest_plan: dict | None = None,
+    etf_execution_ready: bool = False,
 ) -> dict:
     """输出无需额外脚本即可阅读的最新交易建议和目标组合。"""
     advice_columns = [
@@ -348,6 +351,8 @@ def write_latest_advice(
         "数据年龄(天)",
         "数据状态",
         "策略日期",
+        "信号同步状态",
+        "指令状态",
         "最近调仓信号日",
         "策略动作",
         "执行提示",
@@ -371,6 +376,9 @@ def write_latest_advice(
             "data_end_date": None,
             "data_age_days": None,
             "data_stale": True,
+            "instruction_current": False,
+            "action_plan_valid": False,
+            "execution_allowed": False,
             "strategy_action": "无可用数据",
             "execution_message": "无可用数据，禁止执行",
         }
@@ -380,41 +388,65 @@ def write_latest_advice(
         name_lookup = names.drop_duplicates("ts_code").set_index("ts_code")["name"].to_dict()
     else:
         name_lookup = dict(sector_name_lookup)
-    latest_strategy_date = str(daily["signal_date"].dropna().max())
+    latest_strategy_date = str(
+        latest_plan["signal_date"]
+        if latest_plan and latest_plan.get("signal_date")
+        else daily["signal_date"].dropna().max()
+    )
     latest_daily = daily.sort_values(["signal_date", "date"]).iloc[-1]
-    data_end_date = str(daily["date"].dropna().max())
+    # 行情截止日与历史绩效结算日不是同一概念；优先使用原始行情日期。
+    data_end_date = str(market_data_end_date or daily["date"].dropna().max())
     reference_date = pd.Timestamp(asof_date or pd.Timestamp.today()).normalize()
     data_date = pd.to_datetime(data_end_date, format="%Y%m%d").normalize()
     data_age_days = int((reference_date - data_date).days)
     data_stale = data_age_days > 7
     if actions.empty:
-        current_actions = pd.DataFrame()
         last_rebalance_actions = pd.DataFrame()
         last_order_date = ""
-        target_state: dict[str, tuple[float, str | None]] = {}
     else:
         ordered = actions.sort_values(["signal_date", "execution_date", "ts_code"])
         last_order_date = str(ordered["signal_date"].max())
-        current_actions = ordered.loc[ordered["signal_date"].eq(latest_strategy_date)].copy()
         last_rebalance_actions = ordered.loc[ordered["signal_date"].eq(last_order_date)].copy()
-        target_state = {}
-        for row in ordered.to_dict("records"):
-            code = str(row["ts_code"])
-            weight = float(row["target_weight"])
-            if weight <= 1e-12:
-                target_state.pop(code, None)
-            else:
-                etf_code = row.get("etf_code")
-                target_state[code] = (
-                    weight,
-                    str(etf_code) if pd.notna(etf_code) else None,
-                )
-
-        # 人工建议不展示低于5bp的机械尾差，完整账本仍保留原始记录。
-        current_actions = current_actions.loc[current_actions["weight_change"].abs().ge(0.0005)]
         last_rebalance_actions = last_rebalance_actions.loc[
             last_rebalance_actions["weight_change"].abs().ge(0.0005)
         ]
+
+    if latest_plan is not None:
+        current_actions = latest_plan.get("actions", pd.DataFrame()).copy()
+        target_state = {
+            str(code): (
+                float(weight),
+                DEFAULT_LOW_RISK_CODE if str(code) == "LOW_RISK" else None,
+            )
+            for code, weight in latest_plan.get("target_weights", {}).items()
+            if float(weight) > 1e-12
+        }
+        residual = 1.0 - float(sum(weight for weight, _ in target_state.values()))
+        if residual > 1e-12:
+            target_state["LOW_RISK"] = (residual, DEFAULT_LOW_RISK_CODE)
+    else:
+        current_actions = (
+            actions.loc[actions["signal_date"].astype(str).eq(latest_strategy_date)].copy()
+            if not actions.empty
+            else pd.DataFrame()
+        )
+        target_state: dict[str, tuple[float, str | None]] = {}
+        if not actions.empty:
+            for row in ordered.to_dict("records"):
+                code = str(row["ts_code"])
+                weight = float(row["target_weight"])
+                if weight <= 1e-12:
+                    target_state.pop(code, None)
+                else:
+                    etf_code = row.get("etf_code")
+                    target_state[code] = (
+                        weight,
+                        str(etf_code) if pd.notna(etf_code) else None,
+                    )
+
+    # 人工建议不展示低于5bp的机械尾差，完整账本仍保留原始记录。
+    if not current_actions.empty:
+        current_actions = current_actions.loc[current_actions["weight_change"].abs().ge(0.0005)]
 
     def readable_action_frame(frame: pd.DataFrame) -> pd.DataFrame:
         if frame.empty:
@@ -438,20 +470,88 @@ def write_latest_advice(
             }
         )
 
-    strategy_action = "有新调仓建议" if not current_actions.empty else "持有不动"
-    actionable_actions = current_actions if not data_stale else current_actions.iloc[0:0]
-    execution_message = (
-        "数据已过期，禁止执行"
-        if data_stale
-        else "按LATEST_ACTIONS执行"
-        if not actionable_actions.empty
-        else "无需交易"
+    instruction_current = latest_strategy_date == data_end_date
+    if latest_plan is not None:
+        action_plan_valid = bool(
+            latest_plan.get("stage") == "planned"
+            and str(latest_plan.get("planned_execution_date") or "") > data_end_date
+        )
+    else:
+        action_plan_valid = bool(
+            current_actions.empty
+            or (
+                current_actions["signal_date"].astype(str).eq(data_end_date).all()
+                and current_actions["execution_date"].astype(str).gt(data_end_date).all()
+            )
+        )
+    execution_allowed = bool(
+        not data_stale and instruction_current and action_plan_valid and etf_execution_ready
     )
+    strategy_action = (
+        "信号尚未推进到最新行情"
+        if not instruction_current
+        else "有新调仓建议"
+        if not current_actions.empty
+        else "持有不动"
+    )
+    actionable_actions = current_actions if execution_allowed else current_actions.iloc[0:0]
+    if data_stale:
+        execution_message = "数据已过期，禁止执行"
+    elif not instruction_current:
+        execution_message = "策略信号滞后于行情，禁止执行"
+    elif not action_plan_valid:
+        execution_message = "动作不是未来交易计划，禁止执行"
+    elif not etf_execution_ready:
+        execution_message = "ETF执行层未就绪，禁止执行"
+    elif not actionable_actions.empty:
+        execution_message = "按LATEST_ACTIONS人工复核"
+    else:
+        execution_message = "无需交易"
     readable_action_frame(actionable_actions).to_csv(
         output_dir / "LATEST_ACTIONS.csv", index=False, encoding="utf-8-sig"
     )
     readable_action_frame(last_rebalance_actions).to_csv(
         output_dir / "LAST_REBALANCE_ACTIONS.csv", index=False, encoding="utf-8-sig"
+    )
+    plan_preview = readable_action_frame(current_actions)
+    plan_preview.insert(
+        0,
+        "指令状态",
+        "待人工复核" if execution_allowed else "禁止执行",
+    )
+    plan_preview.to_csv(
+        output_dir / "LATEST_PLAN_ACTIONS.csv", index=False, encoding="utf-8-sig"
+    )
+    plan_payload = {
+        "stage": latest_plan.get("stage") if latest_plan else "historical_engine_only",
+        "market_data_asof": data_end_date,
+        "signal_date": latest_strategy_date,
+        "planned_execution_date": (
+            latest_plan.get("planned_execution_date") if latest_plan else None
+        ),
+        "simulated_portfolio_asof_date": (
+            latest_plan.get("simulated_portfolio_asof_date") if latest_plan else latest_strategy_date
+        ),
+        "instruction_current": instruction_current,
+        "action_plan_valid": action_plan_valid,
+        "data_stale": data_stale,
+        "execution_allowed": execution_allowed,
+        "target_weights": {
+            code: weight for code, (weight, _) in target_state.items()
+        },
+        "blockers": [
+            reason
+            for reason, blocked in (
+                ("data_stale", data_stale),
+                ("signal_lag", not instruction_current),
+                ("calendar_or_plan_invalid", not action_plan_valid),
+                ("etf_execution_not_ready", not etf_execution_ready),
+            )
+            if blocked
+        ],
+    }
+    (output_dir / "LATEST_PLAN.json").write_text(
+        json.dumps(plan_payload, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
     pd.DataFrame(
@@ -459,15 +559,17 @@ def write_latest_advice(
             {
                 "数据截止日": data_end_date,
                 "数据年龄(天)": data_age_days,
-                "数据状态": "已过期" if data_stale else "可用",
+                "数据状态": "已过期" if data_stale else "可用" if instruction_current else "信号滞后",
                 "策略日期": latest_strategy_date,
+                "信号同步状态": "同日" if instruction_current else "滞后",
+                "指令状态": "可人工复核" if execution_allowed else "禁止执行",
                 "最近调仓信号日": last_order_date,
                 "策略动作": strategy_action,
                 "执行提示": execution_message,
-                "市场状态": latest_daily["regime"],
-                "当前板块仓位": f"{float(latest_daily['exposure']):.2%}",
-                "当前低风险仓位": f"{float(latest_daily['low_risk_weight']):.2%}",
-                "当前持仓数量": int(latest_daily["position_count"]),
+                "市场状态": latest_plan.get("regime", latest_daily["regime"]) if latest_plan else latest_daily["regime"],
+                "当前板块仓位": f"{float(latest_plan.get('exposure', latest_daily['exposure']) if latest_plan else latest_daily['exposure']):.2%}",
+                "当前低风险仓位": f"{1.0 - float(latest_plan.get('exposure', latest_daily['exposure']) if latest_plan else latest_daily['exposure']):.2%}",
+                "当前持仓数量": len([code for code in target_state if code != "LOW_RISK"]),
             }
         ],
         columns=status_columns,
@@ -478,7 +580,7 @@ def write_latest_advice(
         portfolio_rows.append(
             {
                 "策略日期": latest_strategy_date,
-                "目标形成日期": last_order_date,
+                "目标形成日期": latest_strategy_date if latest_plan is not None else last_order_date,
                 "板块代码": code,
                 "板块名称": name_lookup.get(code, "货币ETF" if code == "LOW_RISK" else code),
                 "目标权重": f"{weight:.2%}",
@@ -492,6 +594,9 @@ def write_latest_advice(
         "data_end_date": data_end_date,
         "data_age_days": data_age_days,
         "data_stale": data_stale,
+        "instruction_current": instruction_current,
+        "action_plan_valid": action_plan_valid,
+        "execution_allowed": execution_allowed,
         "strategy_action": strategy_action,
         "execution_message": execution_message,
     }
@@ -501,6 +606,7 @@ def latest_market_risk_snapshot(
     panel: pd.DataFrame,
     daily: pd.DataFrame,
     policy: RegimePolicy | None = None,
+    latest_plan: dict | None = None,
 ) -> dict:
     """独立推进到最新行情日，不受回测未来收益可用性裁切。"""
     policy = policy or RegimePolicy()
@@ -514,10 +620,29 @@ def latest_market_risk_snapshot(
         raw_regime = classify_market(pd.Series(row._asdict()), policy)
         state = advance_regime(state, raw_regime, policy)
     latest = market.iloc[-1]
-    drawdown_cap = float(daily.iloc[-1]["drawdown_cap"]) if not daily.empty else 1.0
-    actual_exposure = float(daily.iloc[-1]["exposure"]) if not daily.empty else 0.0
-    portfolio_asof = str(daily.iloc[-1]["signal_date"]) if not daily.empty else None
+    planned_risk = latest_plan.get("risk", {}) if latest_plan else {}
+    drawdown_cap = float(
+        planned_risk.get(
+            "drawdown_cap",
+            daily.iloc[-1]["drawdown_cap"] if not daily.empty else 1.0,
+        )
+    )
+    simulated_exposure = float(
+        sum(latest_plan.get("current_weights", {}).values())
+        if latest_plan
+        else daily.iloc[-1]["exposure"]
+        if not daily.empty
+        else 0.0
+    )
+    portfolio_asof = (
+        str(latest_plan.get("simulated_portfolio_asof_date"))
+        if latest_plan
+        else str(daily.iloc[-1]["signal_date"])
+        if not daily.empty
+        else None
+    )
     regime_base = regime_exposure(state.current, policy)
+    risk_target = float(planned_risk.get("risk_target_exposure", min(regime_base, drawdown_cap)))
     return {
         "status": "ready",
         "scope": "sector_breadth_not_broad_market_index",
@@ -538,14 +663,17 @@ def latest_market_risk_snapshot(
         "breadth_60d_health": float(latest["breadth_60d_health"]),
         "volatility_health": float(latest["volatility_health"]),
         "raw_regime": raw_regime,
-        "confirmed_regime": state.current,
+        "confirmed_regime": latest_plan.get("regime", state.current) if latest_plan else state.current,
         "pending_regime": state.pending,
         "pending_sessions": state.pending_sessions,
         "regime_base_exposure": regime_base,
         "drawdown_cap": drawdown_cap,
         "drawdown_cap_asof_date": portfolio_asof,
-        "risk_target_exposure": min(regime_base, drawdown_cap),
-        "actual_portfolio_exposure": actual_exposure,
+        "risk_target_exposure": risk_target,
+        "simulated_portfolio_exposure": simulated_exposure,
+        "simulated_portfolio_asof_date": portfolio_asof,
+        # 兼容旧消费者；这里从来不是券商账户的真实持仓。
+        "actual_portfolio_exposure": simulated_exposure,
         "actual_portfolio_asof_date": portfolio_asof,
     }
 
@@ -566,7 +694,10 @@ def write_latest_market_risk(
         stale = bool(data_freshness and data_freshness.get("data_stale"))
         quality_ok = payload["risk_data_quality"] == "complete"
         payload["status"] = "stale" if stale else "ready" if quality_ok else "insufficient"
-        payload["execution_allowed"] = bool(not stale and quality_ok)
+        instruction_current = bool(data_freshness and data_freshness.get("instruction_current"))
+        plan_valid = bool(data_freshness and data_freshness.get("action_plan_valid"))
+        payload["diagnostic_available"] = bool(not stale and quality_ok)
+        payload["execution_allowed"] = bool(not stale and quality_ok and instruction_current and plan_valid)
         pending = payload.get("pending_regime")
         reasons = [
             f"分数越高越适合承担权益风险，当前{payload['risk_score']:.1f}分",
@@ -587,6 +718,10 @@ def write_latest_market_risk(
             reasons.append("实际仓位与风险目标存在执行时点或再平衡带差异")
         if not quality_ok:
             reasons.append("风险输入覆盖不足，禁止执行")
+        if quality_ok and not instruction_current:
+            reasons.append("产品信号尚未推进到最新行情日，风险诊断不可直接当作交易指令")
+        elif quality_ok and not plan_valid:
+            reasons.append("当前动作不是下一交易日计划，禁止执行")
         payload["reason"] = "；".join(reasons)
     pd.DataFrame([payload]).to_csv(
         output_dir / "LATEST_MARKET_RISK.csv", index=False, encoding="utf-8-sig"
@@ -671,6 +806,8 @@ def run_product_backtest(
     use_drawdown_cap: bool = True,
     use_continuous_defensive_exposure: bool = False,
     use_sector_strength_override: bool = False,
+    latest_plan_sink: dict | None = None,
+    planned_execution_date: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, float]]:
     """运行状态化产品回测，所有决策在收盘后产生并于次日开盘执行。"""
     if universe not in UNIVERSES:
@@ -688,15 +825,14 @@ def run_product_backtest(
     sub[product_score] = sub.groupby("ts_code", sort=False)[score_name].transform(
         lambda values: values.rolling(base_policy.score_smoothing_sessions, min_periods=1).mean()
     )
+    # 只要求订单执行日已经出现；再下一开盘仅属于收益结算，不能反向参与信号。
     score_dates = sub.loc[
         (sub["trade_date"] >= start)
         & (sub["trade_date"] <= end)
         & sub["next_open_date"].notna()
-        & sub["return_end_date"].notna(),
+        & sub["next_open_date"].le(end),
         "trade_date",
     ].drop_duplicates().tolist()
-    valid_end_dates = set(sub.loc[sub["return_end_date"].le(end), "trade_date"])
-    score_dates = [date for date in score_dates if date in valid_end_dates]
     if not score_dates:
         return pd.DataFrame(), pd.DataFrame(), annualized_metrics(pd.Series(dtype=float))
 
@@ -767,15 +903,15 @@ def run_product_backtest(
             signal_open = open_pivot.loc[signal_date].reindex(live_weights)
             signal_close = close_pivot.loc[signal_date].reindex(live_weights)
             missing_mark = signal_open.isna() | signal_close.isna()
-            if missing_mark.any():
-                missing_codes = missing_mark[missing_mark].index.tolist()
-                raise RuntimeError(f"{signal_date} 持仓缺少开盘或收盘估值: {missing_codes}")
-            intraday_returns = signal_close / signal_open - 1.0
+            # 停牌/缺报价时沿用上一估值，不把未来是否恢复交易反馈给当日信号。
+            intraday_returns = (signal_close / signal_open - 1.0).where(~missing_mark, 0.0)
             marked_equity *= 1.0 + float(
                 sum(live_weights[code] * intraday_returns.loc[code] for code in live_weights)
                 + low_risk_weight * low_risk_intraday
             )
             for code in live_weights:
+                if bool(missing_mark.loc[code]):
+                    continue
                 entry_open = position_entry_open.get(code)
                 if entry_open is None or not np.isfinite(entry_open) or entry_open <= 0:
                     raise RuntimeError(f"持仓 {code} 缺少有效入场开盘价")
@@ -825,10 +961,8 @@ def run_product_backtest(
         available = [column for column in columns if column in day_source.columns]
         daily = day_source[available].copy().rename(columns={product_score: "score"})
         daily = daily.dropna(subset=["score"]).copy()
-        execution_date = str(date_map.loc[signal_date, "next_open_date"])
-        valuation_date = str(date_map.loc[signal_date, "return_end_date"])
-        daily["execution_allowed"] = daily["ts_code"].map(open_pivot.loc[execution_date].notna())
-        daily["valuation_available"] = daily["ts_code"].map(open_pivot.loc[valuation_date].notna())
+        # 计划在收盘生成，不能查看下一开盘是否缺价，更不能查看再下一开盘。
+        # 缺价应在真实执行/结算事件发生时记录，而不是改变当日排名和目标。
         daily["position_return"] = daily["ts_code"].map(position_returns)
         daily["position_drawdown"] = daily["ts_code"].map(position_drawdowns)
         positions, targets, decisions = step_portfolio(signal_date, daily, positions, exposure, policy)
@@ -875,15 +1009,19 @@ def run_product_backtest(
     ) = decide(first_signal)
     last_strength_override = first_override
     last_risk_details = first_risk_details
+    first_execution_date = str(date_map.loc[first_signal, "next_open_date"])
+    first_available = open_pivot.loc[first_execution_date].notna()
+    first_unfilled = [code for code in first_target if not bool(first_available.get(code, False))]
+    first_target = {
+        code: weight for code, weight in first_target.items() if code not in first_unfilled
+    }
+    positions = {code: state for code, state in positions.items() if code in first_target}
     initial_turnover = _turnover({}, first_target)
     initial_net = (1.0 - initial_turnover * cost_rate) - 1.0
     equity *= 1.0 + initial_net
     peak = max(peak, equity)
     live_weights = first_target
-    first_execution_date = str(date_map.loc[first_signal, "next_open_date"])
     first_execution_prices = open_pivot.loc[first_execution_date].reindex(live_weights)
-    if first_execution_prices.isna().any():
-        raise RuntimeError("首次建仓仍包含缺失执行开盘价")
     position_entry_open = {code: float(first_execution_prices.loc[code]) for code in live_weights}
     position_close_peak = {code: 1.0 for code in live_weights}
     first_actions = _execution_actions(
@@ -912,18 +1050,21 @@ def run_product_backtest(
             "equity": equity,
             "drawdown": equity / peak - 1.0,
             "regime": first_regime,
-            "exposure": first_exposure,
+            "exposure": sum(live_weights.values()),
             "sector_strength_override": first_override,
             "low_risk_code": low_risk_code,
             "low_risk_weight": 1.0 - sum(live_weights.values()),
             "low_risk_return": 0.0,
-            "position_count": len(live_weights),
+                "position_count": len(live_weights),
+            "missing_valuation_count": 0,
+            "unfilled_order_count": len(first_unfilled),
             **first_risk_details,
         }
     )
 
     for index in range(1, len(score_dates)):
         signal_date = score_dates[index]
+        prior_positions = dict(positions)
         (
             desired_target,
             regime,
@@ -936,12 +1077,9 @@ def run_product_backtest(
         last_risk_details = risk_details
         prior_signal = score_dates[index - 1]
         asset_returns = return_pivot.loc[prior_signal].reindex(live_weights)
-        if asset_returns.isna().any():
-            missing_codes = asset_returns[asset_returns.isna()].index.tolist()
-            raise RuntimeError(
-                f"{prior_signal} 至 {date_map.loc[prior_signal, 'return_end_date']} "
-                f"持仓缺少开盘收益: {missing_codes}"
-            )
+        missing_valuation = asset_returns.isna()
+        # 已持仓遇到停牌/缺报价时采用价格持平估值，并在账本中显式计数。
+        asset_returns = asset_returns.fillna(0.0)
         low_risk_weight = 1.0 - float(sum(live_weights.values()))
         period_low_risk_return = low_risk_return(prior_signal, "forward_open_ret_1d")
         sector_contribution = float(
@@ -955,6 +1093,21 @@ def run_product_backtest(
             desired_target,
             base_policy.rebalance_tolerance,
         )
+        execution_date = str(date_map.loc[signal_date, "next_open_date"])
+        execution_available = open_pivot.loc[execution_date].notna()
+        unfilled_codes = []
+        for code in set(pretrade) | set(target):
+            if not bool(execution_available.get(code, False)):
+                unfilled_codes.append(code)
+                if pretrade.get(code, 0.0) > 1e-12:
+                    target[code] = pretrade[code]
+                else:
+                    target.pop(code, None)
+        positions = {
+            code: positions.get(code, prior_positions.get(code))
+            for code in target
+            if positions.get(code, prior_positions.get(code)) is not None
+        }
         turnover = _turnover(pretrade, target)
         net_return = (1.0 + gross_return) * (1.0 - turnover * cost_rate) - 1.0
         equity *= 1.0 + net_return
@@ -962,11 +1115,7 @@ def run_product_backtest(
         risk_peak = max(risk_peak, equity)
         prior_codes = set(live_weights)
         live_weights = target
-        execution_date = str(date_map.loc[signal_date, "next_open_date"])
         execution_prices = open_pivot.loc[execution_date].reindex(live_weights)
-        if execution_prices.isna().any():
-            missing_codes = execution_prices[execution_prices.isna()].index.tolist()
-            raise RuntimeError(f"{execution_date} 目标持仓缺少执行开盘价: {missing_codes}")
         for code in prior_codes - set(live_weights):
             position_entry_open.pop(code, None)
             position_close_peak.pop(code, None)
@@ -1005,47 +1154,94 @@ def run_product_backtest(
                 "low_risk_weight": 1.0 - sum(live_weights.values()),
                 "low_risk_return": period_low_risk_return,
                 "position_count": len(live_weights),
+                "missing_valuation_count": int(missing_valuation.sum()),
+                "unfilled_order_count": len(unfilled_codes),
                 **risk_details,
             }
         )
 
-    # 最后一个已执行目标仍持有到下一开盘，不凭空截掉尾部收益。
+    # 只有再下一开盘已经出现时才结算最后一段；否则保留为executed_unsettled。
     last_signal = score_dates[-1]
-    last_returns = return_pivot.loc[last_signal].reindex(live_weights)
-    if last_returns.isna().any():
-        missing_codes = last_returns[last_returns.isna()].index.tolist()
-        raise RuntimeError(f"最后持有期缺少开盘收益: {missing_codes}")
-    final_low_risk_weight = 1.0 - float(sum(live_weights.values()))
-    final_low_risk_return = low_risk_return(last_signal, "forward_open_ret_1d")
-    final_sector_contribution = float(
-        sum(live_weights[code] * last_returns.loc[code] for code in live_weights)
-    )
-    final_low_risk_contribution = final_low_risk_weight * final_low_risk_return
-    final_gross = float(final_sector_contribution + final_low_risk_contribution)
-    equity *= 1.0 + final_gross
-    peak = max(peak, equity)
-    rows.append(
-        {
-            "date": str(date_map.loc[last_signal, "return_end_date"]),
-            "signal_date": last_signal,
-            "gross_return": final_gross,
-            "sector_contribution": final_sector_contribution,
-            "low_risk_contribution": final_low_risk_contribution,
-            "turnover": 0.0,
-            "cost": 0.0,
-            "net_return": final_gross,
-            "equity": equity,
-            "drawdown": equity / peak - 1.0,
-            "regime": regime_state.current,
-            "exposure": sum(live_weights.values()),
-            "sector_strength_override": last_strength_override,
-            "low_risk_code": low_risk_code,
-            "low_risk_weight": final_low_risk_weight,
-            "low_risk_return": final_low_risk_return,
-            "position_count": len(live_weights),
-            **last_risk_details,
-        }
-    )
+    last_return_end = date_map.loc[last_signal, "return_end_date"]
+    if pd.notna(last_return_end) and str(last_return_end) <= end:
+        last_returns = return_pivot.loc[last_signal].reindex(live_weights)
+        final_missing_valuation = last_returns.isna()
+        last_returns = last_returns.fillna(0.0)
+        final_low_risk_weight = 1.0 - float(sum(live_weights.values()))
+        final_low_risk_return = low_risk_return(last_signal, "forward_open_ret_1d")
+        final_sector_contribution = float(
+            sum(live_weights[code] * last_returns.loc[code] for code in live_weights)
+        )
+        final_low_risk_contribution = final_low_risk_weight * final_low_risk_return
+        final_gross = float(final_sector_contribution + final_low_risk_contribution)
+        equity *= 1.0 + final_gross
+        peak = max(peak, equity)
+        rows.append(
+            {
+                "date": str(last_return_end),
+                "signal_date": last_signal,
+                "gross_return": final_gross,
+                "sector_contribution": final_sector_contribution,
+                "low_risk_contribution": final_low_risk_contribution,
+                "turnover": 0.0,
+                "cost": 0.0,
+                "net_return": final_gross,
+                "equity": equity,
+                "drawdown": equity / peak - 1.0,
+                "regime": regime_state.current,
+                "exposure": sum(live_weights.values()),
+                "sector_strength_override": last_strength_override,
+                "low_risk_code": low_risk_code,
+                "low_risk_weight": final_low_risk_weight,
+                "low_risk_return": final_low_risk_return,
+                "position_count": len(live_weights),
+                "missing_valuation_count": int(final_missing_valuation.sum()),
+                "unfilled_order_count": 0,
+                **last_risk_details,
+            }
+        )
+
+    # 最新收盘只形成planned目标，不把未知下一开盘伪装成已成交或收益。
+    latest_signal_date = str(sub.loc[sub["trade_date"].le(end), "trade_date"].max())
+    if latest_plan_sink is not None and latest_signal_date > last_signal:
+        current_weights = dict(live_weights)
+        (
+            planned_target,
+            planned_regime,
+            planned_exposure,
+            planned_override,
+            planned_decisions,
+            planned_risk,
+        ) = decide(latest_signal_date)
+        preview_turnover = _turnover(current_weights, planned_target)
+        preview_actions = _execution_actions(
+            latest_signal_date,
+            planned_execution_date or "",
+            planned_decisions,
+            current_weights,
+            planned_target,
+            preview_turnover,
+            cost_rate,
+            planned_regime,
+            low_risk_code,
+        )
+        latest_plan_sink.update(
+            {
+                "stage": "planned" if planned_execution_date else "blocked_calendar_missing",
+                "signal_date": latest_signal_date,
+                "planned_execution_date": planned_execution_date,
+                "simulated_portfolio_asof_date": str(date_map.loc[last_signal, "next_open_date"]),
+                "current_weights": current_weights,
+                "target_weights": planned_target,
+                "preview_turnover": preview_turnover,
+                "preview_cost": preview_turnover * cost_rate,
+                "regime": planned_regime,
+                "exposure": planned_exposure,
+                "sector_strength_override": planned_override,
+                "risk": planned_risk,
+                "actions": preview_actions,
+            }
+        )
 
     daily_result = pd.DataFrame(rows).sort_values("date").reset_index(drop=True)
     action_result = pd.concat(actions, ignore_index=True) if actions else pd.DataFrame()
@@ -1224,6 +1420,9 @@ def write_acceptance_gate(
     )
     latest_risk_path = output_dir / "LATEST_MARKET_RISK.json"
     latest_portfolio_path = output_dir / "LATEST_TARGET_PORTFOLIO.csv"
+    latest_plan_path = output_dir / "LATEST_PLAN.json"
+    execution_readiness_path = output_dir.parent / "etf_mapping" / "ETF_EXECUTION_READINESS.json"
+    latest_actions_path = output_dir / "LATEST_ACTIONS.csv"
     latest_output_ok = False
     latest_output_detail: dict = {"files_present": False}
     if latest_risk_path.exists() and latest_portfolio_path.exists():
@@ -1237,6 +1436,7 @@ def write_acceptance_gate(
             "drawdown_cap",
             "risk_target_exposure",
             "actual_portfolio_exposure",
+            "simulated_portfolio_exposure",
         }
         required_portfolio = {
             "模型相对排名",
@@ -1263,6 +1463,36 @@ def write_acceptance_gate(
             "最新风险日等于数据截止日且风险/目标组合字段齐全",
             latest_output_detail,
             latest_output_ok,
+        )
+    )
+
+    execution_safety_ok = False
+    execution_safety_detail = {"files_present": False}
+    if latest_plan_path.exists() and execution_readiness_path.exists() and latest_actions_path.exists():
+        latest_plan = json.loads(latest_plan_path.read_text(encoding="utf-8"))
+        execution_readiness = json.loads(execution_readiness_path.read_text(encoding="utf-8"))
+        latest_actions = pd.read_csv(latest_actions_path)
+        execution_ready = bool(execution_readiness.get("execution_ready"))
+        blockers = execution_readiness.get("blockers", [])
+        safe_block = bool(execution_ready or (blockers and latest_actions.empty))
+        date_aligned = str(latest_plan.get("signal_date")) == str(latest_plan.get("market_data_asof"))
+        execution_safety_ok = bool(safe_block and date_aligned)
+        execution_safety_detail = {
+            "files_present": True,
+            "plan_stage": latest_plan.get("stage"),
+            "signal_date": latest_plan.get("signal_date"),
+            "market_data_asof": latest_plan.get("market_data_asof"),
+            "execution_ready": execution_ready,
+            "blockers": blockers,
+            "latest_action_rows": int(len(latest_actions)),
+            "safe_block_holds": safe_block,
+        }
+    gates.append(
+        gate(
+            "execution_safety_interlock",
+            "最新计划与行情同日；执行层未就绪时LATEST_ACTIONS必须为空",
+            execution_safety_detail,
+            execution_safety_ok,
         )
     )
 
@@ -1310,7 +1540,14 @@ def write_acceptance_gate(
     accepted = bool(len(evaluated) == len(gates) and all(evaluated))
     policy_payload = json.dumps(asdict(policy), ensure_ascii=False, sort_keys=True)
     source_digest = hashlib.sha256()
-    for source_name in ("product_backtest.py", "risk.py", "strategy.py", "low_risk.py"):
+    for source_name in (
+        "product_backtest.py",
+        "risk.py",
+        "strategy.py",
+        "low_risk.py",
+        "etf_mapping.py",
+        "refresh_data.py",
+    ):
         source_path = Path(__file__).with_name(source_name)
         source_digest.update(source_name.encode("utf-8"))
         source_digest.update(source_path.read_bytes())
@@ -1460,6 +1697,10 @@ def main() -> None:
     )
     summaries = []
     annual_rows = []
+    market_data_end_date = str(panel["trade_date"].dropna().max())
+    from .refresh_data import next_trade_date
+
+    latest_plan: dict = {}
     continuous_daily, continuous_actions, _ = run_product_backtest(
         panel,
         score_name,
@@ -1468,6 +1709,8 @@ def main() -> None:
         cost_bps=args.cost_bps,
         strategy_policy=selected_policy,
         low_risk_frame=low_risk_frame,
+        latest_plan_sink=latest_plan,
+        planned_execution_date=next_trade_date(market_data_end_date),
     )
     continuous_daily.to_parquet(output_dir / "HISTORY_DAILY.parquet", index=False)
     continuous_actions.to_parquet(output_dir / "HISTORY_ACTIONS.parquet", index=False)
@@ -1509,8 +1752,24 @@ def main() -> None:
         gc.collect()
     pd.DataFrame(summaries).to_csv(output_dir / "SUMMARY.csv", index=False, encoding="utf-8-sig")
     pd.DataFrame(annual_rows).to_csv(output_dir / "ANNUAL_RESULTS.csv", index=False, encoding="utf-8-sig")
-    advice_status = write_latest_advice(continuous_daily, continuous_actions, output_dir)
-    risk_snapshot = latest_market_risk_snapshot(panel, continuous_daily)
+    advice_status = write_latest_advice(
+        continuous_daily,
+        continuous_actions,
+        output_dir,
+        market_data_end_date=market_data_end_date,
+        latest_plan=latest_plan or None,
+    )
+    from .etf_mapping import write_latest_execution_readiness
+
+    etf_execution_readiness = write_latest_execution_readiness(
+        output_dir,
+        ensure_output_dir("sector", "etf_mapping"),
+    )
+    risk_snapshot = latest_market_risk_snapshot(
+        panel,
+        continuous_daily,
+        latest_plan=latest_plan or None,
+    )
     write_latest_market_risk(
         risk_snapshot,
         output_dir,
@@ -1659,6 +1918,7 @@ def main() -> None:
                 },
                 "memory_mode": "projected feature columns; one default product replay",
                 "data_freshness": advice_status,
+                "etf_execution_readiness": etf_execution_readiness,
                 "runtime": {
                     "python": platform.python_version(),
                     "pandas": pd.__version__,

@@ -20,9 +20,10 @@ python -m ga_factor_mining.sector --check
 4. `rotation/risk.py`：市场状态和硬风险约束；
 5. `rotation/low_risk.py`：构造货币ETF真实收益；
 6. `rotation/product_backtest.py`：生成连续账本、指标和用户建议；
-7. `rotation/forward_monitor.py`：维护冻结协议后的新样本记录。
+7. `rotation/etf_mapping.py`：解析ETF参考组合并执行映射/新鲜度安全门；
+8. `rotation/forward_monitor.py`：维护冻结协议后的新样本记录。
 
-`doctor.py`只做运行前检查，不参与投资决策。默认运行读取已冻结的季度评分、`simple_v1`和20bp成本，不执行研究搜索。
+`doctor.py`只做运行前检查，不参与投资决策。默认运行读取已冻结的季度评分、`simple_v1`和20bp成本，不执行研究搜索。产品时间轴明确拆成`planned`、`executed_unsettled`和`settled`：最新收盘计划不需要未来收益，只有下一开盘真实出现后才改变模拟持仓。
 
 `risk.py`同时输出0—100的板块广度风险解释分。仓位仍由已冻结的离散状态与回撤保护决定；风险分暂不直接替代仓位规则，避免在没有封存验证时改变基准收益。产品日账本分别记录`market_base_exposure`、`drawdown_cap`、`risk_target_exposure`和实际组合仓位。
 
@@ -36,7 +37,8 @@ python -m ga_factor_mining.sector --check
 | 研究 | `run_experiments.py`、`rolling_validation.py`、`adaptive_validation.py` | 否 |
 | 研究 | `feature_ablation.py`、`ga_ablation.py`、`market_context_ablation.py` | 否 |
 | 诊断 | `return_bridge.py`、`prototype_recovery.py`、`sector_strength_validation.py` | 否 |
-| 诊断 | `bad_year_attribution.py`、`etf_mapping.py` | 否 |
+| 正式安全门 | `etf_mapping.py`的最新解析与执行就绪检查 | 是 |
+| 诊断 | `bad_year_attribution.py`、`etf_mapping.py`的历史映射研究 | 否 |
 
 研究产物保留在 `outputs/sector/`，但未通过固定门槛的模块不能改变默认模型和策略。
 
@@ -55,7 +57,7 @@ python -m ga_factor_mining.sector --check
 - 2024—2025参与模型频率和策略选择；
 - 2026为已经观察过的诊断期；
 - 产品状态从2018年连续承接，不在年度边界重置；
-- 缺失收益不能填0，持仓缺少必要行情时回放直接停止。
+- 信号形成时不能查看未来开盘可用性；执行日缺报价记为未成交，持仓估值日缺报价按价格持平处理并显式计数；
 
 ## 可选诊断
 
@@ -68,7 +70,7 @@ python -m ga_factor_mining.sector.rotation.product_backtest --boundary-sensitivi
 
 这些命令会写入结构化输出，但不会自动改变正式策略。
 
-成本压力命令会串行重放10/20/30/50bp，并生成统一的`ACCEPTANCE_GATE.json`。候选只允许使用2018—2025晋级；2026字段固定为`observation_opened=false`。
+成本压力命令会串行重放10/20/30/50bp，并生成统一的`ACCEPTANCE_GATE.json`。候选只允许使用2018—2025晋级；2026可作诊断，但`observation_used_for_selection`固定为`false`。
 
 `prototype_recovery`只用于审计旧缓存，需要显式传入`--legacy-panel`和可选的`--expected-results`；个人旧目录不会写入项目代码。当前复现结论已经结构化保存在`outputs/sector/prototype_recovery/`。
 

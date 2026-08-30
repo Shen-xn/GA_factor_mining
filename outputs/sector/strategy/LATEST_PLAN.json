@@ -1,0 +1,22 @@
+{
+  "stage": "blocked_calendar_missing",
+  "market_data_asof": "20260810",
+  "signal_date": "20260810",
+  "planned_execution_date": null,
+  "simulated_portfolio_asof_date": "20260810",
+  "instruction_current": true,
+  "action_plan_valid": false,
+  "data_stale": true,
+  "execution_allowed": false,
+  "target_weights": {
+    "700421.TI": 0.09999999999999999,
+    "700582.TI": 0.09999999999999999,
+    "700584.TI": 0.09999999999999999,
+    "LOW_RISK": 0.7
+  },
+  "blockers": [
+    "data_stale",
+    "calendar_or_plan_invalid",
+    "etf_execution_not_ready"
+  ]
+}

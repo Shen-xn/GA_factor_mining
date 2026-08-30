@@ -20,6 +20,8 @@ DEFAULT_SOURCE_PATHS = [
     Path(__file__).with_name("risk.py"),
     Path(__file__).with_name("low_risk.py"),
     Path(__file__).with_name("product_backtest.py"),
+    Path(__file__).with_name("etf_mapping.py"),
+    Path(__file__).with_name("refresh_data.py"),
 ]
 
 

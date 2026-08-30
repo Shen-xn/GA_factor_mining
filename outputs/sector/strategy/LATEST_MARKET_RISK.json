@@ -23,11 +23,14 @@
   "pending_sessions": 0,
   "regime_base_exposure": 0.3,
   "drawdown_cap": 1.0,
-  "drawdown_cap_asof_date": "20260806",
+  "drawdown_cap_asof_date": "20260810",
   "risk_target_exposure": 0.3,
-  "actual_portfolio_exposure": 0.0,
-  "actual_portfolio_asof_date": "20260806",
+  "simulated_portfolio_exposure": 0.3,
+  "simulated_portfolio_asof_date": "20260810",
+  "actual_portfolio_exposure": 0.3,
+  "actual_portfolio_asof_date": "20260810",
   "data_age_days": 21,
+  "diagnostic_available": false,
   "execution_allowed": false,
-  "reason": "分数越高越适合承担权益风险，当前32.6分；60日趋势健康度24.6%；20/60日上涨板块占比86.2%/7.4%；20/60日数据覆盖率99.9%/99.7%；波动健康度12.3%；实际仓位与风险目标存在执行时点或再平衡带差异"
+  "reason": "分数越高越适合承担权益风险，当前32.6分；60日趋势健康度24.6%；20/60日上涨板块占比86.2%/7.4%；20/60日数据覆盖率99.9%/99.7%；波动健康度12.3%；当前动作不是下一交易日计划，禁止执行"
 }

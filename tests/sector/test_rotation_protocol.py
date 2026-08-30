@@ -21,7 +21,10 @@ from ga_factor_mining.sector.rotation.run_experiments import (
 )
 from ga_factor_mining.sector.rotation.refresh_data import (
     _append_parquet,
+    _calendar_and_dates,
     _replace_parquet_tail,
+    _transactional_replace,
+    next_trade_date,
 )
 
 
@@ -255,6 +258,37 @@ class RotationProtocolTests(unittest.TestCase):
             result = pd.read_parquet(replaced)
             self.assertEqual(result["trade_date"].tolist(), ["20240101", "20240102", "20240103", "20240104"])
             self.assertEqual(result["value"].tolist(), [1.0, 2.0, 30.0, 40.0])
+
+    def test_trade_calendar_supplies_only_a_verified_future_open_date(self):
+        class FakePro:
+            def trade_cal(self, **kwargs):
+                self.kwargs = kwargs
+                return pd.DataFrame(
+                    {
+                        "cal_date": ["20240105", "20240106", "20240107", "20240108"],
+                        "is_open": [1, 0, 0, 1],
+                    }
+                )
+
+        pro = FakePro()
+        calendar, open_dates, update_dates = _calendar_and_dates(pro, "20240105", "20240105")
+        self.assertGreater(pro.kwargs["end_date"], "20240105")
+        self.assertEqual(open_dates, ["20240105", "20240108"])
+        self.assertEqual(update_dates, [])
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "trade_calendar.parquet"
+            calendar.to_parquet(path, index=False)
+            self.assertEqual(next_trade_date("20240105", path), "20240108")
+            self.assertIsNone(next_trade_date("20240108", path))
+
+    def test_transaction_can_create_a_new_cache_file(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            staged = root / "staged.txt"
+            target = root / "new.txt"
+            staged.write_text("calendar", encoding="utf-8")
+            _transactional_replace([(target, staged)])
+            self.assertEqual(target.read_text(encoding="utf-8"), "calendar")
 
 
 if __name__ == "__main__":
