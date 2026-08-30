@@ -7,11 +7,23 @@ import sys
 
 
 def main() -> None:
+    # 统一命令行编码，避免Windows重定向输出时中文乱码。
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
+
     parser = argparse.ArgumentParser(description="运行板块轮动原型")
+    parser.add_argument("--check", action="store_true", help="只检查依赖、数据和缓存，不运行策略")
     parser.add_argument("--update", action="store_true", help="先增量更新行情、特征和冻结模型评分")
     parser.add_argument("--end-date", help="更新截止日，格式YYYYMMDD；默认今天")
     parser.add_argument("--token-file", help="可选Tushare token文件")
     args, product_args = parser.parse_known_args()
+
+    if args.check:
+        from .doctor import run_preflight
+
+        ready = run_preflight(include_update=args.update, token_file=args.token_file)
+        raise SystemExit(0 if ready else 2)
 
     if args.update:
         from .rotation.refresh_data import refresh

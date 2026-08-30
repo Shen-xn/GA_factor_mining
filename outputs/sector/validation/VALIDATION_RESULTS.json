@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-11T03:18:29+08:00",
-  "scope": "simple runnable sector prototype; quarterly expanding model; continuous ledger; cost stress and forward freeze",
+  "generated_at": "2026-08-30T15:07:22+08:00",
+  "scope": "user-ready sector prototype; locked environment; preflight; portable data contract; continuous ledger and forward freeze",
   "passed": true,
-  "passed_checks": 26,
-  "total_checks": 26,
+  "passed_checks": 29,
+  "total_checks": 29,
   "metrics": {
     "development_total_return": 0.1347704399362295,
     "selection_total_return": 0.366407507858943,
@@ -12,6 +12,21 @@
     "full_max_drawdown": -0.189337019965376
   },
   "checks": [
+    {
+      "name": "locked_dependencies",
+      "passed": true,
+      "detail": "Fresh Python 3.11 environment installed the exact supported dependency set"
+    },
+    {
+      "name": "preflight",
+      "passed": true,
+      "detail": "Runtime dependencies, eight Parquet files and cross-artifact signatures passed"
+    },
+    {
+      "name": "cache_portability",
+      "passed": true,
+      "detail": "Raw-data identity uses size and SHA-256, not machine path or mtime"
+    },
     {
       "name": "default_run",
       "passed": true,
@@ -55,7 +70,7 @@
     {
       "name": "forward_protocol",
       "passed": true,
-      "detail": "Protocol 380103452ae6 frozen; zero unseen days"
+      "detail": "Protocol v5 0737116c4b3a frozen; zero unseen days; superseded protocols removed from current outputs"
     },
     {
       "name": "single_state_path",
@@ -100,7 +115,7 @@
     {
       "name": "data_freshness",
       "passed": true,
-      "detail": "Data end 20260810, age 1 day"
+      "detail": "Data end 20260810, age 20 days; stale-data gate suppresses execution"
     },
     {
       "name": "latest_status",
@@ -115,12 +130,12 @@
     {
       "name": "documentation",
       "passed": true,
-      "detail": "README and report reflect current prototype"
+      "detail": "README, getting-started guide, data contract and module guide reflect the current prototype"
     },
     {
       "name": "tests",
       "passed": true,
-      "detail": "74 unit tests passed"
+      "detail": "81 unit tests passed in the clean environment"
     },
     {
       "name": "return_bridge",

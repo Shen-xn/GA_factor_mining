@@ -55,16 +55,15 @@ def _token_from(token_file: str | None) -> str:
     candidates = []
     if token_file:
         candidates.append(Path(token_file))
-    candidates.extend(
-        [
-            REPOSITORY_ROOT / "tushare_token.txt",
-            Path(r"D:\Users\s1171\qt_MLE\tushare_token.txt"),
-        ]
-    )
+    if env_file := os.environ.get("TUSHARE_TOKEN_FILE"):
+        candidates.append(Path(env_file))
+    candidates.append(REPOSITORY_ROOT / "tushare_token.txt")
     for path in candidates:
         if path.exists():
             return path.read_text(encoding="utf-8").strip()
-    raise RuntimeError("未找到Tushare token；请设置TUSHARE_TOKEN或传入--token-file")
+    raise RuntimeError(
+        "未找到Tushare token；请设置TUSHARE_TOKEN、TUSHARE_TOKEN_FILE或传入--token-file"
+    )
 
 
 def _query(callable_, **kwargs) -> pd.DataFrame:

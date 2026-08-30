@@ -1,0 +1,145 @@
+# 使用手册
+
+本文面向第一次拿到仓库的用户，目标是完成“安装、检查、回放、查看建议、更新数据”的闭环。
+
+## 1. 安装
+
+支持Python 3.11和3.12。建议始终使用独立虚拟环境。
+
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/Shen-xn/GA_factor_mining.git
+cd GA_factor_mining
+git switch main
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e .
+```
+
+macOS或Linux：
+
+```bash
+git clone https://github.com/Shen-xn/GA_factor_mining.git
+cd GA_factor_mining
+git switch main
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e .
+```
+
+安装完成后，下面的命令应能显示帮助：
+
+```powershell
+python -m ga_factor_mining.sector --help
+```
+
+## 2. 准备运行数据包
+
+Git仓库不包含授权行情和大型Parquet缓存。需要从项目维护者处取得与当前 `main` 对应的运行数据包，并保持原有相对目录复制到仓库。
+
+数据包包含两组内容：
+
+- `data/sector/` 下6个原始Parquet；
+- `outputs/sector/rotation/` 和 `outputs/sector/adaptation/` 下2个大型缓存Parquet。
+
+完整文件名、用途和字段见 [DATA_CONTRACT.md](DATA_CONTRACT.md)。JSON配置和缓存元数据已经随Git提交，不要用其他版本覆盖。
+
+复制后运行：
+
+```powershell
+python -m ga_factor_mining.sector --check
+```
+
+检查分三层：
+
+1. Python依赖是否齐全；
+2. 运行数据包是否放在正确位置；
+3. 原始数据、特征缓存和冻结评分的指纹是否一致。
+
+返回码为0且最后显示 `[ready]` 才代表可以正式运行。检查失败不会重建缓存，也不会修改输出。
+
+## 3. 正式回放
+
+```powershell
+python -m ga_factor_mining.sector
+```
+
+正常完成后，终端最后会显示 `outputs/sector/strategy/SUMMARY.csv`。优先查看：
+
+1. `LATEST_STATUS.csv`：先确认数据状态不是过期；
+2. `LATEST_ACTIONS.csv`：查看本次是否需要操作；
+3. `LATEST_TARGET_PORTFOLIO.csv`：核对完整目标权重；
+4. `SUMMARY.csv` 和 `ANNUAL_RESULTS.csv`：查看历史表现。
+
+`LATEST_ACTIONS.csv`为空不等于程序失败，通常表示当前无需交易。上一批操作只保存在 `LAST_REBALANCE_ACTIONS.csv`，不能重复执行。
+
+普通板块代码目前是研究建议，不保证存在一一对应、历史可交易且流动性充足的ETF。实际交易前必须人工完成产品映射和可交易性检查。
+
+## 4. 增量更新
+
+推荐使用环境变量，不把Token写入代码或仓库：
+
+```powershell
+$env:TUSHARE_TOKEN = "你的Token"
+python -m ga_factor_mining.sector --check --update
+python -m ga_factor_mining.sector --update
+```
+
+如果Token存放在仓库外文件：
+
+```powershell
+$env:TUSHARE_TOKEN_FILE = "D:\private\tushare_token.txt"
+python -m ga_factor_mining.sector --check --update
+python -m ga_factor_mining.sector --update
+```
+
+也可以临时传入：
+
+```powershell
+python -m ga_factor_mining.sector --update --token-file "D:\private\tushare_token.txt"
+```
+
+更新使用临时文件完成尾部校验后才替换正式缓存。若网络或数据校验失败，原文件应保持不变。更新不会重新搜索模型参数或策略规则。
+
+## 5. 运行测试
+
+```powershell
+python -m unittest discover -s tests -t . -v
+```
+
+测试不读取大型行情数据，适合在新机器上先确认代码安装正常。
+
+## 6. 常见问题
+
+### 显示“特征缓存不存在或已过期”
+
+运行数据包缺失、混用了不同版本，或者原始行情已更新但特征缓存未同步。先重新执行 `--check`，按失败项替换成同一批次的数据包。默认产品入口不会自动触发高内存的全量重建。
+
+### 显示“冻结评分与特征不一致”
+
+`SELECTED_SCORES.parquet` 和 `sector_feature_panel.parquet` 不是同一协议生成。不要修改JSON绕过校验，应取得匹配的数据包或按研究流程重新建立模型协议。
+
+### `LATEST_ACTIONS.csv`只有表头
+
+先看 `LATEST_STATUS.csv`。可能是无需交易，也可能是数据超过7天而被安全门禁止执行。
+
+### 安装LightGBM失败
+
+确认使用64位Python 3.11或3.12，并先升级pip：
+
+```powershell
+python -m pip install --upgrade pip
+python -m pip install "lightgbm==4.6.0"
+python -m pip install -e .
+```
+
+### 内存占用过高
+
+日常只运行 `python -m ga_factor_mining.sector`。不要把 `run_experiments`、`rolling_validation` 或GA模块放入日常更新脚本；它们属于研究重建流程。
+
+## 7. 版本边界
+
+正式模型、策略规则或决策代码发生变化后，前向监控会拒绝把新结果续接到旧协议。维护者必须保留旧记录、建立新协议版本，再继续追加未来数据。

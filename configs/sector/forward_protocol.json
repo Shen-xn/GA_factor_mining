@@ -1,11 +1,11 @@
 {
-  "version": 4,
+  "version": 5,
   "freeze_data_end": "20260810",
   "first_unseen_after": "20260810",
-  "evidence_name": "sector_simple_quarterly_forward_v4",
+  "evidence_name": "sector_simple_quarterly_forward_v5",
   "execution_layer": "sector_index_research_with_511880_low_risk_leg",
   "cost_bps": 20.0,
   "model_retraining_schedule": "quarterly_expanding_window",
   "policy_name": "simple_v1",
-  "notes": "模型和simple_v1规则不变；v4仅禁止理论引擎把缺失开盘收益填成0。2026-08-10及以前均已被看到，只有之后的数据可作为前向证据。"
+  "notes": "模型、simple_v1和冻结日不变；v5锁定可移植数据校验、运行前自检和稳定依赖。2026-08-10及以前均已被看到，只有之后的数据可作为前向证据。"
 }

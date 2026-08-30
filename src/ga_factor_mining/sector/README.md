@@ -1,36 +1,76 @@
-# Sector Strategy
+# 板块模块开发说明
 
-默认产品链路只有四层：
-
-1. `rotation/run_experiments.py`：构建无未来信息的板块特征；
-2. `rotation/rolling_validation.py`：生成扩展窗口LightGBM评分；
-3. `rotation/strategy.py`：把评分转换成低频买卖和持仓状态；
-4. `rotation/product_backtest.py`：按次日开盘成交，输出净值、仓位、建议和成本。
-
-直接运行：
+用户入口只有一个：
 
 ```powershell
 python -m ga_factor_mining.sector
 ```
 
-先更新新增行情再运行：
+运行前自检：
 
 ```powershell
-python -m ga_factor_mining.sector --update
+python -m ga_factor_mining.sector --check
 ```
 
-默认使用季度扩展窗口 LightGBM 评分、`simple_v1`、货币ETF `511880.SH` 和单边20bp成本，只执行一次2018年起连续承接的正式回放，不在选择期或观察期重置状态。季度重训只在2024-2025与年度基线做过一次对照并通过固定门槛，不会在日常运行中继续搜索频率。`--update`只更新新增日期和缓存尾部，不运行GA或策略搜索。其他模块均为可选研究诊断，不属于日常运行入口。
+## 正式链路
 
-理论引擎和产品账本都不把缺失开盘价或收益填成0。候选缺少完整收益时不进入理论组合；已经持有的板块若缺少必要行情，回放会停止并报告具体日期和代码。
+1. `rotation/run_experiments.py`：构建无未来信息的板块特征；
+2. `rotation/rolling_validation.py`：生成扩展窗口LightGBM评分；
+3. `rotation/strategy.py`：将评分转换成低频持仓状态；
+4. `rotation/risk.py`：市场状态和硬风险约束；
+5. `rotation/low_risk.py`：构造货币ETF真实收益；
+6. `rotation/product_backtest.py`：生成连续账本、指标和用户建议；
+7. `rotation/forward_monitor.py`：维护冻结协议后的新样本记录。
 
-产品流程只读取必要特征列。2026观察期承接2024-2025选择期末持仓状态；两段数据都已经被研究者看到，不能再作为未来候选的独立样本外证明。当前板块到权益ETF的严格历史映射覆盖不足，因此普通板块动作仍是研究建议，不是可直接下单的ETF指令。
+`doctor.py`只做运行前检查，不参与投资决策。默认运行读取已冻结的季度评分、`simple_v1`和20bp成本，不执行研究搜索。
 
-默认运行还会维护 `outputs/sector/forward/` 的冻结前向账本。冻结日为2026-08-10；之后的新数据才计入未见样本表现。决策代码或协议变化时停止追加，必须明确建立新版本，不能覆盖旧证据。
+## 正式模块与研究模块
 
-理论评分到产品的同口径对照使用：
+| 类型 | 模块 | 默认运行 |
+|---|---|---|
+| 正式 | `strategy.py`、`risk.py`、`low_risk.py`、`product_backtest.py` | 是 |
+| 正式 | `forward_monitor.py` | 是 |
+| 数据维护 | `refresh_data.py` | 仅`--update` |
+| 研究 | `run_experiments.py`、`rolling_validation.py`、`adaptive_validation.py` | 否 |
+| 研究 | `feature_ablation.py`、`ga_ablation.py`、`market_context_ablation.py` | 否 |
+| 诊断 | `return_bridge.py`、`bad_year_attribution.py`、`etf_mapping.py` | 否 |
+
+研究产物保留在 `outputs/sector/`，但未通过固定门槛的模块不能改变默认模型和策略。
+
+## 数据与缓存
+
+路径全部以仓库根目录为基准，不允许在代码中写个人绝对路径。运行数据契约见 `docs/DATA_CONTRACT.md`。
+
+产品入口只投影读取必要列。缓存缺失或指纹不一致时会立即停止，不会在日常流程中自动触发全量特征构建。完整研究重建可能占用较多内存，应单独执行并设置底层数值库为单线程。
+
+## 研究协议
+
+- 5日标签为 `open[t+6] / open[t+1] - 1`；
+- 训练样本标签必须在训练截止日前兑现；
+- 横截面排名在实际投资宇宙内部重新计算；
+- 2018—2023为开发期；
+- 2024—2025参与模型频率和策略选择；
+- 2026为已经观察过的诊断期；
+- 产品状态从2018年连续承接，不在年度边界重置；
+- 缺失收益不能填0，持仓缺少必要行情时回放直接停止。
+
+## 可选诊断
 
 ```powershell
 python -m ga_factor_mining.sector.rotation.return_bridge
+python -m ga_factor_mining.sector.rotation.product_backtest --cost-sensitivity
+python -m ga_factor_mining.sector.rotation.product_backtest --boundary-sensitivity
 ```
 
-该诊断只读取15列，不改变默认策略；五条路径使用完全相同的2018-01-03至2026-08-10收益日期。
+这些命令会写入结构化输出，但不会自动改变正式策略。
+
+## 提交前检查
+
+```powershell
+python -m unittest discover -s tests -t . -v
+python -m ga_factor_mining.sector --check
+python -m ga_factor_mining.sector
+git status --short
+```
+
+数据、Parquet缓存、模型文件、Token、临时日志和报告排版预览不得进入Git。正式Markdown/PDF报告和不含授权行情的结构化研究摘要可以保留。

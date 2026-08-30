@@ -156,16 +156,16 @@ def add_forward_open_returns(df: pd.DataFrame, horizons: tuple[int, ...] = (1, 5
 
 
 def _file_fingerprint(path: Path) -> dict[str, int | str]:
-    """用内容哈希和文件属性绑定原始数据，避免静默复用旧缓存。"""
+    """用相对名称、大小和内容哈希绑定原始数据。"""
     digest = hashlib.sha256()
     with path.open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
     stat = path.stat()
     return {
-        "path": str(path.resolve()),
+        # 不记录机器绝对路径和mtime，数据包复制到另一台机器后仍可校验。
+        "path": f"data/sector/{path.name}",
         "size": stat.st_size,
-        "mtime_ns": stat.st_mtime_ns,
         "sha256": digest.hexdigest(),
     }
 
@@ -182,6 +182,17 @@ def _metadata_signature(payload: dict) -> str:
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
+def _portable_source_identity(sources: dict) -> dict:
+    """兼容旧元数据，但只用可跨机器复核的内容字段比较原始数据。"""
+    return {
+        name: {
+            "size": fingerprint.get("size"),
+            "sha256": fingerprint.get("sha256"),
+        }
+        for name, fingerprint in sources.items()
+    }
+
+
 def feature_cache_is_current(feature_path: Path, meta_path: Path) -> bool:
     """协议、构建逻辑和原始数据均一致时才复用特征缓存。"""
     if not feature_path.exists() or not meta_path.exists():
@@ -193,7 +204,8 @@ def feature_cache_is_current(feature_path: Path, meta_path: Path) -> bool:
     return (
         metadata.get("feature_protocol_version") == FEATURE_PROTOCOL_VERSION
         and metadata.get("feature_logic_signature") == FEATURE_LOGIC_SIGNATURE
-        and metadata.get("sources") == source_data_fingerprints()
+        and _portable_source_identity(metadata.get("sources", {}))
+        == _portable_source_identity(source_data_fingerprints())
         and metadata.get("feature_cache_signature")
         == _metadata_signature({key: value for key, value in metadata.items() if key != "feature_cache_signature"})
     )

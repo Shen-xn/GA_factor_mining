@@ -186,7 +186,14 @@ class RotationProtocolTests(unittest.TestCase):
             feature_path.touch()
             meta_path.write_text('{"feature_protocol_version": 1}', encoding="utf-8")
             self.assertFalse(feature_cache_is_current(feature_path, meta_path))
-            sources = {"source.parquet": {"sha256": "abc", "size": 1, "mtime_ns": 1}}
+            sources = {
+                "source.parquet": {
+                    "path": "C:/old-machine/source.parquet",
+                    "sha256": "abc",
+                    "size": 1,
+                    "mtime_ns": 1,
+                }
+            }
             metadata = {
                 "feature_protocol_version": FEATURE_PROTOCOL_VERSION,
                 "feature_logic_signature": FEATURE_LOGIC_SIGNATURE,
@@ -196,7 +203,13 @@ class RotationProtocolTests(unittest.TestCase):
             meta_path.write_text(json.dumps(metadata), encoding="utf-8")
             with patch(
                 "ga_factor_mining.sector.rotation.run_experiments.source_data_fingerprints",
-                return_value=sources,
+                return_value={
+                    "source.parquet": {
+                        "path": "data/sector/source.parquet",
+                        "sha256": "abc",
+                        "size": 1,
+                    }
+                },
             ):
                 self.assertTrue(feature_cache_is_current(feature_path, meta_path))
 

@@ -1,0 +1,32 @@
+# 当前结构化结果
+
+本目录只保留正式策略运行所需产物，以及解释当前结论的少量诊断。历史基线、已被替代的实验矩阵和旧协议归档不在这里展示。
+
+## 日常用户
+
+按以下顺序查看：
+
+1. `strategy/LATEST_STATUS.csv`：数据是否可用、市场状态和仓位；
+2. `strategy/LATEST_ACTIONS.csv`：本次是否需要操作；
+3. `strategy/LATEST_TARGET_PORTFOLIO.csv`：完整目标组合；
+4. `strategy/SUMMARY.csv`：三个研究期间的汇总；
+5. `strategy/ANNUAL_RESULTS.csv`：逐年表现；
+6. `forward/STATUS.json`：当前前向协议是否正常。
+
+`rotation/sector_feature_panel.parquet` 和 `adaptation/SELECTED_SCORES.parquet` 是本地运行缓存，不进入Git，但默认策略必须使用。对应JSON元数据会提交。
+
+## 当前结论的解释材料
+
+| 目录 | 回答的问题 |
+|---|---|
+| `model_frequency/` | 为什么正式模型采用季度扩展窗口训练 |
+| `return_bridge/` | 理论Top5收益如何变成当前低频产品收益 |
+| `bad_year_attribution/` | 2018和2022为什么亏损 |
+| `defensive_exposure/` | 为什么没有采用防御期连续降仓方案 |
+| `factors/` | 当前因子目录、依赖与相关性 |
+| `feature_ablation/` | 为什么三项高相关派生因子仍被保留 |
+| `low_risk/` | 为什么低风险腿选择 `511880.SH` |
+| `etf_mapping/` | 当前板块到权益ETF映射为何尚不能实盘化 |
+| `validation/` | 当前代码、文档和正式结果的验收摘要 |
+
+除此之外的研究尝试不代表当前产品，不应重新放回本目录；如需恢复，应该作为新的研究协议单独运行。

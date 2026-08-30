@@ -6,7 +6,7 @@
   "score_name": "score_frozen_selected_5d",
   "policy_name": "simple_v1",
   "cost_bps": 20.0,
-  "cost_sensitivity_run": true,
+  "cost_sensitivity_run": false,
   "boundary_sensitivity_run": false,
   "product_history_start": "20180101",
   "boundary_mode": "continuous_carry_from_2018",
@@ -19,13 +19,13 @@
   "memory_mode": "projected feature columns; one default product replay",
   "data_freshness": {
     "data_end_date": "20260810",
-    "data_age_days": 1,
-    "data_stale": false,
+    "data_age_days": 20,
+    "data_stale": true,
     "strategy_action": "持有不动",
-    "execution_message": "无需交易"
+    "execution_message": "数据已过期，禁止执行"
   },
   "runtime": {
-    "python": "3.12.7",
+    "python": "3.11.9",
     "pandas": "2.2.2",
     "numpy": "1.26.4"
   }

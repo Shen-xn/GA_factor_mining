@@ -22,6 +22,11 @@ data/
 *.npz
 **/latest_model.txt
 
+# 本地访问凭据，绝不提交。
+/tushare_token.txt
+/.env
+/.env.*
+
 # 常见临时文件和日志。
 *.log
 *.tmp
