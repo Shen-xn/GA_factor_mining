@@ -14,7 +14,7 @@
 6. `strategy/LATEST_MARKET_RISK.csv`：板块广度风险、仓位来源与确认进度；
 7. `strategy/SUMMARY.csv`、`strategy/ANNUAL_RESULTS.csv`：分段与逐年表现；
 8. `strategy/ACCEPTANCE_GATE.json`：当前版本距收益、低频和成本目标还差什么；
-9. `forward/STATUS.json`：当前前向协议是否正常。
+9. `forward/STATUS.json`：当前v9前向协议是否正常；`forward/archive/v8/`保留8月11—28日的14日未见证据。
 
 `rotation/sector_feature_panel.parquet` 和 `adaptation/SELECTED_SCORES.parquet` 是本地运行缓存，不进入Git，但默认策略必须使用。对应JSON元数据会提交。
 

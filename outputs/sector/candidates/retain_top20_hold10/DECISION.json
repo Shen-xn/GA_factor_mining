@@ -1,35 +1,48 @@
 {
-  "candidate": "simple_v1_retain_top20_hold10",
-  "sequential_changes": {
-    "retain_rank": {
-      "baseline": 10,
-      "candidate": 20
-    },
-    "min_hold_sessions": {
-      "baseline": 5,
-      "candidate": 10
-    }
+  "candidate": "retain_top20_hold10",
+  "parameters": {
+    "target_positions": 5,
+    "entry_rank": 5,
+    "retain_rank": 20,
+    "min_hold_sessions": 10,
+    "score_smoothing_sessions": 3
   },
   "selection_end": "20251231",
   "observation_used_for_selection": false,
   "input_max_trade_date": "20251231",
+  "feature_cache_signature_at_replay": "6dd1e5ddb4c0afce5af4cd142ce9917243bf4f5ec090a32ef6d14cdd7262a445",
   "cost_bps": 20.0,
-  "accepted_at_20bp": false,
-  "cost_stress_run": false,
-  "promotion": "rejected",
-  "gates": {
-    "cumulative_return": false,
-    "annualized_return": false,
-    "development_return": false,
+  "accepted_at_20bp": true,
+  "cost_stress_run": true,
+  "cost_stress": {
+    "30bp": {
+      "status": "completed",
+      "development_return": -0.07494023977213793,
+      "selection_return": 0.06782954670051944,
+      "full_return": -0.01219385556499164,
+      "maximum_drawdown": -0.2065651447932052,
+      "passed": false
+    },
+    "50bp": {
+      "status": "not_required_after_30bp_gate_failed",
+      "passed": false
+    }
+  },
+  "gates_20bp": {
+    "cumulative_return": true,
+    "annualized_return": true,
+    "development_return": true,
     "selection_return": true,
     "selection_years_positive": true,
     "maximum_drawdown": true,
     "positive_years": true,
-    "years_above_3pct": false,
+    "years_above_3pct": true,
     "worst_calendar_year": true,
     "average_daily_turnover": true,
     "annualized_turnover": true,
     "trade_day_ratio": true,
     "median_holding_sessions": true
-  }
+  },
+  "promotion": "rejected",
+  "rejection_reason": "20bp基础门全部通过，但30bp完整路径的开发期和全期收益转负，成本鲁棒性门失败"
 }

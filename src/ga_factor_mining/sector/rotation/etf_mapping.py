@@ -11,7 +11,9 @@ import argparse
 from datetime import datetime
 import hashlib
 import json
+import os
 import re
+import tempfile
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -21,7 +23,7 @@ import pandas as pd
 
 from ...common.paths import DATA_ROOT, OUTPUT_ROOT, ensure_output_dir
 from .low_risk import DEFAULT_LOW_RISK_CODE
-from .run_experiments import load_or_build_features
+from .run_experiments import load_feature_subset
 
 
 ETF_BASIC_PATH = DATA_ROOT / "sector" / "etf_basic.parquet"
@@ -801,14 +803,86 @@ def build_strategy_allocation_audit(
 def _save_fetched_frames(daily_frames: list[pd.DataFrame], adj_frames: list[pd.DataFrame]) -> None:
     daily = pd.concat(daily_frames, ignore_index=True) if daily_frames else pd.DataFrame()
     adj = pd.concat(adj_frames, ignore_index=True) if adj_frames else pd.DataFrame()
-    if not daily.empty:
-        daily = daily.drop_duplicates(["ts_code", "trade_date"], keep="last")
-        daily = daily.sort_values(["ts_code", "trade_date"])
-        daily.to_parquet(ETF_DAILY_PATH, index=False)
-    if not adj.empty:
-        adj = adj.drop_duplicates(["ts_code", "trade_date"], keep="last")
-        adj = adj.sort_values(["ts_code", "trade_date"])
-        adj.to_parquet(ETF_ADJ_PATH, index=False)
+    if daily.empty or adj.empty:
+        raise RuntimeError("ETF行情和复权因子必须同时存在")
+    daily = daily.drop_duplicates(["ts_code", "trade_date"], keep="last")
+    daily = daily.sort_values(["ts_code", "trade_date"])
+    adj = adj.drop_duplicates(["ts_code", "trade_date"], keep="last")
+    adj = adj.sort_values(["ts_code", "trade_date"])
+    # 两份行情先完整落到临时目录，再一起替换，避免中断后版本不一致。
+    from .refresh_data import _transactional_replace
+
+    with tempfile.TemporaryDirectory(prefix="etf-refresh-", dir=ETF_DAILY_PATH.parent) as temp_dir:
+        staging = Path(temp_dir)
+        staged_daily = staging / ETF_DAILY_PATH.name
+        staged_adj = staging / ETF_ADJ_PATH.name
+        daily.to_parquet(staged_daily, index=False)
+        adj.to_parquet(staged_adj, index=False)
+        _transactional_replace(
+            [(ETF_DAILY_PATH, staged_daily), (ETF_ADJ_PATH, staged_adj)]
+        )
+
+
+def refresh_etf_basic(token_file: Path) -> None:
+    """更新ETF目录；凭据只从仓库外文件读取。"""
+    try:
+        import tushare as ts
+    except ImportError as exc:  # pragma: no cover - 仅数据准备环境需要
+        raise RuntimeError("抓取ETF目录需要单独安装 tushare") from exc
+    token = token_file.read_text(encoding="utf-8").strip()
+    if not token:
+        raise ValueError("Tushare token 文件为空")
+    basic = ts.pro_api(token).etf_basic()
+    required = {"ts_code", "index_code", "index_name", "list_date", "list_status"}
+    if basic.empty or required - set(basic.columns):
+        raise RuntimeError("ETF目录为空或字段不完整")
+    ETF_BASIC_PATH.parent.mkdir(parents=True, exist_ok=True)
+    handle = tempfile.NamedTemporaryFile(
+        prefix=".etf-basic-",
+        suffix=".parquet",
+        dir=ETF_BASIC_PATH.parent,
+        delete=False,
+    )
+    staged = Path(handle.name)
+    handle.close()
+    try:
+        basic.to_parquet(staged, index=False)
+        os.replace(staged, ETF_BASIC_PATH)
+    finally:
+        staged.unlink(missing_ok=True)
+
+
+def candidate_fetch_ranges(
+    candidates: pd.DataFrame,
+    existing_daily: pd.DataFrame,
+    existing_adj: pd.DataFrame,
+    start_date: str,
+    end_date: str,
+) -> list[tuple[str, str]]:
+    """为每只ETF计算断点续传起点；包含最后重叠日用于去重校验。"""
+    daily_latest = (
+        existing_daily.assign(trade_date=existing_daily["trade_date"].astype(str))
+        .groupby("ts_code")["trade_date"]
+        .max()
+        .to_dict()
+        if not existing_daily.empty
+        else {}
+    )
+    adj_latest = (
+        existing_adj.assign(trade_date=existing_adj["trade_date"].astype(str))
+        .groupby("ts_code")["trade_date"]
+        .max()
+        .to_dict()
+        if not existing_adj.empty
+        else {}
+    )
+    ranges = []
+    for code in sorted(set(candidates["etf_code"].astype(str))):
+        overlap = min(daily_latest.get(code, start_date), adj_latest.get(code, start_date))
+        fetch_start = max(str(start_date), str(overlap))
+        if fetch_start <= end_date:
+            ranges.append((code, fetch_start))
+    return ranges
 
 
 def fetch_candidate_history(
@@ -831,22 +905,25 @@ def fetch_candidate_history(
     existing_adj = pd.read_parquet(ETF_ADJ_PATH) if ETF_ADJ_PATH.exists() else pd.DataFrame()
     daily_frames = [existing_daily] if not existing_daily.empty else []
     adj_frames = [existing_adj] if not existing_adj.empty else []
-    complete_codes = set(existing_daily.get("ts_code", pd.Series(dtype=str)).astype(str)) & set(
-        existing_adj.get("ts_code", pd.Series(dtype=str)).astype(str)
+    fetch_ranges = candidate_fetch_ranges(
+        candidates,
+        existing_daily,
+        existing_adj,
+        start_date,
+        end_date,
     )
-    codes = sorted(set(candidates["etf_code"].astype(str)) - complete_codes)
-    for index, code in enumerate(codes, start=1):
-        daily = pro.fund_daily(ts_code=code, start_date=start_date, end_date=end_date)
+    for index, (code, fetch_start) in enumerate(fetch_ranges, start=1):
+        daily = pro.fund_daily(ts_code=code, start_date=fetch_start, end_date=end_date)
         time.sleep(call_interval)
-        adj = pro.fund_adj(ts_code=code, start_date=start_date, end_date=end_date)
+        adj = pro.fund_adj(ts_code=code, start_date=fetch_start, end_date=end_date)
         time.sleep(call_interval)
         if daily.empty or adj.empty:
             raise RuntimeError(f"ETF {code} 行情或复权因子为空")
         daily_frames.append(daily)
         adj_frames.append(adj)
-        if index % 20 == 0 or index == len(codes):
+        if index % 20 == 0 or index == len(fetch_ranges):
             _save_fetched_frames(daily_frames, adj_frames)
-            print(f"[etf-data] {index}/{len(codes)}")
+            print(f"[etf-data] {index}/{len(fetch_ranges)}")
 
 
 def main() -> None:
@@ -858,12 +935,14 @@ def main() -> None:
     parser.add_argument("--end-date", default="20260529")
     args = parser.parse_args()
 
+    if args.fetch:
+        if args.token_file is None:
+            parser.error("--fetch 时必须提供 --token-file")
+        refresh_etf_basic(args.token_file)
     sector_catalog = pd.read_parquet(DATA_ROOT / "sector" / "ths_index.parquet")
     etf_basic = pd.read_parquet(ETF_BASIC_PATH)
     candidates = build_strict_candidates(sector_catalog, etf_basic, args.asof_date)
     if args.fetch:
-        if args.token_file is None:
-            parser.error("--fetch 时必须提供 --token-file")
         fetch_candidate_history(candidates, args.token_file, args.start_date, args.end_date)
 
     output_dir = ensure_output_dir("sector", "etf_mapping")
@@ -885,7 +964,8 @@ def main() -> None:
         "data_signature": _data_signature((ETF_BASIC_PATH, ETF_DAILY_PATH, ETF_ADJ_PATH)),
     }
     if ETF_DAILY_PATH.exists() and ETF_ADJ_PATH.exists():
-        panel = load_or_build_features()
+        # 映射只需要日收益，禁止加载整张特征面板造成无意义的内存峰值。
+        panel = load_feature_subset({"trade_date", "ts_code", "type", "ret_1d"})
         prices = load_adjusted_etf_prices()
         mapping = build_monthly_mapping(panel, prices, candidates, policy)
         mapping.to_parquet(output_dir / "MONTHLY_MAPPING.parquet", index=False)

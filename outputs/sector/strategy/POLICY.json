@@ -1,6 +1,6 @@
 {
   "feature_protocol_version": 4,
-  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86",
+  "feature_cache_signature": "6dd1e5ddb4c0afce5af4cd142ce9917243bf4f5ec090a32ef6d14cdd7262a445",
   "strategy_policy_version": 5,
   "policy_name": "simple_v1",
   "policy": {
@@ -28,6 +28,6 @@
   "observation_hypothesis_disclosure": "2026 market structure motivated the review; 2026 metrics are diagnostic, not confirmatory evidence",
   "boundary_mode": "continuous_carry_from_2018",
   "low_risk_code": "511880.SH",
-  "low_risk_data_signature": "1eeb18eb7051fac89a37d46a8a1005708be84514dfefb9ae9762187fd5e40bdd",
+  "low_risk_data_signature": "760bf7fdeefae8d8ea0e0e7c3401d1ff395c7f171dc96a4760031d67f0f522a8",
   "starting_capital_assumption": "fully invested in low-risk ETF before first signal"
 }

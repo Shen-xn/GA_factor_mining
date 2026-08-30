@@ -7,7 +7,11 @@ import argparse
 import gc
 import hashlib
 import json
+import os
 import platform
+import subprocess
+import sys
+import tempfile
 from dataclasses import asdict, replace
 from pathlib import Path
 
@@ -697,7 +701,10 @@ def write_latest_market_risk(
         instruction_current = bool(data_freshness and data_freshness.get("instruction_current"))
         plan_valid = bool(data_freshness and data_freshness.get("action_plan_valid"))
         payload["diagnostic_available"] = bool(not stale and quality_ok)
-        payload["execution_allowed"] = bool(not stale and quality_ok and instruction_current and plan_valid)
+        product_execution_allowed = bool(
+            data_freshness and data_freshness.get("execution_allowed")
+        )
+        payload["execution_allowed"] = bool(quality_ok and product_execution_allowed)
         pending = payload.get("pending_regime")
         reasons = [
             f"分数越高越适合承担权益风险，当前{payload['risk_score']:.1f}分",
@@ -722,6 +729,8 @@ def write_latest_market_risk(
             reasons.append("产品信号尚未推进到最新行情日，风险诊断不可直接当作交易指令")
         elif quality_ok and not plan_valid:
             reasons.append("当前动作不是下一交易日计划，禁止执行")
+        elif quality_ok and not product_execution_allowed:
+            reasons.append("ETF执行层未就绪，风险诊断不可直接当作交易指令")
         payload["reason"] = "；".join(reasons)
     pd.DataFrame([payload]).to_csv(
         output_dir / "LATEST_MARKET_RISK.csv", index=False, encoding="utf-8-sig"
@@ -1299,6 +1308,63 @@ def summarize_backtest_period(
     return period_daily, period_actions, metrics
 
 
+def build_cost_sensitivity_frame(
+    daily_path: pd.DataFrame,
+    actions_path: pd.DataFrame,
+    *,
+    cost_bps: float,
+    score_name: str,
+    policy_name: str,
+) -> pd.DataFrame:
+    """汇总单一成本路径；供隔离子进程回传小型结果表。"""
+    rows = []
+    for period, start, end in (
+        ("development", PRODUCT_HISTORY_START, TRAIN_END),
+        ("selection", VAL_START, VAL_END),
+        ("full", PRODUCT_HISTORY_START, VAL_END),
+        ("observation", OBSERVATION_START, OBSERVATION_END),
+    ):
+        daily, _, metrics = summarize_backtest_period(daily_path, actions_path, start, end)
+        rows.append(
+            {
+                "period": period,
+                "boundary_mode": "continuous_carry",
+                "score_name": score_name,
+                "policy_name": policy_name,
+                "cost_bps": cost_bps,
+                "full_path_rerun": True,
+                "stress_kind": "full_system_replay_with_drawdown_feedback",
+                "feature_protocol_version": FEATURE_PROTOCOL_VERSION,
+                "feature_cache_signature": current_feature_cache_signature(),
+                "strategy_policy_version": STRATEGY_POLICY_VERSION,
+                "low_risk_data_signature": low_risk_data_signature(),
+                **metrics,
+                "avg_turnover": float(daily["turnover"].mean()),
+            }
+        )
+    history = daily_path.loc[daily_path["date"].le(VAL_END)]
+    for year, year_daily in history.groupby(history["date"].str[:4]):
+        metrics = annualized_metrics(year_daily.set_index("date")["net_return"])
+        rows.append(
+            {
+                "period": f"year_{year}",
+                "boundary_mode": "continuous_carry",
+                "score_name": score_name,
+                "policy_name": policy_name,
+                "cost_bps": cost_bps,
+                "full_path_rerun": True,
+                "stress_kind": "full_system_replay_with_drawdown_feedback",
+                "feature_protocol_version": FEATURE_PROTOCOL_VERSION,
+                "feature_cache_signature": current_feature_cache_signature(),
+                "strategy_policy_version": STRATEGY_POLICY_VERSION,
+                "low_risk_data_signature": low_risk_data_signature(),
+                **metrics,
+                "avg_turnover": float(year_daily["turnover"].mean()),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def write_acceptance_gate(
     daily: pd.DataFrame,
     actions: pd.DataFrame,
@@ -1585,6 +1651,9 @@ def main() -> None:
     parser.add_argument("--refresh-scores", action="store_true")
     parser.add_argument("--use-selected-adaptive", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--cost-sensitivity", action="store_true")
+    parser.add_argument("--cost-worker", type=float, help=argparse.SUPPRESS)
+    parser.add_argument("--cost-worker-output", type=Path, help=argparse.SUPPRESS)
+    parser.add_argument("--precomputed-cost-file", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--boundary-sensitivity", action="store_true")
     parser.add_argument(
         "--policy",
@@ -1596,9 +1665,101 @@ def main() -> None:
         parser.error("滚动模型重训不能同时指定其他评分来源")
     if args.score and args.use_selected_adaptive:
         parser.error("人工公式评分和已选滚动评分不能同时使用")
+    if (args.cost_worker is None) != (args.cost_worker_output is None):
+        parser.error("成本隔离进程参数必须成对提供")
+    if args.cost_worker is not None and args.cost_sensitivity:
+        parser.error("成本隔离进程不能再次启动成本压力")
     use_selected_adaptive = bool(
         args.use_selected_adaptive or (args.score is None and args.rolling_lgbm_horizon is None)
     )
+    precomputed_cost_frame = (
+        pd.read_csv(args.precomputed_cost_file)
+        if args.precomputed_cost_file is not None
+        else None
+    )
+    if args.cost_sensitivity:
+        # 每条成本路径使用独立进程，避免Pandas/Numpy长期重复回放产生内存碎片。
+        isolated_frames = []
+        worker_python = os.environ.get("GA_FACTOR_WORKER_PYTHON", sys.executable)
+        with tempfile.TemporaryDirectory(prefix="sector-cost-") as temp_dir:
+            temp_root = Path(temp_dir)
+            for cost_bps in (10.0, 20.0, 30.0, 50.0):
+                output_path = temp_root / f"cost_{int(cost_bps)}.csv"
+                command = [
+                    worker_python,
+                    "-X",
+                    "faulthandler",
+                    "-m",
+                    "ga_factor_mining.sector.rotation.product_backtest",
+                    "--cost-worker",
+                    str(cost_bps),
+                    "--cost-worker-output",
+                    str(output_path),
+                    "--policy",
+                    args.policy,
+                ]
+                if args.score:
+                    command.extend(["--score", args.score])
+                elif args.rolling_lgbm_horizon:
+                    command.extend(["--rolling-lgbm-horizon", str(args.rolling_lgbm_horizon)])
+                elif args.use_selected_adaptive:
+                    command.append("--use-selected-adaptive")
+                worker_env = os.environ.copy()
+                for name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
+                    worker_env[name] = "1"
+                worker_env["PYTHONMALLOC"] = "malloc"
+                source_root = str(Path(__file__).resolve().parents[3])
+                worker_env["PYTHONPATH"] = os.pathsep.join(
+                    value
+                    for value in (source_root, worker_env.get("PYTHONPATH", ""))
+                    if value
+                )
+                completed = None
+                for attempt in range(1, 4):
+                    output_path.unlink(missing_ok=True)
+                    completed = subprocess.run(command, check=False, env=worker_env)
+                    if completed.returncode == 0 and output_path.exists():
+                        break
+                    print(f"[cost] {cost_bps:.0f}bp 子进程异常，第{attempt}/3次")
+                if completed is None or completed.returncode != 0 or not output_path.exists():
+                    raise RuntimeError(f"{cost_bps:.0f}bp 成本隔离回放连续失败")
+                isolated_frames.append(pd.read_csv(output_path))
+                print(f"[cost] {cost_bps:.0f}bp 隔离回放完成")
+            combined_path = temp_root / "cost_sensitivity.csv"
+            pd.concat(isolated_frames, ignore_index=True).to_csv(
+                combined_path, index=False, encoding="utf-8-sig"
+            )
+            final_command = [
+                worker_python,
+                "-X",
+                "faulthandler",
+                "-m",
+                "ga_factor_mining.sector.rotation.product_backtest",
+                "--precomputed-cost-file",
+                str(combined_path),
+                "--cost-bps",
+                str(args.cost_bps),
+                "--policy",
+                args.policy,
+            ]
+            if args.score:
+                final_command.extend(["--score", args.score])
+            elif args.rolling_lgbm_horizon:
+                final_command.extend(
+                    ["--rolling-lgbm-horizon", str(args.rolling_lgbm_horizon)]
+                )
+            elif args.use_selected_adaptive:
+                final_command.append("--use-selected-adaptive")
+            final = None
+            for attempt in range(1, 4):
+                final = subprocess.run(final_command, check=False, env=worker_env)
+                if final.returncode == 0:
+                    break
+                print(f"[product] 正式账本子进程异常，第{attempt}/3次")
+            if final is None or final.returncode != 0:
+                raise RuntimeError("正式账本隔离回放连续失败")
+            print("[cost] 隔离成本压力与正式账本全部完成")
+        return
     requested_score = args.score or "score_breakout"
     # 已有外部评分时只读取产品账本所需列；滚动模型重训仍需要完整特征面板。
     if args.rolling_lgbm_horizon:
@@ -1663,8 +1824,30 @@ def main() -> None:
             )
         panel = panel.merge(predictions, on=["ts_code", "trade_date"], how="left")
         score_name = f"score_rolling_lgbm_{horizon}d"
-    output_dir = ensure_output_dir("sector", "strategy")
     selected_policy = get_strategy_policy(args.policy)
+    if args.cost_worker is not None:
+        worker_daily, worker_actions, _ = run_product_backtest(
+            panel,
+            score_name,
+            PRODUCT_HISTORY_START,
+            OBSERVATION_END,
+            cost_bps=args.cost_worker,
+            strategy_policy=selected_policy,
+            low_risk_frame=low_risk_frame,
+        )
+        worker_frame = build_cost_sensitivity_frame(
+            worker_daily,
+            worker_actions,
+            cost_bps=args.cost_worker,
+            score_name=score_name,
+            policy_name=args.policy,
+        )
+        args.cost_worker_output.parent.mkdir(parents=True, exist_ok=True)
+        worker_frame.to_csv(args.cost_worker_output, index=False, encoding="utf-8-sig")
+        print(f"[cost-worker] {args.cost_worker:.0f}bp 完成")
+        return
+
+    output_dir = ensure_output_dir("sector", "strategy")
     (output_dir / "POLICY.json").write_text(
         json.dumps(
             {
@@ -1784,68 +1967,8 @@ def main() -> None:
         output_dir,
     )
     cost_sensitivity_frame: pd.DataFrame | None = None
-    if args.cost_sensitivity:
-        sensitivity_rows = []
-        for cost_bps in [10.0, 20.0, 30.0, 50.0]:
-            if cost_bps == args.cost_bps:
-                cost_daily, cost_actions = continuous_daily, continuous_actions
-            else:
-                cost_daily, cost_actions, _ = run_product_backtest(
-                    panel,
-                    score_name,
-                    PRODUCT_HISTORY_START,
-                    OBSERVATION_END,
-                    cost_bps=cost_bps,
-                    strategy_policy=selected_policy,
-                    low_risk_frame=low_risk_frame,
-                )
-            for period, start, end in (
-                ("development", PRODUCT_HISTORY_START, TRAIN_END),
-                ("selection", VAL_START, VAL_END),
-                ("full", PRODUCT_HISTORY_START, VAL_END),
-                ("observation", OBSERVATION_START, OBSERVATION_END),
-            ):
-                daily, _, metrics = summarize_backtest_period(cost_daily, cost_actions, start, end)
-                sensitivity_rows.append(
-                    {
-                        "period": period,
-                        "boundary_mode": "continuous_carry",
-                        "score_name": score_name,
-                        "policy_name": args.policy,
-                        "cost_bps": cost_bps,
-                        "full_path_rerun": True,
-                        "stress_kind": "full_system_replay_with_drawdown_feedback",
-                        "feature_protocol_version": FEATURE_PROTOCOL_VERSION,
-                        "feature_cache_signature": current_feature_cache_signature(),
-                        "strategy_policy_version": STRATEGY_POLICY_VERSION,
-                        "low_risk_data_signature": low_risk_data_signature(),
-                        **metrics,
-                        "avg_turnover": float(daily["turnover"].mean()),
-                    }
-                )
-            for year, year_daily in cost_daily.loc[cost_daily["date"].le(VAL_END)].groupby(
-                cost_daily.loc[cost_daily["date"].le(VAL_END), "date"].str[:4]
-            ):
-                year_metrics = annualized_metrics(year_daily.set_index("date")["net_return"])
-                sensitivity_rows.append(
-                    {
-                        "period": f"year_{year}",
-                        "boundary_mode": "continuous_carry",
-                        "score_name": score_name,
-                        "policy_name": args.policy,
-                        "cost_bps": cost_bps,
-                        "full_path_rerun": True,
-                        "stress_kind": "full_system_replay_with_drawdown_feedback",
-                        "feature_protocol_version": FEATURE_PROTOCOL_VERSION,
-                        "feature_cache_signature": current_feature_cache_signature(),
-                        "strategy_policy_version": STRATEGY_POLICY_VERSION,
-                        "low_risk_data_signature": low_risk_data_signature(),
-                        **year_metrics,
-                        "avg_turnover": float(year_daily["turnover"].mean()),
-                    }
-                )
-            gc.collect()
-        cost_sensitivity_frame = pd.DataFrame(sensitivity_rows)
+    if precomputed_cost_frame is not None:
+        cost_sensitivity_frame = precomputed_cost_frame
         cost_sensitivity_frame.to_csv(
             output_dir / "COST_SENSITIVITY.csv", index=False, encoding="utf-8-sig"
         )
@@ -1906,7 +2029,7 @@ def main() -> None:
                 "score_name": score_name,
                 "policy_name": args.policy,
                 "cost_bps": args.cost_bps,
-                "cost_sensitivity_run": args.cost_sensitivity,
+                "cost_sensitivity_run": cost_sensitivity_frame is not None,
                 "boundary_sensitivity_run": args.boundary_sensitivity,
                 "product_history_start": PRODUCT_HISTORY_START,
                 "boundary_mode": "continuous_carry_from_2018",

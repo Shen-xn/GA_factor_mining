@@ -1,7 +1,7 @@
 {
   "default_prototype": true,
   "feature_protocol_version": 4,
-  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86",
+  "feature_cache_signature": "6dd1e5ddb4c0afce5af4cd142ce9917243bf4f5ec090a32ef6d14cdd7262a445",
   "strategy_policy_version": 5,
   "score_name": "score_frozen_selected_5d",
   "policy_name": "simple_v1",
@@ -18,39 +18,35 @@
   },
   "memory_mode": "projected feature columns; one default product replay",
   "data_freshness": {
-    "data_end_date": "20260810",
-    "data_age_days": 21,
-    "data_stale": true,
+    "data_end_date": "20260828",
+    "data_age_days": 3,
+    "data_stale": false,
     "instruction_current": true,
-    "action_plan_valid": false,
+    "action_plan_valid": true,
     "execution_allowed": false,
-    "strategy_action": "持有不动",
-    "execution_message": "数据已过期，禁止执行"
+    "strategy_action": "有新调仓建议",
+    "execution_message": "ETF执行层未就绪，禁止执行"
   },
   "etf_execution_readiness": {
-    "generated_at": "2026-08-31T01:43:13+08:00",
+    "generated_at": "2026-08-31T02:28:22+08:00",
     "overall_status": "blocked",
     "execution_ready": false,
-    "strategy_data_end": "20260810",
-    "strategy_data_age_days": 21,
-    "signal_date": "20260810",
-    "planned_execution_date": null,
-    "mapping_asof": "20260430",
-    "mapping_review_due": "20260531",
-    "equity_quote_date": "20260529",
-    "low_risk_quote_date": "20260810",
-    "current_selected_sectors": 18,
-    "current_distinct_etfs": 15,
-    "historical_selected_rows": 708,
+    "strategy_data_end": "20260828",
+    "strategy_data_age_days": 3,
+    "signal_date": "20260828",
+    "planned_execution_date": "20260831",
+    "mapping_asof": "20260731",
+    "mapping_review_due": "20260831",
+    "equity_quote_date": "20260828",
+    "low_risk_quote_date": "20260828",
+    "current_selected_sectors": 13,
+    "current_distinct_etfs": 12,
+    "historical_selected_rows": 748,
     "risk_target_weight": 0.3,
     "mapped_equity_weight": 0.0,
     "current_target_coverage": 0.0,
     "weights_valid": true,
     "operational_blockers": [
-      "strategy_data_stale",
-      "next_trade_calendar_missing",
-      "mapping_stale",
-      "equity_etf_quotes_stale",
       "mapping_coverage_incomplete"
     ],
     "research_blockers": [
@@ -59,10 +55,6 @@
       "resolved_etf_backtest_missing"
     ],
     "blockers": [
-      "strategy_data_stale",
-      "next_trade_calendar_missing",
-      "mapping_stale",
-      "equity_etf_quotes_stale",
       "mapping_coverage_incomplete",
       "etf_master_not_point_in_time",
       "sector_catalog_not_point_in_time",
@@ -70,8 +62,8 @@
     ]
   },
   "runtime": {
-    "python": "3.11.9",
-    "pandas": "2.2.2",
-    "numpy": "1.26.4"
+    "python": "3.12.13",
+    "pandas": "3.0.3",
+    "numpy": "2.4.6"
   }
 }

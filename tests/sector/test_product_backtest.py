@@ -17,11 +17,45 @@ from ga_factor_mining.sector.rotation.product_backtest import (
     run_product_backtest,
     summarize_backtest_period,
     write_latest_advice,
+    write_latest_market_risk,
 )
 from ga_factor_mining.sector.rotation.strategy import StrategyPolicy
 
 
 class ProductBacktestTests(unittest.TestCase):
+    def test_market_risk_is_not_executable_when_product_layer_blocks(self):
+        snapshot = {
+            "status": "ready",
+            "risk_data_quality": "complete",
+            "risk_score": 60.0,
+            "trend_health": 0.6,
+            "breadth_positive_20d": 0.6,
+            "breadth_positive_60d": 0.6,
+            "breadth_20d_coverage": 1.0,
+            "breadth_60d_coverage": 1.0,
+            "volatility_health": 0.6,
+            "pending_regime": None,
+            "drawdown_cap": 1.0,
+            "regime_base_exposure": 0.7,
+            "actual_portfolio_exposure": 0.7,
+            "risk_target_exposure": 0.7,
+        }
+        freshness = {
+            "data_age_days": 0,
+            "data_stale": False,
+            "instruction_current": True,
+            "action_plan_valid": True,
+            "execution_allowed": False,
+        }
+        with tempfile.TemporaryDirectory() as temp_dir:
+            payload = write_latest_market_risk(
+                snapshot,
+                Path(temp_dir),
+                data_freshness=freshness,
+            )
+        self.assertFalse(payload["execution_allowed"])
+        self.assertIn("ETF执行层未就绪", payload["reason"])
+
     @staticmethod
     def _three_day_live_tail_panel() -> pd.DataFrame:
         rows = []

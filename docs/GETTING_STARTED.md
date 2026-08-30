@@ -104,6 +104,8 @@ python -m ga_factor_mining.sector --update
 python -m ga_factor_mining.sector --update --token-file "D:\private\tushare_token.txt"
 ```
 
+成本压力会把10/20/30/50bp和最终正式账本拆到相互隔离的进程中。如果本机默认Python存在原生运行时异常，可临时设置`GA_FACTOR_WORKER_PYTHON`指向另一个已验证、依赖齐全的Python解释器；数据、策略和验收口径不会因此改变。
+
 更新会额外缓存请求日之后至少31个自然日的交易日历，用于生成严格晚于最新信号日的下一开市日。行情、特征、评分和日历通过尾部校验后才替换正式缓存；网络或数据校验失败时原文件保持不变。更新不会重新搜索模型参数或策略规则。
 
 ## 5. 运行测试

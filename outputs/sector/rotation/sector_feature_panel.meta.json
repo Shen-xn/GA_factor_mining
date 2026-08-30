@@ -7,16 +7,14 @@
   "rank_universe": "recomputed_per_investment_universe",
   "sources": {
     "ths_daily.parquet": {
-      "path": "C:\\Users\\s1171\\Documents\\ChatGPT\\GA_factor_mining\\data\\sector\\ths_daily.parquet",
-      "size": 211379598,
-      "mtime_ns": 1786380481627762400,
-      "sha256": "845b144b2474e59bf962d0bb2c4cee680383620352792bac06b0e512ad1212e0"
+      "path": "data/sector/ths_daily.parquet",
+      "size": 213570761,
+      "sha256": "75c5ee5027c5f7fc0329e59a3fbed0574ece17925d540ceba8c88202c8f1941c"
     },
     "ths_index.parquet": {
-      "path": "C:\\Users\\s1171\\Documents\\ChatGPT\\GA_factor_mining\\data\\sector\\ths_index.parquet",
-      "size": 32162,
-      "mtime_ns": 1786380483816490200,
-      "sha256": "fb113d04aacbc173fa395ca7d9f21362d46f7ac4324f52172f22a61f863b552d"
+      "path": "data/sector/ths_index.parquet",
+      "size": 32229,
+      "sha256": "a29db9184d6a1ee23818da044bf61a37bd0300e25f374377a9838e66472692d8"
     }
   },
   "feature_columns": [
@@ -78,5 +76,5 @@
     "market_trend_60d",
     "market_vol_percentile"
   ],
-  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86"
+  "feature_cache_signature": "6dd1e5ddb4c0afce5af4cd142ce9917243bf4f5ec090a32ef6d14cdd7262a445"
 }

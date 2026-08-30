@@ -70,7 +70,7 @@ python -m ga_factor_mining.sector.rotation.product_backtest --boundary-sensitivi
 
 这些命令会写入结构化输出，但不会自动改变正式策略。
 
-成本压力命令会串行重放10/20/30/50bp，并生成统一的`ACCEPTANCE_GATE.json`。候选只允许使用2018—2025晋级；2026可作诊断，但`observation_used_for_selection`固定为`false`。
+成本压力命令会用四个相互隔离的子进程依次重放10/20/30/50bp，再由独立进程生成正式账本和统一的`ACCEPTANCE_GATE.json`，避免重复回放造成内存碎片。候选只允许使用2018—2025晋级；2026可作诊断，但`observation_used_for_selection`固定为`false`。本机默认Python原生运行时不稳定时，可用`GA_FACTOR_WORKER_PYTHON`指向另一个已验证的Python解释器，代码、数据和口径不变。
 
 `prototype_recovery`只用于审计旧缓存，需要显式传入`--legacy-panel`和可选的`--expected-results`；个人旧目录不会写入项目代码。当前复现结论已经结构化保存在`outputs/sector/prototype_recovery/`。
 

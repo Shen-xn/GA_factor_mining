@@ -6,6 +6,7 @@ import pandas as pd
 from ga_factor_mining.sector.rotation.etf_mapping import (
     MappingPolicy,
     build_latest_execution_readiness,
+    candidate_fetch_ranges,
     build_strategy_allocation_audit,
     build_strategy_coverage_audit,
     build_monthly_mapping,
@@ -16,6 +17,29 @@ from ga_factor_mining.sector.rotation.etf_mapping import (
 
 
 class EtfMappingTests(unittest.TestCase):
+    def test_candidate_fetch_ranges_resume_from_last_overlap_day(self):
+        candidates = pd.DataFrame({"etf_code": ["A.SH", "B.SZ", "C.SH"]})
+        daily = pd.DataFrame(
+            {
+                "ts_code": ["A.SH", "C.SH"],
+                "trade_date": ["20260529", "20260829"],
+            }
+        )
+        adj = pd.DataFrame(
+            {
+                "ts_code": ["A.SH", "C.SH"],
+                "trade_date": ["20260528", "20260829"],
+            }
+        )
+        ranges = candidate_fetch_ranges(
+            candidates,
+            daily,
+            adj,
+            "20150101",
+            "20260828",
+        )
+        self.assertEqual(ranges, [("A.SH", "20260528"), ("B.SZ", "20150101")])
+
     def test_normalized_name_is_conservative_but_handles_common_suffixes(self):
         self.assertEqual(normalize_theme_name("芯片概念"), "芯片")
         self.assertEqual(normalize_theme_name("国证芯片指数"), "芯片")

@@ -1,0 +1,11 @@
+{
+  "protocol_hash": "184f76b4cd138001fe296be9e584570ec6f7c4b0fb7fae6a88feee1d64cb564f",
+  "status": "forward_evidence_available",
+  "freeze_data_end": "20260810",
+  "start": "20260811",
+  "end": "20260828",
+  "days": 14,
+  "total_return": 0.005505080962615372,
+  "max_drawdown": -0.013126956205767537,
+  "average_daily_turnover": 0.03610142529858907
+}

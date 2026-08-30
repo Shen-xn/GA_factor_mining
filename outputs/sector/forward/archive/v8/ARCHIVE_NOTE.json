@@ -1,0 +1,9 @@
+{
+  "status": "archived_complete",
+  "protocol_version": 8,
+  "freeze_data_end": "20260810",
+  "last_data_end": "20260828",
+  "unseen_days": 14,
+  "archive_reason": "v9仅升级数据、ETF执行安全和内存隔离；策略决策规则未改变",
+  "evidence_preserved": true
+}

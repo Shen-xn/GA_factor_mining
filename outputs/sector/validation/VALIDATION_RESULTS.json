@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-08-31T01:51:54+08:00",
-  "scope": "simple_v1 corrected replay, planned/executed/settled live loop, ETF safety interlock, sealed candidate review and forward v8 freeze",
+  "generated_at": "2026-08-31T02:42:01+08:00",
+  "scope": "simple_v1 corrected replay through 20260828, isolated cost workers, incremental ETF data, execution safety interlock, sealed candidate review and forward v9 freeze",
   "engineering_validation_passed": true,
   "strategy_acceptance_passed": false,
   "execution_ready": false,
   "strategy_acceptance_path": "outputs/sector/strategy/ACCEPTANCE_GATE.json",
   "metrics_2018_2025": {
-    "total_return": 0.5450546705320205,
-    "annualized_return": 0.05810941146165782,
-    "maximum_drawdown": -0.18933701996537633,
-    "average_daily_turnover": 0.08873608976474448,
-    "annualized_turnover": 22.361494620715607,
+    "total_return": 0.5450546377087413,
+    "annualized_return": 0.058109408543265406,
+    "maximum_drawdown": -0.1893370269982635,
+    "average_daily_turnover": 0.08873608978866689,
+    "annualized_turnover": 22.361494626744054,
     "trade_day_ratio": 0.4657393096342092,
     "positive_years": 6
   },
@@ -18,7 +18,7 @@
     {
       "name": "default_corrected_replay",
       "passed": true,
-      "detail": "2018-2023 +13.4770%, 2024-2025 +36.1557%, 2026 observation +0.1324%; missing execution/valuation events no longer use future prices"
+      "detail": "2018-2023 +13.4770%, 2024-2025 +36.1557%, 2026 observation +0.6836%; missing execution/valuation events no longer use future prices"
     },
     {
       "name": "planned_executed_settled_timeline",
@@ -33,57 +33,62 @@
     {
       "name": "risk_snapshot_current",
       "passed": true,
-      "detail": "Risk snapshot reaches panel data end 20260810; score 32.6260, complete coverage, confirmed DEFENSIVE"
+      "detail": "Risk snapshot reaches panel data end 20260828; score 46.9604, complete coverage, confirmed DEFENSIVE"
     },
     {
       "name": "risk_execution_safety",
       "passed": true,
-      "detail": "Stale or insufficient risk data disables execution; latest risk is explicitly identified as a simulated portfolio snapshot"
+      "detail": "Risk output inherits the product-level execution interlock and is not executable while ETF coverage is incomplete"
     },
     {
       "name": "execution_safety_interlock",
       "passed": true,
-      "detail": "Current plan is blocked and LATEST_ACTIONS is empty because data, future calendar and ETF execution checks are not ready"
+      "detail": "Current planned action is dated 20260828 for 20260831; LATEST_ACTIONS remains empty because ETF execution checks are blocked"
     },
     {
       "name": "etf_mapping_safety",
       "passed": true,
-      "detail": "Stale mappings expire, duplicate ETF conflicts are deterministic, unmapped equity weight falls back explicitly, and no blocked order is presented as executable"
+      "detail": "ETF directory and 139 candidate quote histories reach 20260828; target coverage is 0%, so unmapped equity weight is blocked rather than presented as executable"
     },
     {
       "name": "cost_stress",
       "passed": true,
-      "detail": "10/20/30/50bp are serial full-system replays with drawdown feedback and current signatures"
+      "detail": "10/20/30/50bp complete-system replays ran in isolated one-replay child processes with bounded threads and retry cleanup"
     },
     {
       "name": "candidate_seal",
       "passed": true,
-      "detail": "All candidates used data only through 2025; Top20 retention improved return but did not reduce turnover, while forced holding/confirmation damaged return and was rejected"
+      "detail": "Top20 plus 10-day minimum holding passed every 20bp base gate using data only through 2025, but failed the 30bp development/full-return gate and was not promoted"
     },
     {
       "name": "strategy_acceptance",
       "passed": false,
-      "detail": "simple_v1 fails the 7% annual return, low-turnover, median-holding and cost-robustness targets"
+      "detail": "simple_v1 passes drawdown, year stability and execution safety, but fails the 7% annual return, low-turnover, median-holding and cost-robustness targets"
     },
     {
       "name": "forward_protocol",
       "passed": true,
-      "detail": "Protocol v8 184f76b4cd13 frozen at 20260810; zero unseen days"
+      "detail": "v8 archived 14 unseen trading days from 20260811 through 20260828, returning +0.5505% with -1.3127% drawdown; v9 07afbd839caf froze a new baseline at 20260828"
     },
     {
       "name": "unit_tests",
       "passed": true,
-      "detail": "97 standard-library unit tests passed"
+      "detail": "99 standard-library unit tests passed"
     },
     {
       "name": "preflight",
       "passed": true,
-      "detail": "Runtime dependencies, local data pack and cross-artifact signatures passed"
+      "detail": "Runtime dependencies, local data pack, external Tushare credential and cross-artifact signatures passed"
     },
     {
       "name": "live_data_refresh",
-      "passed": false,
-      "detail": "Tushare update credential is not currently available; local market data remains at 20260810"
+      "passed": true,
+      "detail": "Market, low-risk, calendar, feature and ETF quote data were refreshed through the latest available trade date 20260828"
+    },
+    {
+      "name": "native_runtime_mitigation",
+      "passed": true,
+      "detail": "Official cost replay completed under Python 3.12.13/pandas 3.0.3/numpy 2.4.6; isolated workers avoid accumulating multiple full panels in one process"
     }
   ]
 }

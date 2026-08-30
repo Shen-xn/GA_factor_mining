@@ -1,0 +1,7 @@
+{
+  "status": "protocol_mismatch",
+  "recorded_at": "2026-08-31T02:28:24+08:00",
+  "frozen_protocol_hash": "184f76b4cd138001fe296be9e584570ec6f7c4b0fb7fae6a88feee1d64cb564f",
+  "current_protocol_hash": "7c91233b3550f6ae573b97da2abc199466eca0218f5008a42a4e87a253774bf0",
+  "message": "协议或决策代码已改变，不能把新结果静默续接到旧前向证据。"
+}

@@ -6,11 +6,11 @@
   "policy_name": "simple_v1",
   "policy_signature": "9f8d0005261cddef6fdb1d76ae5be8d343b7adae1fc03ac81ec9c5828c8390f6",
   "regime_policy_signature": "a0bbfa8b1488f69e16bb2264b547fb61f6e756b7444889451a88debc898aac8f",
-  "low_risk_data_signature": "1eeb18eb7051fac89a37d46a8a1005708be84514dfefb9ae9762187fd5e40bdd",
-  "decision_source_signature": "5b15e437037ab0819b09dea9c0b609744f2c59faaa688cb33050b95950f67f95",
+  "low_risk_data_signature": "760bf7fdeefae8d8ea0e0e7c3401d1ff395c7f171dc96a4760031d67f0f522a8",
+  "decision_source_signature": "4c6e0538a1b103b04757e1cb2f3d4a7edbc35b044ecb422f031b4b383a917b03",
   "score_name": "score_frozen_selected_5d",
   "feature_protocol_version": 4,
-  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86",
+  "feature_cache_signature": "6dd1e5ddb4c0afce5af4cd142ce9917243bf4f5ec090a32ef6d14cdd7262a445",
   "gates": [
     {
       "name": "complete_2018_2025_coverage",
@@ -34,40 +34,40 @@
     {
       "name": "cumulative_return",
       "threshold": ">= 68.39%（与7%年化同口径）",
-      "value": 0.5450546705320205,
+      "value": 0.5450546377087413,
       "pass": false
     },
     {
       "name": "annualized_return",
       "threshold": ">= 7.00%",
-      "value": 0.05810941146165782,
+      "value": 0.058109408543265406,
       "pass": false
     },
     {
       "name": "development_return",
       "threshold": ">= 20.00%（2018—2023）",
-      "value": 0.13477043993622906,
+      "value": 0.13477041691039182,
       "pass": false
     },
     {
       "name": "selection_return",
       "threshold": ">= 30.00%（2024—2025）",
-      "value": 0.36155703052931853,
+      "value": 0.36155702923188704,
       "pass": true
     },
     {
       "name": "selection_years_positive",
       "threshold": "2024与2025分别为正",
       "value": {
-        "2024": 0.2411368171893069,
-        "2025": 0.09702412471552835
+        "2024": 0.24113681820986677,
+        "2025": 0.09702412276811367
       },
       "pass": true
     },
     {
       "name": "maximum_drawdown",
       "threshold": ">= -20.00%",
-      "value": -0.18933701996537633,
+      "value": -0.1893370269982635,
       "pass": true
     },
     {
@@ -85,19 +85,19 @@
     {
       "name": "worst_calendar_year",
       "threshold": ">= -15.00%",
-      "value": -0.1272543048224013,
+      "value": -0.12725430708832108,
       "pass": true
     },
     {
       "name": "average_daily_turnover",
       "threshold": "<= 7.50%",
-      "value": 0.08873608976474448,
+      "value": 0.08873608978866689,
       "pass": false
     },
     {
       "name": "annualized_turnover",
       "threshold": "<= 19.0x",
-      "value": 22.361494620715607,
+      "value": 22.361494626744054,
       "pass": false
     },
     {
@@ -126,8 +126,8 @@
       "threshold": "最新风险日等于数据截止日且风险/目标组合字段齐全",
       "value": {
         "files_present": true,
-        "risk_asof_date": "20260810",
-        "data_end_date": "20260810",
+        "risk_asof_date": "20260828",
+        "data_end_date": "20260828",
         "risk_schema_ok": true,
         "portfolio_schema_ok": true
       },
@@ -138,15 +138,11 @@
       "threshold": "最新计划与行情同日；执行层未就绪时LATEST_ACTIONS必须为空",
       "value": {
         "files_present": true,
-        "plan_stage": "blocked_calendar_missing",
-        "signal_date": "20260810",
-        "market_data_asof": "20260810",
+        "plan_stage": "planned",
+        "signal_date": "20260828",
+        "market_data_asof": "20260828",
         "execution_ready": false,
         "blockers": [
-          "strategy_data_stale",
-          "next_trade_calendar_missing",
-          "mapping_stale",
-          "equity_etf_quotes_stale",
           "mapping_coverage_incomplete",
           "etf_master_not_point_in_time",
           "sector_catalog_not_point_in_time",
@@ -162,12 +158,12 @@
       "threshold": "30bp开发/选择期为正且保留20bp收益60%；50bp全期为正",
       "value": {
         "status": "evaluated",
-        "development_30bp": -0.04732087284251474,
-        "selection_30bp": 0.19916905591990774,
-        "full_20bp": 0.5450546705320205,
-        "full_30bp": 0.14242332950804393,
-        "full_50bp": -0.11384167119951372,
-        "retention_30bp_vs_20bp": 0.2613009982448668
+        "development_30bp": -0.0473208780449319,
+        "selection_30bp": 0.1991690602674316,
+        "full_20bp": 0.5450546377087413,
+        "full_30bp": 0.14242332741126,
+        "full_50bp": -0.1138416754842531,
+        "retention_30bp_vs_20bp": 0.2613010101335312
       },
       "pass": false
     }

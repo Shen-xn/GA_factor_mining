@@ -1,22 +1,20 @@
 {
-  "stage": "blocked_calendar_missing",
-  "market_data_asof": "20260810",
-  "signal_date": "20260810",
-  "planned_execution_date": null,
-  "simulated_portfolio_asof_date": "20260810",
+  "stage": "planned",
+  "market_data_asof": "20260828",
+  "signal_date": "20260828",
+  "planned_execution_date": "20260831",
+  "simulated_portfolio_asof_date": "20260828",
   "instruction_current": true,
-  "action_plan_valid": false,
-  "data_stale": true,
+  "action_plan_valid": true,
+  "data_stale": false,
   "execution_allowed": false,
   "target_weights": {
-    "700421.TI": 0.09999999999999999,
-    "700582.TI": 0.09999999999999999,
-    "700584.TI": 0.09999999999999999,
+    "885410.TI": 0.09999999999999999,
+    "885472.TI": 0.09999999999999999,
+    "885914.TI": 0.09999999999999999,
     "LOW_RISK": 0.7
   },
   "blockers": [
-    "data_stale",
-    "calendar_or_plan_invalid",
     "etf_execution_not_ready"
   ]
 }
