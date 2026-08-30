@@ -1,0 +1,18 @@
+﻿name,threshold,value,pass
+complete_2018_2025_coverage,年份必须完整为2018—2025且每年>=200日,"{'first': '20180103', 'last': '20251231', 'days': {'2018': 242, '2019': 244, '2020': 243, '2021': 243, '2022': 242, '2023': 242, '2024': 242, '2025': 243}}",True
+cumulative_return,>= 68.39%（与7%年化同口径）,0.5505588488252595,False
+annualized_return,>= 7.00%,0.05859804362850274,False
+development_return,>= 20.00%（2018—2023）,0.13477043993622928,False
+selection_return,>= 30.00%（2024—2025）,0.36640750785894305,True
+selection_years_positive,2024与2025分别为正,"{'2024': 0.2411368171893069, '2025': 0.10093221708894551}",True
+maximum_drawdown,>= -20.00%,-0.18933701996537633,True
+positive_years,>= 6 of 8,6,True
+years_above_3pct,>= 5 of 8,5,True
+worst_calendar_year,>= -15.00%,-0.1272543048224013,True
+average_daily_turnover,<= 7.50%,0.08883916754414599,False
+annualized_turnover,<= 19.0x,22.38747022112479,False
+trade_day_ratio,<= 40.00%,0.4652241112828439,False
+median_holding_sessions,>= 8,5.0,False
+risk_explanation_schema,"风险字段齐全且risk_target=min(market_after_override, drawdown_cap)","{'required_fields_present': True, 'identity_holds': True}",True
+latest_output_compatibility,最新风险日等于数据截止日且风险/目标组合字段齐全,"{'files_present': True, 'risk_asof_date': '20260810', 'data_end_date': '20260810', 'risk_schema_ok': True, 'portfolio_schema_ok': True}",True
+cost_robustness,30bp开发/选择期为正且保留20bp收益60%；50bp全期为正,"{'status': 'evaluated', 'development_30bp': -0.04732087284251474, 'selection_30bp': 0.2224171702256177, 'full_20bp': 0.5505588488252595, 'full_30bp': 0.16457132275286424, 'full_50bp': -0.11303077005234718, 'retention_30bp_vs_20bp': 0.29891686075705437}",False

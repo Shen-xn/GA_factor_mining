@@ -2,6 +2,7 @@ import unittest
 import tempfile
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from ga_factor_mining.sector.rotation.product_backtest import (
@@ -9,14 +10,84 @@ from ga_factor_mining.sector.rotation.product_backtest import (
     _drift_weights,
     _execution_actions,
     _turnover,
+    append_latest_signal_strength,
+    latest_market_risk_snapshot,
     prepare_product_panel,
     product_feature_columns,
     summarize_backtest_period,
     write_latest_advice,
 )
+from ga_factor_mining.sector.rotation.strategy import StrategyPolicy
 
 
 class ProductBacktestTests(unittest.TestCase):
+    def test_latest_risk_uses_panel_asof_not_last_backtest_signal(self):
+        dates = pd.bdate_range("2024-01-02", periods=90).strftime("%Y%m%d")
+        rows = []
+        for day_index, date in enumerate(dates):
+            for sector_index in range(30):
+                rows.append(
+                    {
+                        "trade_date": date,
+                        "ts_code": f"S{sector_index:02d}",
+                        "type": "I",
+                        "ret_1d": 0.001 * np.sin(day_index + sector_index),
+                        "ret_20d": 0.01 if sector_index < 20 else -0.01,
+                        "ret_60d": 0.02 if sector_index < 18 else -0.02,
+                    }
+                )
+        daily = pd.DataFrame(
+            {"signal_date": [dates[-3]], "drawdown_cap": [0.7], "exposure": [0.69]}
+        )
+        snapshot = latest_market_risk_snapshot(pd.DataFrame(rows), daily)
+        self.assertEqual(snapshot["risk_asof_date"], dates[-1])
+        self.assertAlmostEqual(
+            snapshot["risk_target_exposure"],
+            min(snapshot["regime_base_exposure"], snapshot["drawdown_cap"]),
+        )
+
+    def test_latest_absolute_strength_combines_rank_and_risk_exposure(self):
+        panel = pd.DataFrame(
+            {
+                "ts_code": ["A.TI", "B.TI", "A.TI", "B.TI"],
+                "trade_date": ["20240102", "20240102", "20240103", "20240103"],
+                "type": ["I", "I", "I", "I"],
+                "model_score": [0.8, 0.2, 0.9, 0.1],
+            }
+        )
+        daily = pd.DataFrame(
+            {"signal_date": ["20240103"], "risk_target_exposure": [0.7]}
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            pd.DataFrame(
+                {
+                    "板块代码": ["A.TI", "LOW_RISK"],
+                    "目标权重": ["70.00%", "30.00%"],
+                }
+            ).to_csv(
+                output_dir / "LATEST_TARGET_PORTFOLIO.csv",
+                index=False,
+                encoding="utf-8-sig",
+            )
+            append_latest_signal_strength(
+                panel,
+                "model_score",
+                StrategyPolicy(score_smoothing_sessions=2),
+                daily,
+                {
+                    "risk_asof_date": "20240103",
+                    "risk_target_exposure": 0.7,
+                    "risk_score": 60.0,
+                },
+                output_dir,
+            )
+            result = pd.read_csv(output_dir / "LATEST_TARGET_PORTFOLIO.csv")
+        sector = result.loc[result["板块代码"].eq("A.TI")].iloc[0]
+        self.assertEqual(sector["模型相对排名"], 1.0)
+        self.assertEqual(sector["风险目标仓位"], "70.00%")
+        self.assertEqual(sector["连续风险调整强度"], "60.00%")
+
     def test_latest_advice_reconstructs_last_target_portfolio(self):
         daily = pd.DataFrame(
             {

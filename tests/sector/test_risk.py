@@ -8,14 +8,74 @@ from ga_factor_mining.sector.rotation.risk import (
     RegimeState,
     advance_drawdown_state,
     advance_regime,
+    build_market_state,
     classify_market,
     effective_exposure,
     leading_sector_strength,
+    market_risk_components,
     technical_regime_exposure,
 )
 
 
 class MarketRiskTests(unittest.TestCase):
+    def test_market_risk_score_is_monotonic_and_bounded(self):
+        weak = pd.Series(
+            {
+                "benchmark_trend_60d": -0.10,
+                "market_volatility_20d": 0.02,
+                "breadth_positive_20d": 0.25,
+                "breadth_positive_60d": 0.30,
+                "market_vol_percentile": 0.90,
+            }
+        )
+        strong = weak.copy()
+        strong["benchmark_trend_60d"] = 0.10
+        strong["breadth_positive_20d"] = 0.70
+        strong["breadth_positive_60d"] = 0.75
+        strong["market_vol_percentile"] = 0.20
+        weak_score = float(market_risk_components(weak)["risk_score"])
+        strong_score = float(market_risk_components(strong)["risk_score"])
+        self.assertTrue(0.0 <= weak_score < strong_score <= 100.0)
+
+    def test_market_risk_missing_data_is_not_optimistic(self):
+        result = market_risk_components(pd.Series(dtype=float))
+        self.assertEqual(result["risk_data_quality"], "insufficient")
+        self.assertLessEqual(float(result["risk_score"]), 50.0)
+
+    def test_zero_volatility_is_not_complete_market_data(self):
+        result = market_risk_components(
+            pd.Series(
+                {
+                    "benchmark_trend_60d": 0.20,
+                    "market_volatility_20d": 0.0,
+                    "risk_breadth_positive_20d": 1.0,
+                    "risk_breadth_positive_60d": 1.0,
+                    "market_vol_percentile": 0.0,
+                    "sector_count": 100,
+                    "breadth_20d_coverage": 1.0,
+                    "breadth_60d_coverage": 1.0,
+                }
+            )
+        )
+        self.assertEqual(result["risk_data_quality"], "insufficient")
+        self.assertLessEqual(float(result["risk_score"]), 50.0)
+
+    def test_risk_breadth_excludes_missing_values_from_denominator(self):
+        panel = pd.DataFrame(
+            {
+                "trade_date": ["20240102", "20240102"],
+                "ts_code": ["A", "B"],
+                "type": ["I", "I"],
+                "ret_1d": [0.01, -0.01],
+                "ret_20d": [0.10, float("nan")],
+                "ret_60d": [0.10, float("nan")],
+            }
+        )
+        row = build_market_state(panel).iloc[0]
+        self.assertEqual(row["breadth_positive_20d"], 0.5)
+        self.assertEqual(row["risk_breadth_positive_20d"], 1.0)
+        self.assertEqual(row["breadth_20d_coverage"], 0.5)
+
     def test_leading_sector_strength_requires_three_strong_top_five(self):
         frame = pd.DataFrame(
             {

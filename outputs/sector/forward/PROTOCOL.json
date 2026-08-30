@@ -1,17 +1,17 @@
 {
-  "created_at": "2026-08-30T16:00:39+08:00",
-  "protocol_hash": "805f9871dc28ed8f152c1a719e3a89009b7d04291d5e473a1b18dda86d5fb92f",
+  "created_at": "2026-08-31T01:14:30+08:00",
+  "protocol_hash": "c77cbec4c7c0a19c17aab2a60ae8d4c2f120f5cfd710af9ca9f75f11e98bb187",
   "payload": {
     "config": {
-      "version": 6,
+      "version": 7,
       "freeze_data_end": "20260810",
       "first_unseen_after": "20260810",
-      "evidence_name": "sector_simple_quarterly_forward_v6",
+      "evidence_name": "sector_simple_quarterly_forward_v7",
       "execution_layer": "sector_index_research_with_511880_low_risk_leg",
       "cost_bps": 20.0,
       "model_retraining_schedule": "quarterly_expanding_window",
       "policy_name": "simple_v1",
-      "notes": "模型、simple_v1和冻结日不变；v6记录旧原型协议审计与一个未晋级的板块强度候选，候选开关默认关闭。2026-08-10及以前均已被看到，只有之后的数据可作为前向证据。"
+      "notes": "模型、simple_v1和冻结日不变；v7增加板块广度健康解释、统一验收门和单线程内存保护，未晋级候选不改变正式决策。2026-08-10及以前均已被看到，只有之后的数据可作为前向证据。"
     },
     "model": {
       "variant": "expanding_quarterly",
@@ -40,11 +40,11 @@
     },
     "source_sha256": {
       "src/ga_factor_mining/sector/rotation/run_experiments.py": "dbd2d48a1c60761fdf22ec597daa1c07454737b263bdff32e4288432af953f2e",
-      "src/ga_factor_mining/sector/rotation/rolling_validation.py": "b1b583fc42997652ccb1612295763906e57921f35c184ad92ecf0d47c4f9e058",
+      "src/ga_factor_mining/sector/rotation/rolling_validation.py": "32ae70523c76bd583435188e0e53edda6a8aa065a8b8a5c92e14f2f7c054e0fd",
       "src/ga_factor_mining/sector/rotation/strategy.py": "4d1d0a09d28e695be68187abaebb52e2b893e1d5c75603a80049f1dc5caa169b",
-      "src/ga_factor_mining/sector/rotation/risk.py": "abd1a44d69029c22337e54117bd5a9512edff75ad4372a8b94f125b7c00529e3",
+      "src/ga_factor_mining/sector/rotation/risk.py": "1cb0bc2eccac3f13a6c0d2630d4aac744dbcd8b7aab700822ee4f9370c870c30",
       "src/ga_factor_mining/sector/rotation/low_risk.py": "6ccee3b89125ddca4ba92c982a97f7351c4925a354ec50701d9e46f4579a75b0",
-      "src/ga_factor_mining/sector/rotation/product_backtest.py": "15fdd81acfcc9e4144c673ba14689c5076b391b9fcd66d0d0230a073c70a65a2"
+      "src/ga_factor_mining/sector/rotation/product_backtest.py": "acfdb58d042cb8a106459363954d8994b2b08ad6e3c16b615a5d74f48a817663"
     }
   }
 }

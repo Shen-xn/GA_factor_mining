@@ -5,9 +5,11 @@ from __future__ import annotations
 
 import argparse
 import gc
+import hashlib
 import json
 import platform
 from dataclasses import asdict, replace
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -194,6 +196,38 @@ def _target_dict(targets: pd.DataFrame) -> dict[str, float]:
     if targets.empty:
         return {}
     return dict(zip(targets["ts_code"], targets["target_weight"], strict=True))
+
+
+def execution_stability_metrics(
+    daily: pd.DataFrame,
+    actions: pd.DataFrame,
+) -> dict[str, float]:
+    """统一计算换手和持有期，供策略摘要与验收门共同使用。"""
+    sell_holding = (
+        pd.to_numeric(
+            actions.loc[actions["action"].eq("sell"), "held_sessions"],
+            errors="coerce",
+        ).dropna()
+        if not actions.empty and {"action", "held_sessions"}.issubset(actions.columns)
+        else pd.Series(dtype=float)
+    )
+    return {
+        "annualized_turnover": float(daily["turnover"].mean() * 252.0),
+        "trade_day_ratio": float(daily["turnover"].gt(1e-12).mean()),
+        "completed_position_exit_count": int(len(sell_holding)),
+        "completed_position_holding_sessions_p25": (
+            float(sell_holding.quantile(0.25)) if not sell_holding.empty else np.nan
+        ),
+        "completed_position_holding_sessions_p50": (
+            float(sell_holding.quantile(0.50)) if not sell_holding.empty else np.nan
+        ),
+        "completed_position_holding_sessions_p75": (
+            float(sell_holding.quantile(0.75)) if not sell_holding.empty else np.nan
+        ),
+        "completed_position_holding_sessions_le_5_ratio": (
+            float(sell_holding.le(5).mean()) if not sell_holding.empty else np.nan
+        ),
+    }
 
 
 def _apply_rebalance_band(
@@ -463,6 +497,166 @@ def write_latest_advice(
     }
 
 
+def latest_market_risk_snapshot(
+    panel: pd.DataFrame,
+    daily: pd.DataFrame,
+    policy: RegimePolicy | None = None,
+) -> dict:
+    """独立推进到最新行情日，不受回测未来收益可用性裁切。"""
+    policy = policy or RegimePolicy()
+    market = build_market_state(panel, tuple(UNIVERSES["industry_concept"]))
+    market = market.loc[market["trade_date"].ge(PRODUCT_HISTORY_START)].sort_values("trade_date")
+    if market.empty:
+        return {"status": "no_data", "scope": "sector_breadth_not_broad_market_index"}
+    state = RegimeState()
+    raw_regime = "NEUTRAL"
+    for row in market.itertuples(index=False):
+        raw_regime = classify_market(pd.Series(row._asdict()), policy)
+        state = advance_regime(state, raw_regime, policy)
+    latest = market.iloc[-1]
+    drawdown_cap = float(daily.iloc[-1]["drawdown_cap"]) if not daily.empty else 1.0
+    actual_exposure = float(daily.iloc[-1]["exposure"]) if not daily.empty else 0.0
+    portfolio_asof = str(daily.iloc[-1]["signal_date"]) if not daily.empty else None
+    regime_base = regime_exposure(state.current, policy)
+    return {
+        "status": "ready",
+        "scope": "sector_breadth_not_broad_market_index",
+        "score_direction": "high_is_risk_on",
+        "risk_asof_date": str(latest["trade_date"]),
+        "risk_score": float(latest["risk_score"]),
+        "risk_data_quality": str(latest["risk_data_quality"]),
+        "benchmark_trend_60d": float(latest["benchmark_trend_60d"]),
+        "breadth_positive_20d": float(latest["risk_breadth_positive_20d"]),
+        "breadth_positive_60d": float(latest["risk_breadth_positive_60d"]),
+        "breadth_20d_valid_count": int(latest["breadth_20d_valid_count"]),
+        "breadth_60d_valid_count": int(latest["breadth_60d_valid_count"]),
+        "breadth_20d_coverage": float(latest["breadth_20d_coverage"]),
+        "breadth_60d_coverage": float(latest["breadth_60d_coverage"]),
+        "market_vol_percentile": float(latest["market_vol_percentile"]),
+        "trend_health": float(latest["trend_health"]),
+        "breadth_20d_health": float(latest["breadth_20d_health"]),
+        "breadth_60d_health": float(latest["breadth_60d_health"]),
+        "volatility_health": float(latest["volatility_health"]),
+        "raw_regime": raw_regime,
+        "confirmed_regime": state.current,
+        "pending_regime": state.pending,
+        "pending_sessions": state.pending_sessions,
+        "regime_base_exposure": regime_base,
+        "drawdown_cap": drawdown_cap,
+        "drawdown_cap_asof_date": portfolio_asof,
+        "risk_target_exposure": min(regime_base, drawdown_cap),
+        "actual_portfolio_exposure": actual_exposure,
+        "actual_portfolio_asof_date": portfolio_asof,
+    }
+
+
+def write_latest_market_risk(
+    snapshot: dict,
+    output_dir,
+    *,
+    data_freshness: dict | None = None,
+) -> dict:
+    """输出可直接读取的最新板块广度风险CSV和JSON。"""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if snapshot.get("status") == "no_data":
+        payload = snapshot
+    else:
+        payload = dict(snapshot)
+        payload["data_age_days"] = data_freshness.get("data_age_days") if data_freshness else None
+        stale = bool(data_freshness and data_freshness.get("data_stale"))
+        quality_ok = payload["risk_data_quality"] == "complete"
+        payload["status"] = "stale" if stale else "ready" if quality_ok else "insufficient"
+        payload["execution_allowed"] = bool(not stale and quality_ok)
+        pending = payload.get("pending_regime")
+        reasons = [
+            f"分数越高越适合承担权益风险，当前{payload['risk_score']:.1f}分",
+            f"60日趋势健康度{payload['trend_health']:.1%}",
+            f"20/60日上涨板块占比{payload['breadth_positive_20d']:.1%}/"
+            f"{payload['breadth_positive_60d']:.1%}",
+            f"20/60日数据覆盖率{payload['breadth_20d_coverage']:.1%}/"
+            f"{payload['breadth_60d_coverage']:.1%}",
+            f"波动健康度{payload['volatility_health']:.1%}",
+        ]
+        if pending:
+            reasons.append(
+                f"原始状态{payload['raw_regime']}正在确认（{payload['pending_sessions']}日）"
+            )
+        if payload["drawdown_cap"] < payload["regime_base_exposure"]:
+            reasons.append("组合回撤保护进一步压低仓位")
+        if abs(payload["actual_portfolio_exposure"] - payload["risk_target_exposure"]) > 1e-6:
+            reasons.append("实际仓位与风险目标存在执行时点或再平衡带差异")
+        if not quality_ok:
+            reasons.append("风险输入覆盖不足，禁止执行")
+        payload["reason"] = "；".join(reasons)
+    pd.DataFrame([payload]).to_csv(
+        output_dir / "LATEST_MARKET_RISK.csv", index=False, encoding="utf-8-sig"
+    )
+    (output_dir / "LATEST_MARKET_RISK.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return payload
+
+
+def append_latest_signal_strength(
+    panel: pd.DataFrame,
+    score_name: str,
+    policy: StrategyPolicy,
+    daily: pd.DataFrame,
+    risk_snapshot: dict,
+    output_dir,
+) -> None:
+    """给最新目标组合补充相对排名与风险调整后的绝对买入强度。"""
+    portfolio_path = output_dir / "LATEST_TARGET_PORTFOLIO.csv"
+    if daily.empty or not portfolio_path.exists():
+        return
+    portfolio = pd.read_csv(portfolio_path, dtype={"板块代码": str})
+    for column in (
+        "模型相对排名",
+        "模型相对强度",
+        "板块广度健康分",
+        "风险目标仓位",
+        "连续风险调整强度",
+    ):
+        portfolio[column] = ""
+    signal_date = str(risk_snapshot["risk_asof_date"])
+    usable = panel.loc[
+        panel["type"].isin(UNIVERSES["industry_concept"])
+        & panel["trade_date"].le(signal_date)
+    ].sort_values(["ts_code", "trade_date"])
+    # 每个板块独立取自身最近三个观测，与正式回测的rolling口径一致。
+    recent = usable.groupby("ts_code", sort=False).tail(policy.score_smoothing_sessions).copy()
+    if score_name not in recent.columns:
+        recent = add_formula_scores(recent)
+    if score_name not in recent.columns:
+        return
+    latest_dates = recent.groupby("ts_code", sort=False)["trade_date"].max()
+    scores = recent.groupby("ts_code", sort=False)[score_name].mean().dropna()
+    scores = scores.loc[latest_dates.reindex(scores.index).eq(signal_date)]
+    if scores.empty:
+        return
+    ordered = (
+        scores.rename("score")
+        .reset_index()
+        .sort_values(["score", "ts_code"], ascending=[False, True])
+        .reset_index(drop=True)
+    )
+    ranks = pd.Series(np.arange(1, len(ordered) + 1), index=ordered["ts_code"])
+    strength = scores.rank(method="average", pct=True)
+    risk_target = float(risk_snapshot["risk_target_exposure"])
+    risk_score = float(risk_snapshot["risk_score"])
+    for index, row in portfolio.iterrows():
+        code = str(row["板块代码"])
+        if code == "LOW_RISK" or code not in scores.index:
+            continue
+        relative_strength = float(strength.loc[code])
+        portfolio.at[index, "模型相对排名"] = str(int(ranks.loc[code]))
+        portfolio.at[index, "模型相对强度"] = f"{relative_strength:.2%}"
+        portfolio.at[index, "板块广度健康分"] = f"{risk_score:.1f}"
+        portfolio.at[index, "风险目标仓位"] = f"{risk_target:.2%}"
+        portfolio.at[index, "连续风险调整强度"] = f"{relative_strength * risk_score / 100.0:.2%}"
+    portfolio.to_csv(portfolio_path, index=False, encoding="utf-8-sig")
+
+
 def run_product_backtest(
     panel: pd.DataFrame,
     score_name: str,
@@ -554,7 +748,7 @@ def run_product_backtest(
     position_entry_open: dict[str, float] = {}
     position_close_peak: dict[str, float] = {}
 
-    def decide(signal_date: str) -> tuple[dict[str, float], str, float, bool, pd.DataFrame]:
+    def decide(signal_date: str) -> tuple[dict[str, float], str, float, bool, pd.DataFrame, dict]:
         nonlocal positions, regime_state, drawdown_state, risk_peak
         market_row = market.loc[signal_date]
         if use_market_regime:
@@ -610,6 +804,7 @@ def run_product_backtest(
             market_exposure = regime_exposure(regime_state.current, regime_policy)
         else:
             market_exposure = 1.0
+        regime_base_exposure = market_exposure
         # 大盘防御但领先板块自身仍强时保留七成仓位；组合回撤上限仍可继续压低它。
         if strength_override:
             market_exposure = max(market_exposure, 0.7)
@@ -637,11 +832,49 @@ def run_product_backtest(
         daily["position_return"] = daily["ts_code"].map(position_returns)
         daily["position_drawdown"] = daily["ts_code"].map(position_drawdowns)
         positions, targets, decisions = step_portfolio(signal_date, daily, positions, exposure, policy)
-        return _target_dict(targets), regime_state.current, exposure, strength_override, decisions
+        risk_details = {
+            "risk_score": float(market_row["risk_score"]),
+            "risk_data_quality": str(market_row["risk_data_quality"]),
+            "benchmark_trend_60d": float(market_row["benchmark_trend_60d"]),
+            "breadth_positive_20d": float(market_row["risk_breadth_positive_20d"]),
+            "breadth_positive_60d": float(market_row["risk_breadth_positive_60d"]),
+            "breadth_20d_valid_count": int(market_row["breadth_20d_valid_count"]),
+            "breadth_60d_valid_count": int(market_row["breadth_60d_valid_count"]),
+            "breadth_20d_coverage": float(market_row["breadth_20d_coverage"]),
+            "breadth_60d_coverage": float(market_row["breadth_60d_coverage"]),
+            "market_vol_percentile": float(market_row["market_vol_percentile"]),
+            "trend_health": float(market_row["trend_health"]),
+            "breadth_20d_health": float(market_row["breadth_20d_health"]),
+            "breadth_60d_health": float(market_row["breadth_60d_health"]),
+            "volatility_health": float(market_row["volatility_health"]),
+            "raw_regime": raw_regime if use_market_regime else "RISK_ON",
+            "regime_pending": regime_state.pending,
+            "regime_pending_sessions": regime_state.pending_sessions,
+            "regime_base_exposure": regime_base_exposure,
+            "market_exposure_after_override": market_exposure,
+            "drawdown_cap": drawdown_cap,
+            "risk_target_exposure": exposure,
+        }
+        return (
+            _target_dict(targets),
+            regime_state.current,
+            exposure,
+            strength_override,
+            decisions,
+            risk_details,
+        )
 
     first_signal = score_dates[0]
-    first_target, first_regime, first_exposure, first_override, first_decisions = decide(first_signal)
+    (
+        first_target,
+        first_regime,
+        first_exposure,
+        first_override,
+        first_decisions,
+        first_risk_details,
+    ) = decide(first_signal)
     last_strength_override = first_override
+    last_risk_details = first_risk_details
     initial_turnover = _turnover({}, first_target)
     initial_net = (1.0 - initial_turnover * cost_rate) - 1.0
     equity *= 1.0 + initial_net
@@ -685,13 +918,22 @@ def run_product_backtest(
             "low_risk_weight": 1.0 - sum(live_weights.values()),
             "low_risk_return": 0.0,
             "position_count": len(live_weights),
+            **first_risk_details,
         }
     )
 
     for index in range(1, len(score_dates)):
         signal_date = score_dates[index]
-        desired_target, regime, exposure, strength_override, decisions = decide(signal_date)
+        (
+            desired_target,
+            regime,
+            exposure,
+            strength_override,
+            decisions,
+            risk_details,
+        ) = decide(signal_date)
         last_strength_override = strength_override
+        last_risk_details = risk_details
         prior_signal = score_dates[index - 1]
         asset_returns = return_pivot.loc[prior_signal].reindex(live_weights)
         if asset_returns.isna().any():
@@ -763,6 +1005,7 @@ def run_product_backtest(
                 "low_risk_weight": 1.0 - sum(live_weights.values()),
                 "low_risk_return": period_low_risk_return,
                 "position_count": len(live_weights),
+                **risk_details,
             }
         )
 
@@ -800,6 +1043,7 @@ def run_product_backtest(
             "low_risk_weight": final_low_risk_weight,
             "low_risk_return": final_low_risk_return,
             "position_count": len(live_weights),
+            **last_risk_details,
         }
     )
 
@@ -819,6 +1063,7 @@ def run_product_backtest(
             "median_holding_sessions": (
                 float(sell_holding_periods.median()) if not sell_holding_periods.empty else np.nan
             ),
+            **execution_stability_metrics(daily_result, action_result),
         }
     )
     return daily_result, action_result, metrics
@@ -852,9 +1097,247 @@ def summarize_backtest_period(
             ),
             "avg_exposure": float(period_daily["exposure"].mean()),
             "avg_low_risk_weight": float(period_daily["low_risk_weight"].mean()),
+            **execution_stability_metrics(period_daily, period_actions),
         }
     )
     return period_daily, period_actions, metrics
+
+
+def write_acceptance_gate(
+    daily: pd.DataFrame,
+    actions: pd.DataFrame,
+    output_dir,
+    *,
+    policy_name: str,
+    policy: StrategyPolicy,
+    score_name: str,
+    cost_sensitivity: pd.DataFrame | None = None,
+) -> dict:
+    """用固定2018—2025门槛评价候选；2026永不参与晋级判断。"""
+    selection_daily, selection_actions, metrics = summarize_backtest_period(
+        daily,
+        actions,
+        PRODUCT_HISTORY_START,
+        VAL_END,
+    )
+    if selection_daily.empty or selection_daily["date"].max() > VAL_END:
+        raise RuntimeError("验收账本必须严格截止于2025年末")
+    year_counts = selection_daily.groupby(selection_daily["date"].str[:4]).size()
+    expected_years = {str(year) for year in range(2018, 2026)}
+    coverage_complete = bool(
+        set(year_counts.index) == expected_years
+        and selection_daily["date"].min().startswith("2018")
+        and selection_daily["date"].max() == VAL_END
+        and year_counts.ge(200).all()
+    )
+    annual_returns = {
+        int(year): float((1.0 + part["net_return"]).prod() - 1.0)
+        for year, part in selection_daily.groupby(selection_daily["date"].str[:4])
+    }
+    positive_years = sum(value > 0.0 for value in annual_returns.values())
+    meaningful_positive_years = sum(value >= 0.03 for value in annual_returns.values())
+    worst_year = min(annual_returns.values())
+    development = summarize_backtest_period(
+        daily, actions, PRODUCT_HISTORY_START, TRAIN_END
+    )[2]
+    selection = summarize_backtest_period(daily, actions, VAL_START, VAL_END)[2]
+    cumulative_threshold = float((1.0 + 0.07) ** (len(selection_daily) / 252.0) - 1.0)
+
+    def gate(name: str, threshold: str, value, passed: bool | None) -> dict:
+        return {"name": name, "threshold": threshold, "value": value, "pass": passed}
+
+    gates = [
+        gate(
+            "complete_2018_2025_coverage",
+            "年份必须完整为2018—2025且每年>=200日",
+            {
+                "first": selection_daily["date"].min(),
+                "last": selection_daily["date"].max(),
+                "days": {str(year): int(count) for year, count in year_counts.items()},
+            },
+            coverage_complete,
+        ),
+        gate(
+            "cumulative_return",
+            f">= {cumulative_threshold:.2%}（与7%年化同口径）",
+            metrics["total_ret"],
+            metrics["total_ret"] >= cumulative_threshold,
+        ),
+        gate("annualized_return", ">= 7.00%", metrics["ann_ret"], metrics["ann_ret"] >= 0.07),
+        gate(
+            "development_return",
+            ">= 20.00%（2018—2023）",
+            development["total_ret"],
+            development["total_ret"] >= 0.20,
+        ),
+        gate(
+            "selection_return",
+            ">= 30.00%（2024—2025）",
+            selection["total_ret"],
+            selection["total_ret"] >= 0.30,
+        ),
+        gate(
+            "selection_years_positive",
+            "2024与2025分别为正",
+            {"2024": annual_returns.get(2024), "2025": annual_returns.get(2025)},
+            annual_returns.get(2024, -1.0) > 0 and annual_returns.get(2025, -1.0) > 0,
+        ),
+        gate("maximum_drawdown", ">= -20.00%", metrics["max_drawdown"], metrics["max_drawdown"] >= -0.20),
+        gate("positive_years", ">= 6 of 8", positive_years, positive_years >= 6),
+        gate("years_above_3pct", ">= 5 of 8", meaningful_positive_years, meaningful_positive_years >= 5),
+        gate("worst_calendar_year", ">= -15.00%", worst_year, worst_year >= -0.15),
+        gate("average_daily_turnover", "<= 7.50%", metrics["avg_turnover"], metrics["avg_turnover"] <= 0.075),
+        gate("annualized_turnover", "<= 19.0x", metrics["annualized_turnover"], metrics["annualized_turnover"] <= 19.0),
+        gate("trade_day_ratio", "<= 40.00%", metrics["trade_day_ratio"], metrics["trade_day_ratio"] <= 0.40),
+        gate(
+            "median_holding_sessions",
+            ">= 8",
+            metrics["completed_position_holding_sessions_p50"],
+            metrics["completed_position_holding_sessions_p50"] >= 8,
+        ),
+    ]
+
+    risk_required = {
+        "risk_score",
+        "risk_data_quality",
+        "raw_regime",
+        "regime",
+        "regime_base_exposure",
+        "market_exposure_after_override",
+        "drawdown_cap",
+        "risk_target_exposure",
+    }
+    risk_schema_ok = risk_required.issubset(selection_daily.columns)
+    risk_identity_ok = False
+    if risk_schema_ok:
+        expected_target = selection_daily[["market_exposure_after_override", "drawdown_cap"]].min(axis=1)
+        risk_identity_ok = bool(
+            np.allclose(expected_target, selection_daily["risk_target_exposure"], atol=1e-12)
+        )
+    gates.append(
+        gate(
+            "risk_explanation_schema",
+            "风险字段齐全且risk_target=min(market_after_override, drawdown_cap)",
+            {"required_fields_present": risk_schema_ok, "identity_holds": risk_identity_ok},
+            risk_schema_ok and risk_identity_ok,
+        )
+    )
+    latest_risk_path = output_dir / "LATEST_MARKET_RISK.json"
+    latest_portfolio_path = output_dir / "LATEST_TARGET_PORTFOLIO.csv"
+    latest_output_ok = False
+    latest_output_detail: dict = {"files_present": False}
+    if latest_risk_path.exists() and latest_portfolio_path.exists():
+        latest_risk = json.loads(latest_risk_path.read_text(encoding="utf-8"))
+        latest_portfolio = pd.read_csv(latest_portfolio_path)
+        required_latest_risk = {
+            "risk_asof_date",
+            "risk_score",
+            "risk_data_quality",
+            "regime_base_exposure",
+            "drawdown_cap",
+            "risk_target_exposure",
+            "actual_portfolio_exposure",
+        }
+        required_portfolio = {
+            "模型相对排名",
+            "模型相对强度",
+            "板块广度健康分",
+            "风险目标仓位",
+            "连续风险调整强度",
+        }
+        latest_output_ok = bool(
+            required_latest_risk.issubset(latest_risk)
+            and required_portfolio.issubset(latest_portfolio.columns)
+            and str(latest_risk.get("risk_asof_date")) == str(daily["date"].max())
+        )
+        latest_output_detail = {
+            "files_present": True,
+            "risk_asof_date": latest_risk.get("risk_asof_date"),
+            "data_end_date": str(daily["date"].max()),
+            "risk_schema_ok": required_latest_risk.issubset(latest_risk),
+            "portfolio_schema_ok": required_portfolio.issubset(latest_portfolio.columns),
+        }
+    gates.append(
+        gate(
+            "latest_output_compatibility",
+            "最新风险日等于数据截止日且风险/目标组合字段齐全",
+            latest_output_detail,
+            latest_output_ok,
+        )
+    )
+
+    cost_gate_status: bool | None = None
+    cost_detail: dict = {"status": "not_evaluated"}
+    if cost_sensitivity is not None and not cost_sensitivity.empty:
+        lookup = cost_sensitivity.set_index(["cost_bps", "period"])
+        required = [
+            (20.0, "full"),
+            (30.0, "development"),
+            (30.0, "selection"),
+            (30.0, "full"),
+            (50.0, "full"),
+        ]
+        if all(key in lookup.index for key in required):
+            dev30 = float(lookup.loc[(30.0, "development"), "total_ret"])
+            selection30 = float(lookup.loc[(30.0, "selection"), "total_ret"])
+            full20 = float(lookup.loc[(20.0, "full"), "total_ret"])
+            full30 = float(lookup.loc[(30.0, "full"), "total_ret"])
+            full50 = float(lookup.loc[(50.0, "full"), "total_ret"])
+            cost_gate_status = bool(
+                dev30 > 0.0
+                and selection30 > 0.0
+                and full30 >= 0.60 * full20
+                and full50 > 0.0
+            )
+            cost_detail = {
+                "status": "evaluated",
+                "development_30bp": dev30,
+                "selection_30bp": selection30,
+                "full_20bp": full20,
+                "full_30bp": full30,
+                "full_50bp": full50,
+                "retention_30bp_vs_20bp": full30 / full20 if full20 else None,
+            }
+    gates.append(
+        gate(
+            "cost_robustness",
+            "30bp开发/选择期为正且保留20bp收益60%；50bp全期为正",
+            cost_detail,
+            cost_gate_status,
+        )
+    )
+    evaluated = [item["pass"] for item in gates if item["pass"] is not None]
+    accepted = bool(len(evaluated) == len(gates) and all(evaluated))
+    policy_payload = json.dumps(asdict(policy), ensure_ascii=False, sort_keys=True)
+    source_digest = hashlib.sha256()
+    for source_name in ("product_backtest.py", "risk.py", "strategy.py", "low_risk.py"):
+        source_path = Path(__file__).with_name(source_name)
+        source_digest.update(source_name.encode("utf-8"))
+        source_digest.update(source_path.read_bytes())
+    payload = {
+        "status": "pass" if accepted else "fail",
+        "accepted": accepted,
+        "selection_end": VAL_END,
+        "observation_used_for_selection": False,
+        "policy_name": policy_name,
+        "policy_signature": hashlib.sha256(policy_payload.encode("utf-8")).hexdigest(),
+        "regime_policy_signature": hashlib.sha256(
+            json.dumps(asdict(RegimePolicy()), sort_keys=True).encode("utf-8")
+        ).hexdigest(),
+        "low_risk_data_signature": low_risk_data_signature(),
+        "decision_source_signature": source_digest.hexdigest(),
+        "score_name": score_name,
+        "feature_protocol_version": FEATURE_PROTOCOL_VERSION,
+        "feature_cache_signature": current_feature_cache_signature(),
+        "gates": gates,
+    }
+    (output_dir / "ACCEPTANCE_GATE.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    pd.DataFrame(gates).to_csv(
+        output_dir / "ACCEPTANCE_GATE.csv", index=False, encoding="utf-8-sig"
+    )
+    return payload
 
 
 def main() -> None:
@@ -1027,9 +1510,24 @@ def main() -> None:
     pd.DataFrame(summaries).to_csv(output_dir / "SUMMARY.csv", index=False, encoding="utf-8-sig")
     pd.DataFrame(annual_rows).to_csv(output_dir / "ANNUAL_RESULTS.csv", index=False, encoding="utf-8-sig")
     advice_status = write_latest_advice(continuous_daily, continuous_actions, output_dir)
+    risk_snapshot = latest_market_risk_snapshot(panel, continuous_daily)
+    write_latest_market_risk(
+        risk_snapshot,
+        output_dir,
+        data_freshness=advice_status,
+    )
+    append_latest_signal_strength(
+        panel,
+        score_name,
+        selected_policy,
+        continuous_daily,
+        risk_snapshot,
+        output_dir,
+    )
+    cost_sensitivity_frame: pd.DataFrame | None = None
     if args.cost_sensitivity:
         sensitivity_rows = []
-        for cost_bps in [10.0, 20.0, 30.0]:
+        for cost_bps in [10.0, 20.0, 30.0, 50.0]:
             if cost_bps == args.cost_bps:
                 cost_daily, cost_actions = continuous_daily, continuous_actions
             else:
@@ -1045,6 +1543,7 @@ def main() -> None:
             for period, start, end in (
                 ("development", PRODUCT_HISTORY_START, TRAIN_END),
                 ("selection", VAL_START, VAL_END),
+                ("full", PRODUCT_HISTORY_START, VAL_END),
                 ("observation", OBSERVATION_START, OBSERVATION_END),
             ):
                 daily, _, metrics = summarize_backtest_period(cost_daily, cost_actions, start, end)
@@ -1056,14 +1555,51 @@ def main() -> None:
                         "policy_name": args.policy,
                         "cost_bps": cost_bps,
                         "full_path_rerun": True,
+                        "stress_kind": "full_system_replay_with_drawdown_feedback",
+                        "feature_protocol_version": FEATURE_PROTOCOL_VERSION,
+                        "feature_cache_signature": current_feature_cache_signature(),
+                        "strategy_policy_version": STRATEGY_POLICY_VERSION,
+                        "low_risk_data_signature": low_risk_data_signature(),
                         **metrics,
                         "avg_turnover": float(daily["turnover"].mean()),
                     }
                 )
+            for year, year_daily in cost_daily.loc[cost_daily["date"].le(VAL_END)].groupby(
+                cost_daily.loc[cost_daily["date"].le(VAL_END), "date"].str[:4]
+            ):
+                year_metrics = annualized_metrics(year_daily.set_index("date")["net_return"])
+                sensitivity_rows.append(
+                    {
+                        "period": f"year_{year}",
+                        "boundary_mode": "continuous_carry",
+                        "score_name": score_name,
+                        "policy_name": args.policy,
+                        "cost_bps": cost_bps,
+                        "full_path_rerun": True,
+                        "stress_kind": "full_system_replay_with_drawdown_feedback",
+                        "feature_protocol_version": FEATURE_PROTOCOL_VERSION,
+                        "feature_cache_signature": current_feature_cache_signature(),
+                        "strategy_policy_version": STRATEGY_POLICY_VERSION,
+                        "low_risk_data_signature": low_risk_data_signature(),
+                        **year_metrics,
+                        "avg_turnover": float(year_daily["turnover"].mean()),
+                    }
+                )
             gc.collect()
-        pd.DataFrame(sensitivity_rows).to_csv(
+        cost_sensitivity_frame = pd.DataFrame(sensitivity_rows)
+        cost_sensitivity_frame.to_csv(
             output_dir / "COST_SENSITIVITY.csv", index=False, encoding="utf-8-sig"
         )
+
+    write_acceptance_gate(
+        continuous_daily,
+        continuous_actions,
+        output_dir,
+        policy_name=args.policy,
+        policy=selected_policy,
+        score_name=score_name,
+        cost_sensitivity=cost_sensitivity_frame,
+    )
 
     if args.boundary_sensitivity:
         # 独立重置只用于研究边界，不进入默认产品运行。

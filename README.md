@@ -54,8 +54,11 @@ python -m ga_factor_mining.sector
 - `LATEST_ACTIONS.csv`：本次需要执行的中文动作，无动作时只有表头；
 - `LAST_REBALANCE_ACTIONS.csv`：上一批调仓记录，不能重复执行；
 - `LATEST_TARGET_PORTFOLIO.csv`：当前目标板块与低风险权重；
+- `LATEST_MARKET_RISK.csv/.json`：板块广度风险分、原始/确认状态、市场仓位与回撤上限；
 - `SUMMARY.csv`：开发期、选择期和观察期汇总；
 - `ANNUAL_RESULTS.csv`：2018年至今的逐年结果；
+- `COST_SENSITIVITY.csv`：10/20/30/50bp完整重放压力结果；
+- `ACCEPTANCE_GATE.csv/.json`：收益、回撤、换手和成本门是否通过；
 - `HISTORY_DAILY.parquet`、`HISTORY_ACTIONS.parquet`：连续产品账本；
 - `POLICY.json`、`RUN.json`：本次使用的规则、数据和运行环境。
 
@@ -66,6 +69,8 @@ python -m ga_factor_mining.sector
 - `outputs/sector/` 下的结构化研究记录。
 
 研究产物可以保留，但日常用户只需要默认入口和 `outputs/sector/strategy/`。
+
+这里的风险分来自同花顺行业与概念板块的趋势、上涨宽度和波动率，只能称为“板块广度健康分”，不是严格的宽基大盘指数。分数越高，越适合承担权益风险；它目前只增强信号解释，不改变已冻结的`simple_v1`交易逻辑。`LATEST_TARGET_PORTFOLIO.csv`中的连续风险调整强度等于模型横截面相对强度乘以板块广度健康分，它不是收益率预测；实际执行预算仍看风险目标仓位。数据过期时一律禁止执行。
 
 ## 更新到最新行情
 
@@ -89,7 +94,7 @@ python -m ga_factor_mining.sector --update
 python -m unittest discover -s tests -t . -v
 ```
 
-当前基线通过83项测试，覆盖无未来信息标签、滚动训练边界、缺失行情处理、持仓状态、成本、低风险资产、前向协议、运行前自检和领先板块强度判定。
+当前基线通过89项测试，覆盖无未来信息标签、滚动训练边界、缺失行情处理、持仓状态、成本、低风险资产、风险评分、前向协议和运行前自检。
 
 ## 当前结果口径
 
@@ -102,6 +107,8 @@ python -m unittest discover -s tests -t . -v
 2024—2025参与过模型频率和规则选择，2026也已经被研究者观察，二者都不是新的独立样本外证据。只有冻结日2026-08-10之后从未见过的数据，才会进入 `outputs/sector/forward/` 的前向记录。
 
 旧项目中“多数年份大幅正收益”的年度LightGBM Top5原型已经重新运行并精确复现，但其收盘标签、次日收益和训练边界与可执行的次日开盘口径不一致，且没有交易成本。统一到当前协议后收益明显下降。随后唯一验证的“领先板块自身走强时恢复70%仓位”候选恶化了2018、2022和长期回撤，因此没有晋级，也没有建立`simple_v2`。完整证据见板块轮动报告和`outputs/sector/prototype_recovery/`、`outputs/sector/return_bridge/`。
+
+本轮又在不打开2026的前提下验证了三类低频候选：固定周频普通换仓、`2日入场确认/至少持有10日/3日退出确认`、10日目标LightGBM。三者都未同时通过收益、回撤和换手门，因此正式版本仍为`simple_v1`。当前基准能守住回撤和年度稳定性，但2018—2025累计收益约`+55.1%`、年化约`5.9%`，平均日换手约`8.9%`，尚未通过新设的收益、低频和成本压力门；`ACCEPTANCE_GATE.json`会明确记录失败项，而不是把研究基准包装成已达成目标的版本。
 
 ## 分支与目录
 

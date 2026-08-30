@@ -1,0 +1,41 @@
+{
+  "candidate": "rank_confirmation_2_10_3",
+  "feature_protocol_version": 4,
+  "selection_end": "20251231",
+  "observation_opened": false,
+  "policy": {
+    "target_positions": 5,
+    "entry_rank": 5,
+    "retain_rank": 10,
+    "min_hold_sessions": 10,
+    "hard_drawdown": -0.12,
+    "weak_momentum_rank": 0.2,
+    "extreme_volatility_rank": 0.95,
+    "score_smoothing_sessions": 3,
+    "rebalance_tolerance": 0.03,
+    "entry_confirm_sessions": 2,
+    "exit_confirm_sessions": 3
+  },
+  "metrics": {
+    "total_ret": 0.46787637812510185,
+    "ann_ret": 0.05109336064451875,
+    "max_drawdown": -0.20292999875395878,
+    "avg_turnover": 0.05787141002294695,
+    "annualized_turnover": 14.58359532578263,
+    "changed_day_ratio": 0.3039670273055126,
+    "median_holding_sessions": 10.0,
+    "development_ret": 0.15003860054930285,
+    "selection_ret": 0.2763713995547554,
+    "positive_years": 6,
+    "year_2018": -0.17353310181968074,
+    "year_2022": -0.08683247356186885,
+    "year_2024": 0.13325619987800486,
+    "year_2025": 0.1262867123004987
+  },
+  "gates": {
+    "low_frequency": true,
+    "return": false,
+    "risk": false
+  },
+  "decision": "reject"
+}

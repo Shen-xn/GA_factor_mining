@@ -35,7 +35,8 @@ def make_lgbm_model(horizon: int):
     return lgb.LGBMRegressor(
         objective="regression", n_estimators=350, learning_rate=0.035, num_leaves=31,
         min_child_samples=160, subsample=0.85, colsample_bytree=0.85, reg_alpha=0.2,
-        reg_lambda=1.0, random_state=42 + horizon, n_jobs=-1, verbose=-1,
+        # 本地研究默认单线程，避免LightGBM与NumPy同时抢占内存导致进程崩溃。
+        reg_lambda=1.0, random_state=42 + horizon, n_jobs=1, verbose=-1,
         deterministic=True, force_col_wise=True,
     )
 

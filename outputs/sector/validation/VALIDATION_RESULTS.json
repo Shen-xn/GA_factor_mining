@@ -1,171 +1,68 @@
 {
-  "generated_at": "2026-08-30T16:08:52+08:00",
-  "scope": "user-ready sector prototype; legacy protocol audit; fixed-order return bridge; sealed candidate gate; continuous ledger and forward freeze",
-  "passed": true,
-  "passed_checks": 31,
-  "total_checks": 31,
-  "metrics": {
-    "development_total_return": 0.1347704399362295,
-    "selection_total_return": 0.366407507858943,
-    "observation_total_return": 0.0019246989637979,
-    "full_total_return": 0.5535432078349014,
-    "full_max_drawdown": -0.189337019965376
+  "generated_at": "2026-08-31T01:14:30+08:00",
+  "scope": "simple_v1 engineering replay, risk explanation, fixed acceptance gate, sealed candidate review and forward v7 freeze",
+  "engineering_validation_passed": true,
+  "strategy_acceptance_passed": false,
+  "strategy_acceptance_path": "outputs/sector/strategy/ACCEPTANCE_GATE.json",
+  "metrics_2018_2025": {
+    "total_return": 0.5505588488252595,
+    "annualized_return": 0.05859804362850274,
+    "maximum_drawdown": -0.18933701996537633,
+    "average_daily_turnover": 0.08883916754414599,
+    "annualized_turnover": 22.38747022112479,
+    "trade_day_ratio": 0.4652241112828439,
+    "positive_years": 6
   },
   "checks": [
     {
-      "name": "locked_dependencies",
+      "name": "default_replay_unchanged",
       "passed": true,
-      "detail": "Fresh Python 3.11 environment installed the exact supported dependency set"
+      "detail": "2018-2023 +13.4770%, 2024-2025 +36.6408%, 2026 observation +0.1925%; simple_v1 trading logic unchanged"
     },
     {
-      "name": "preflight",
+      "name": "risk_snapshot_current",
       "passed": true,
-      "detail": "Runtime dependencies, eight Parquet files and cross-artifact signatures passed"
+      "detail": "Risk snapshot reaches panel data end 20260810; score 32.6260, complete coverage, confirmed DEFENSIVE"
     },
     {
-      "name": "cache_portability",
+      "name": "risk_execution_safety",
       "passed": true,
-      "detail": "Raw-data identity uses size and SHA-256, not machine path or mtime"
-    },
-    {
-      "name": "default_run",
-      "passed": true,
-      "detail": "Quarterly expanding LightGBM + simple_v1 + 20bp"
-    },
-    {
-      "name": "memory_mode",
-      "passed": true,
-      "detail": "projected feature columns; one default product replay"
-    },
-    {
-      "name": "feature_signature",
-      "passed": true,
-      "detail": "Feature, score and product signatures match"
-    },
-    {
-      "name": "data_integrity",
-      "passed": true,
-      "detail": "Score data ends 2026-08-10"
-    },
-    {
-      "name": "missing_return_policy",
-      "passed": true,
-      "detail": "Missing open returns are never converted to zero; live-position gaps raise an error"
-    },
-    {
-      "name": "strategy_protocol",
-      "passed": true,
-      "detail": "simple_v1 strategy policy v5; optional sector-strength candidate remains disabled"
-    },
-    {
-      "name": "period_roles",
-      "passed": true,
-      "detail": "Period roles are explicit"
-    },
-    {
-      "name": "model_frequency",
-      "passed": true,
-      "detail": "Quarterly challenger passed the frozen 2024-2025 gate and was promoted"
-    },
-    {
-      "name": "forward_protocol",
-      "passed": true,
-      "detail": "Protocol v6 805f9871dc28 frozen; zero unseen days; superseded protocols removed from current outputs"
-    },
-    {
-      "name": "single_state_path",
-      "passed": true,
-      "detail": "Continuous portfolio state from 2018"
-    },
-    {
-      "name": "selection_return",
-      "passed": true,
-      "detail": "Selection total 0.366408"
-    },
-    {
-      "name": "selection_drawdown",
-      "passed": true,
-      "detail": "Selection MDD -0.100099"
-    },
-    {
-      "name": "observation_return",
-      "passed": true,
-      "detail": "Observed 2026 total 0.001925; viewed only after promotion"
-    },
-    {
-      "name": "long_horizon_drawdown",
-      "passed": true,
-      "detail": "Continuous-path MDD -0.189337; total 0.553543"
-    },
-    {
-      "name": "positive_years",
-      "passed": true,
-      "detail": "6 of 8 complete years are positive"
-    },
-    {
-      "name": "accounting_identities",
-      "passed": true,
-      "detail": "Maximum accounting error 2.97e-18; trading cost is compounded multiplicatively"
+      "detail": "Stale or insufficient risk data disables execution; target exposure identity is checked"
     },
     {
       "name": "cost_stress",
       "passed": true,
-      "detail": "30bp selection stays positive while development turns negative"
+      "detail": "10/20/30/50bp are serial full-system replays with drawdown feedback and current signatures"
     },
     {
-      "name": "data_freshness",
+      "name": "candidate_seal",
       "passed": true,
-      "detail": "Data end 20260810, age 20 days; stale-data gate suppresses execution"
+      "detail": "Weekly cadence, rank confirmation and 10-day LightGBM candidates used data only through 2025 and were rejected"
     },
     {
-      "name": "latest_status",
-      "passed": true,
-      "detail": "Latest target is 0.00% sector and 100.00% low risk"
+      "name": "strategy_acceptance",
+      "passed": false,
+      "detail": "simple_v1 fails the 7% annual return, low-turnover, median-holding and cost-robustness targets"
     },
     {
-      "name": "tradability_disclosure",
+      "name": "forward_protocol",
       "passed": true,
-      "detail": "Ordinary sectors are not presented as executable ETF orders"
+      "detail": "Protocol v7 c77cbec4c7c0 frozen at 20260810; zero unseen days"
     },
     {
-      "name": "documentation",
+      "name": "unit_tests",
       "passed": true,
-      "detail": "README, getting-started guide, data contract and module guide reflect the current prototype"
+      "detail": "89 standard-library unit tests passed"
     },
     {
-      "name": "tests",
+      "name": "preflight",
       "passed": true,
-      "detail": "83 unit tests passed in the clean environment"
+      "detail": "Runtime dependencies, local data pack and cross-artifact signatures passed"
     },
     {
-      "name": "return_bridge",
-      "passed": true,
-      "detail": "Six-layer fixed-order return bridge passed on 2086 common dates; risk control is the largest historical return reduction but improves the 2026 observation path"
-    },
-    {
-      "name": "legacy_prototype_reproduction",
-      "passed": true,
-      "detail": "Nine legacy annual results reproduced within 1e-6; same-schedule corrected open protocol materially reduces the old headline returns"
-    },
-    {
-      "name": "sector_strength_candidate",
-      "passed": true,
-      "detail": "Candidate gate executed only through 2025 and rejected; candidate 2026 observation was not opened and simple_v1 remains unchanged"
-    },
-    {
-      "name": "factor_redundancy",
-      "passed": true,
-      "detail": "9 development-period pairs flagged; later periods diagnostic only; no automatic deletion"
-    },
-    {
-      "name": "derived_feature_ablation",
-      "passed": true,
-      "detail": "Three direct derived representations failed development; selection and observation remained sealed"
-    },
-    {
-      "name": "bad_year_attribution",
-      "passed": true,
-      "detail": "2018 and 2022 exact-linked attribution identifies market exposure as the common primary loss driver"
+      "name": "live_data_refresh",
+      "passed": false,
+      "detail": "Tushare update credential is not currently available; local market data remains at 20260810"
     }
   ]
 }

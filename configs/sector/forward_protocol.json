@@ -1,11 +1,11 @@
 {
-  "version": 6,
+  "version": 7,
   "freeze_data_end": "20260810",
   "first_unseen_after": "20260810",
-  "evidence_name": "sector_simple_quarterly_forward_v6",
+  "evidence_name": "sector_simple_quarterly_forward_v7",
   "execution_layer": "sector_index_research_with_511880_low_risk_leg",
   "cost_bps": 20.0,
   "model_retraining_schedule": "quarterly_expanding_window",
   "policy_name": "simple_v1",
-  "notes": "模型、simple_v1和冻结日不变；v6记录旧原型协议审计与一个未晋级的板块强度候选，候选开关默认关闭。2026-08-10及以前均已被看到，只有之后的数据可作为前向证据。"
+  "notes": "模型、simple_v1和冻结日不变；v7增加板块广度健康解释、统一验收门和单线程内存保护，未晋级候选不改变正式决策。2026-08-10及以前均已被看到，只有之后的数据可作为前向证据。"
 }

@@ -1,0 +1,29 @@
+{
+  "candidate": "quarterly_expanding_lgbm_10d",
+  "feature_protocol_version": 4,
+  "selection_end": "20251231",
+  "observation_opened": false,
+  "model_threads": 1,
+  "metrics": {
+    "total_ret": 0.3265356548752829,
+    "ann_ret": 0.03736740143602191,
+    "max_drawdown": -0.22550224402180674,
+    "avg_turnover": 0.0776392057174607,
+    "annualized_turnover": 19.5650798408001,
+    "changed_day_ratio": 0.42143225141679547,
+    "median_holding_sessions": 5.0,
+    "development_ret": 0.012225847975005921,
+    "selection_ret": 0.31051351586117404,
+    "positive_years": 5,
+    "year_2018": -0.14167861767546264,
+    "year_2022": -0.06144919427981754,
+    "year_2024": 0.08992934220445314,
+    "year_2025": 0.20238392078754064
+  },
+  "gates": {
+    "low_frequency": false,
+    "return": false,
+    "risk": false
+  },
+  "decision": "reject"
+}

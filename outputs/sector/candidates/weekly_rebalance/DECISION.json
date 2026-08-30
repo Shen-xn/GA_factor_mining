@@ -1,0 +1,16 @@
+{
+  "candidate": "weekly_ordinary_rebalance_interval_5",
+  "feature_protocol_version": 4,
+  "selection_end": "20251231",
+  "observation_opened": false,
+  "anchors_tested": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "all_anchors_pass": false,
+  "decision": "reject",
+  "reason": "五个固定周频锚点必须全部通过收益、换手和回撤门，禁止挑选最好锚点。"
+}

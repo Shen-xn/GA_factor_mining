@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import erf, sqrt
 
 import numpy as np
 import pandas as pd
@@ -44,15 +45,70 @@ class DrawdownState:
     trigger_drawdown: float | None = None
 
 
+def market_risk_components(row: pd.Series) -> dict[str, float | str]:
+    """把板块广度指标压缩为0—100分；分数仅用于解释，不改变现有仓位。"""
+    trend = float(row.get("benchmark_trend_60d", np.nan))
+    volatility = float(row.get("market_volatility_20d", np.nan))
+    breadth20 = float(row.get("risk_breadth_positive_20d", row.get("breadth_positive_20d", np.nan)))
+    breadth60 = float(row.get("risk_breadth_positive_60d", row.get("breadth_positive_60d", np.nan)))
+    vol_percentile = float(row.get("market_vol_percentile", np.nan))
+    coverage20 = float(row.get("breadth_20d_coverage", 1.0))
+    coverage60 = float(row.get("breadth_60d_coverage", 1.0))
+    sector_count = float(row.get("sector_count", 100.0))
+
+    if np.isfinite(trend) and np.isfinite(volatility) and volatility > 0:
+        trend_z = trend / (volatility * sqrt(60.0))
+        trend_score = 0.5 * (1.0 + erf(trend_z / sqrt(2.0)))
+    else:
+        trend_score = 0.5
+    components = {
+        "trend_health": float(np.clip(trend_score, 0.0, 1.0)),
+        "breadth_20d_health": float(np.clip(breadth20, 0.0, 1.0)) if np.isfinite(breadth20) else 0.5,
+        "breadth_60d_health": float(np.clip(breadth60, 0.0, 1.0)) if np.isfinite(breadth60) else 0.5,
+        "volatility_health": float(np.clip(1.0 - vol_percentile, 0.0, 1.0)) if np.isfinite(vol_percentile) else 0.5,
+    }
+    complete = volatility > 0.0 and sector_count >= 30 and all(
+        np.isfinite(
+            [
+                trend,
+                volatility,
+                breadth20,
+                breadth60,
+                vol_percentile,
+                coverage20,
+                coverage60,
+                sector_count,
+            ]
+        )
+    ) and min(coverage20, coverage60) >= 0.80
+    score = 100.0 * float(np.mean(list(components.values())))
+    # 数据不完整时最多给中性分，不能因缺失而产生乐观信号。
+    if not complete:
+        score = min(score, 50.0)
+    return {
+        **components,
+        "risk_score": score,
+        "risk_data_quality": "complete" if complete else "insufficient",
+    }
+
+
 def build_market_state(panel: pd.DataFrame, types: tuple[str, ...] = ("I", "N")) -> pd.DataFrame:
     """从板块横截面构造不依赖未来数据的市场状态表。"""
     sub = panel[panel["type"].isin(types)].copy()
     daily = sub.groupby("trade_date", sort=True).agg(
         benchmark_ret_1d=("ret_1d", "mean"),
+        # 旧状态列保持不变，保证simple_v1历史收益不被解释层改写。
         breadth_positive_20d=("ret_20d", lambda x: float((x > 0).mean())),
         breadth_positive_60d=("ret_60d", lambda x: float((x > 0).mean())),
+        risk_breadth_positive_20d=("ret_20d", lambda x: float(x.dropna().gt(0).mean())),
+        risk_breadth_positive_60d=("ret_60d", lambda x: float(x.dropna().gt(0).mean())),
+        breadth_20d_valid_count=("ret_20d", "count"),
+        breadth_60d_valid_count=("ret_60d", "count"),
+        sector_count=("ts_code", "nunique"),
         cross_section_dispersion_20d=("ret_20d", "std"),
     )
+    daily["breadth_20d_coverage"] = daily["breadth_20d_valid_count"] / daily["sector_count"]
+    daily["breadth_60d_coverage"] = daily["breadth_60d_valid_count"] / daily["sector_count"]
     daily["benchmark_equity"] = (1.0 + daily["benchmark_ret_1d"].fillna(0.0)).cumprod()
     daily["benchmark_trend_60d"] = daily["benchmark_equity"] / daily["benchmark_equity"].shift(60) - 1.0
     daily["market_volatility_20d"] = daily["benchmark_ret_1d"].rolling(20, min_periods=15).std()
@@ -67,6 +123,8 @@ def build_market_state(panel: pd.DataFrame, types: tuple[str, ...] = ("I", "N"))
         252,
         min_periods=60,
     ).apply(last_percentile, raw=True)
+    component_rows = daily.apply(market_risk_components, axis=1, result_type="expand")
+    daily = pd.concat([daily, component_rows], axis=1)
     return daily.reset_index()
 
 

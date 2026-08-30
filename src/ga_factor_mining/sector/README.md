@@ -24,6 +24,8 @@ python -m ga_factor_mining.sector --check
 
 `doctor.py`只做运行前检查，不参与投资决策。默认运行读取已冻结的季度评分、`simple_v1`和20bp成本，不执行研究搜索。
 
+`risk.py`同时输出0—100的板块广度风险解释分。仓位仍由已冻结的离散状态与回撤保护决定；风险分暂不直接替代仓位规则，避免在没有封存验证时改变基准收益。产品日账本分别记录`market_base_exposure`、`drawdown_cap`、`risk_target_exposure`和实际组合仓位。
+
 ## 正式模块与研究模块
 
 | 类型 | 模块 | 默认运行 |
@@ -65,6 +67,8 @@ python -m ga_factor_mining.sector.rotation.product_backtest --boundary-sensitivi
 ```
 
 这些命令会写入结构化输出，但不会自动改变正式策略。
+
+成本压力命令会串行重放10/20/30/50bp，并生成统一的`ACCEPTANCE_GATE.json`。候选只允许使用2018—2025晋级；2026字段固定为`observation_opened=false`。
 
 `prototype_recovery`只用于审计旧缓存，需要显式传入`--legacy-panel`和可选的`--expected-results`；个人旧目录不会写入项目代码。当前复现结论已经结构化保存在`outputs/sector/prototype_recovery/`。
 
