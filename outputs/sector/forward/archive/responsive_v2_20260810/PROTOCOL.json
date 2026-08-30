@@ -1,0 +1,61 @@
+{
+  "created_at": "2026-08-11T01:30:59+08:00",
+  "protocol_hash": "36f619c2b09c68969cb58398292745dfce3f6fd9399dc567fd7aacddaf34f1e3",
+  "payload": {
+    "config": {
+      "version": 1,
+      "freeze_data_end": "20260810",
+      "first_unseen_after": "20260810",
+      "evidence_name": "sector_product_forward_shadow_v1",
+      "execution_layer": "sector_index_research_with_511880_low_risk_leg",
+      "cost_bps": 20.0,
+      "model_retraining_schedule": "annual_expanding_window",
+      "policy_name": "responsive_v2",
+      "notes": "2026-08-10及以前均已被研究者看到；只有之后的数据可作为冻结协议下的前向证据。"
+    },
+    "model": {
+      "variant": "expanding",
+      "training_years": null,
+      "half_life_years": null,
+      "retrain_months": 12,
+      "score_column": "score_frozen_selected_5d",
+      "feature_protocol_version": 4
+    },
+    "policy": {
+      "strategy_policy_version": 4,
+      "policy_name": "responsive_v2",
+      "policy": {
+        "target_positions": 5,
+        "entry_rank": 5,
+        "retain_rank": 20,
+        "min_hold_sessions": 5,
+        "review_after_sessions": 20,
+        "replacement_score_gap": 0.04,
+        "min_entry_score": 0.5,
+        "hard_drawdown": -0.12,
+        "weak_momentum_rank": 0.2,
+        "extreme_volatility_rank": 0.95,
+        "max_normal_replacements": 2,
+        "max_new_entries": 2,
+        "entry_confirmation_sessions": 1,
+        "entry_window_sessions": 3,
+        "strong_entry_rank": 2,
+        "strong_entry_zscore": 1.5,
+        "cooldown_sessions": 3,
+        "exit_confirmation_sessions": 1,
+        "score_smoothing_sessions": 3,
+        "rebalance_tolerance": 0.03
+      },
+      "boundary_mode": "continuous_carry_from_2018",
+      "low_risk_code": "511880.SH"
+    },
+    "source_sha256": {
+      "src/ga_factor_mining/sector/rotation/run_experiments.py": "f8a88b7798d15e207a527c842ca9e635bd87ca0a66aeb25caf5db339fc7c1257",
+      "src/ga_factor_mining/sector/rotation/rolling_validation.py": "bd53e343abade606ad807f6673462c33895856727599e10f28d2f5fcbf2da2a3",
+      "src/ga_factor_mining/sector/rotation/strategy.py": "31cdb69cf728c545a10c55d830d18679832f4171a35b0c589fd640b5da20de8b",
+      "src/ga_factor_mining/sector/rotation/risk.py": "ef35a26c296151b77db2d863445d557d930a238ad82f87f7a29aed686b5971fe",
+      "src/ga_factor_mining/sector/rotation/low_risk.py": "6ccee3b89125ddca4ba92c982a97f7351c4925a354ec50701d9e46f4579a75b0",
+      "src/ga_factor_mining/sector/rotation/product_backtest.py": "51fb6931357b00ac9f3666c643bc144007df6d77375863615cec2fafcae5d582"
+    }
+  }
+}

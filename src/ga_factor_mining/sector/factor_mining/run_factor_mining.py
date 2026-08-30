@@ -5,14 +5,11 @@ import copy
 import json
 import math
 import random
-import shutil
-import subprocess
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import rankdata
@@ -28,13 +25,6 @@ from ...common.expression_tree import (
     valid_expression,
 )
 
-try:
-    import markdown
-except ImportError:  # pragma: no cover
-    markdown = None
-
-
-ROOT = Path(__file__).resolve().parent
 
 
 UNARY = ("neg", "abs", "signed_log", "signed_sqrt")
@@ -46,26 +36,22 @@ def expr_text(expr) -> str:
     return expression_text(expr, separator=", ")
 
 
-def pct(x: float) -> str:
-    return "" if pd.isna(x) else f"{x * 100:.2f}%"
+def simple_derived_duplicate(expr) -> bool:
+    """识别人工特征间最简单的线性重写，避免作为独立 GA 因子晋级。"""
+    return (
+        isinstance(expr, list)
+        and len(expr) == 3
+        and expr[0] in {"add", "sub"}
+        and isinstance(expr[1], str)
+        and isinstance(expr[2], str)
+    )
 
-
-def num(x: float, digits: int = 4) -> str:
-    return "" if pd.isna(x) else f"{x:.{digits}f}"
-
-
-def md_table(headers: list[str], rows: list[list[str]]) -> str:
-    out = ["| " + " | ".join(headers) + " |"]
-    out.append("| " + " | ".join(["---"] * len(headers)) + " |")
-    for row in rows:
-        out.append("| " + " | ".join(str(x) for x in row) + " |")
-    return "\n".join(out)
 
 
 def load_config(path: str | Path) -> dict:
     p = Path(path).resolve()
     cfg = json.loads(p.read_text(encoding="utf-8"))
-    for key in ("feature_panel", "artifacts", "reports"):
+    for key in ("feature_panel", "artifacts"):
         cfg["paths"][key] = str((p.parent / cfg["paths"][key]).resolve())
     Path(cfg["paths"]["artifacts"]).mkdir(parents=True, exist_ok=True)
     return cfg
@@ -97,9 +83,16 @@ def expression_category(expr, cfg: dict) -> str:
 class Evaluator:
     """表达式逐行计算器。时间算子只允许作用于基础字段。"""
 
-    def __init__(self, frame: pd.DataFrame, max_abs: float = 1e6, temporal_cache_size: int = 32):
+    def __init__(
+        self,
+        frame: pd.DataFrame,
+        max_abs: float = 10.0,
+        div_epsilon: float = 0.1,
+        temporal_cache_size: int = 32,
+    ):
         self.df = frame
         self.max_abs = max_abs
+        self.div_epsilon = div_epsilon
         self.temporal_cache_size = temporal_cache_size
         self.temporal_cache: OrderedDict[tuple[str, str], pd.Series] = OrderedDict()
 
@@ -157,7 +150,9 @@ class Evaluator:
             elif op == "mul":
                 out = a * b
             elif op == "div":
-                out = a / b.where(b.abs() > 1e-8)
+                sign = np.sign(b).replace(0, 1.0)
+                denominator = b.where(b.abs() >= self.div_epsilon, sign * self.div_epsilon)
+                out = a / denominator
             elif op == "min":
                 out = np.minimum(a, b)
             elif op == "max":
@@ -409,7 +404,21 @@ def load_discovery_frame(cfg: dict) -> tuple[pd.DataFrame, list[str]]:
     needed = ["ts_code", "trade_date", "name", "type", cfg["target"]["return_column"], cfg["target"]["rank_column"]]
     keep = list(dict.fromkeys(needed + terminals))
     panel = panel[keep].sort_values(["ts_code", "trade_date"]).reset_index(drop=True)
+    if cfg["ga"].get("terminal_transform") == "centered_rank":
+        non_rank = [terminal for terminal in terminals if not terminal.endswith("_rank")]
+        if non_rank:
+            raise ValueError(f"centered_rank 模式不允许非排名终端: {non_rank}")
+        for terminal in terminals:
+            panel[terminal] = (2.0 * panel[terminal] - 1.0).astype("float32")
     return panel, terminals
+
+
+def make_evaluator(frame: pd.DataFrame, cfg: dict) -> Evaluator:
+    return Evaluator(
+        frame,
+        max_abs=float(cfg["ga"].get("value_clip", 10.0)),
+        div_epsilon=float(cfg["ga"].get("protected_div_epsilon", 0.1)),
+    )
 
 
 def run_ga(frame: pd.DataFrame, terminals: list[str], cfg: dict, out_dir: Path) -> tuple[list[dict], pd.DataFrame]:
@@ -419,7 +428,7 @@ def run_ga(frame: pd.DataFrame, terminals: list[str], cfg: dict, out_dir: Path) 
         & (frame["trade_date"] <= cfg["split"]["discovery_end"])
         & frame[cfg["target"]["return_column"]].notna()
     )
-    ev = Evaluator(frame)
+    ev = make_evaluator(frame, cfg)
     scorer = AlphaScorer(frame, cfg, discovery_mask)
     population = build_population(terminals, cfg, rng)
     cache: dict[str, Candidate] = {}
@@ -509,13 +518,36 @@ def select_library(candidates: list[Candidate], frame: pd.DataFrame, ev: Evaluat
     peak_counts: dict[str, int] = {}
     rows = []
     g = cfg["ga"]
+    terminal_names = list(
+        dict.fromkeys(
+            terminal
+            for group in cfg["terminal_groups"].values()
+            for terminal in group
+            if terminal in frame.columns
+        )
+    )
+    sample_size = int(g.get("corr_sample_size", 20_000))
+    sample_step = max(1, len(scorer.frame) // sample_size)
+    sample_index = scorer.frame.index[::sample_step]
+    manual_ranks = {
+        terminal: rank_for_corr(frame[terminal], scorer, 1).loc[sample_index]
+        for terminal in terminal_names
+    }
     for cand in candidates:
         value = ev.eval(cand.expr)
         rank_series = rank_for_corr(value, scorer, cand.direction)
+        sampled_rank = rank_series.loc[sample_index]
+        manual_duplicate_factor = ""
+        manual_duplicate_corr = 0.0
+        for terminal, manual_rank in manual_ranks.items():
+            corr = float(sampled_rank.corr(manual_rank))
+            if np.isfinite(corr) and abs(corr) > manual_duplicate_corr:
+                manual_duplicate_corr = abs(corr)
+                manual_duplicate_factor = terminal
         duplicate_corr = 0.0
         duplicate = False
         for existing in ranked_series:
-            corr = float(rank_series.corr(existing))
+            corr = float(sampled_rank.corr(existing.loc[sample_index]))
             duplicate_corr = max(duplicate_corr, abs(corr) if np.isfinite(corr) else 0.0)
             if np.isfinite(corr) and abs(corr) >= float(g["corr_prune_threshold"]):
                 duplicate = True
@@ -529,8 +561,14 @@ def select_library(candidates: list[Candidate], frame: pd.DataFrame, ev: Evaluat
             "depth": depth(cand.expr),
             "category": expression_category(cand.expr, cfg),
             "duplicate_corr": duplicate_corr,
+            "manual_duplicate_corr": manual_duplicate_corr,
+            "manual_duplicate_factor": manual_duplicate_factor,
             "selected": False,
         }
+        if manual_duplicate_corr >= float(g["corr_prune_threshold"]):
+            row["reject_reason"] = "manual_factor_duplicate"
+            rows.append(row)
+            continue
         if peak_counts.get(cand.peak_month, 0) >= int(g["max_factors_per_peak_month"]):
             row["reject_reason"] = "peak_month_limit"
             rows.append(row)
@@ -572,11 +610,11 @@ def select_library(candidates: list[Candidate], frame: pd.DataFrame, ev: Evaluat
 
 
 def evaluate_library(frame: pd.DataFrame, library: list[dict], cfg: dict, out_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
-    ev = Evaluator(frame)
+    ev = make_evaluator(frame, cfg)
     periods = {
         "discovery": (cfg["split"]["discovery_start"], cfg["split"]["discovery_end"]),
         "validation": (cfg["split"]["validation_start"], cfg["split"]["validation_end"]),
-        "test_observation": (cfg["split"]["test_start"], cfg["split"]["test_end"]),
+        "observation": (cfg["split"]["observation_start"], cfg["split"]["observation_end"]),
     }
     all_rows = []
     monthly_rows = []
@@ -614,6 +652,7 @@ def evaluate_library(frame: pd.DataFrame, library: list[dict], cfg: dict, out_di
         out = {k: v for k, v in item.items() if k not in {"expression"}}
         out["factor_name"] = name
         out["expression_json"] = json.dumps(item["expression"], ensure_ascii=False)
+        out["structural_duplicate"] = simple_derived_duplicate(item["expression"])
         for period in periods:
             sub = metrics[(metrics["factor_name"] == name) & (metrics["period"] == period)]
             if sub.empty:
@@ -625,11 +664,12 @@ def evaluate_library(frame: pd.DataFrame, library: list[dict], cfg: dict, out_di
         valid_pos = out.get("validation_positive_month_ratio", np.nan)
         valid_ndcg = out.get("validation_top10_ndcg", np.nan)
         out["status"] = (
-            "core"
+            "shadow"
             if pd.notna(valid_alpha)
-            and valid_alpha > float(cfg["selection"]["core_validation_top10_alpha_min"])
-            and valid_pos >= float(cfg["selection"]["core_validation_positive_month_ratio_min"])
+            and valid_alpha > float(cfg["selection"]["shadow_validation_top10_alpha_min"])
+            and valid_pos >= float(cfg["selection"]["shadow_validation_positive_month_ratio_min"])
             and pd.notna(valid_ndcg)
+            and not out["structural_duplicate"]
             else "diagnostic"
         )
         flat_rows.append(out)
@@ -647,263 +687,43 @@ def compute_correlation_matrix(frame: pd.DataFrame, library: list[dict], cfg: di
         & frame[cfg["target"]["return_column"]].notna()
     )
     scorer = AlphaScorer(frame, cfg, mask)
-    ev = Evaluator(frame)
+    ev = make_evaluator(frame, cfg)
     ranks = {}
     for item in library:
         value = ev.eval(item["expression"])
         ranks[item["name"]] = rank_for_corr(value, scorer, int(item["direction"]))
     corr = pd.DataFrame(ranks).corr()
-    corr.to_csv(out_dir / "factor_correlation_matrix.csv", encoding="utf-8-sig")
+    corr.rename_axis("factor_name").to_csv(
+        out_dir / "factor_correlation_matrix.csv",
+        encoding="utf-8-sig",
+    )
     return corr
 
-
-def plot_report_figures(validation: pd.DataFrame, monthly: pd.DataFrame, out_dir: Path) -> tuple[Path, Path]:
-    if "factor_name" not in validation.columns and "name" in validation.columns:
-        validation = validation.copy()
-        validation["factor_name"] = validation["name"]
-    plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "Arial Unicode MS", "DejaVu Sans"]
-    plt.rcParams["axes.unicode_minus"] = False
-    val = validation.sort_values("validation_top10_alpha", ascending=False).head(15)
-    fig1 = out_dir / "validation_top10_alpha.png"
-    fig, ax = plt.subplots(figsize=(10.5, 4.8))
-    ax.bar(val["factor_name"], val["validation_top10_alpha"] * 100, color="#1f5fbf")
-    ax.axhline(0, color="#555", lw=0.9)
-    ax.set_title("验证期 Top10 Alpha 前15因子")
-    ax.set_ylabel("平均未来10日超额收益 (%)")
-    ax.tick_params(axis="x", rotation=55)
-    fig.tight_layout()
-    fig.savefig(fig1, bbox_inches="tight")
-    plt.close(fig)
-
-    core_names = validation.sort_values("validation_top10_alpha", ascending=False).head(8)["factor_name"]
-    heat = monthly[(monthly["period"] == "validation") & (monthly["factor_name"].isin(core_names))]
-    pivot = heat.pivot(index="factor_name", columns="month", values="alpha").reindex(core_names)
-    fig2 = out_dir / "validation_monthly_alpha_heatmap.png"
-    fig, ax = plt.subplots(figsize=(11.5, 4.8))
-    im = ax.imshow(pivot.fillna(0).to_numpy() * 100, aspect="auto", cmap="RdYlGn", vmin=-5, vmax=5)
-    ax.set_yticks(np.arange(len(pivot.index)), pivot.index)
-    ax.set_xticks(np.arange(len(pivot.columns)), pivot.columns, rotation=60, ha="right")
-    ax.set_title("验证期前8因子月度Top10 Alpha")
-    cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label("未来10日超额收益 (%)")
-    fig.tight_layout()
-    fig.savefig(fig2, bbox_inches="tight")
-    plt.close(fig)
-    return fig1, fig2
-
-
-def build_report(validation: pd.DataFrame, monthly: pd.DataFrame, cfg: dict, out_dir: Path) -> tuple[Path, Path]:
-    if "factor_name" not in validation.columns and "name" in validation.columns:
-        validation = validation.copy()
-        validation["factor_name"] = validation["name"]
-    fig1, fig2 = plot_report_figures(validation, monthly, out_dir)
-    top = validation.sort_values(["status", "validation_top10_alpha"], ascending=[True, False]).head(30)
-    summary_rows = []
-    for row in top.itertuples(index=False):
-        summary_rows.append(
-            [
-                row.factor_name,
-                row.status,
-                row.category,
-                pct(row.discovery_top10_alpha),
-                pct(row.validation_top10_alpha),
-                pct(row.validation_positive_month_ratio),
-                num(row.validation_rank_ic, 4),
-                row.peak_month,
-                row.expression_text,
-            ]
-        )
-    factor_sections = []
-    for row in top.head(12).itertuples(index=False):
-        factor_sections.append(
-            f"""### {row.factor_name}
-
-```text
-{row.expression_text}
-```
-
-- 方向：`{int(row.direction)}`
-- 类别：`{row.category}`
-- 验证期 Top10 alpha：{pct(row.validation_top10_alpha)}
-- 验证期 Top5 alpha：{pct(row.validation_top5_alpha)}
-- 验证期 Top20 alpha：{pct(row.validation_top20_alpha)}
-- 验证期正 alpha 月份比例：{pct(row.validation_positive_month_ratio)}
-- 验证期 Rank IC：{num(row.validation_rank_ic, 4)}
-- 发现期峰值月份：`{row.peak_month}`
-- 状态：`{row.status}`
-"""
-        )
-    core_count = int((validation["status"] == "core").sum())
-    md = f"""# 板块高 Alpha 因子挖掘报告
-
-生成日期：2026-07-01
-
-## 目的
-
-本轮只做板块因子挖掘，不训练滚动模型。目标是找到一批能够提示板块未来 10 个交易日进入主升浪的高 alpha 因子。评价标准优先看 Top10 板块未来 10 日相对全板块均值的超额收益，而不是单纯 IC。
-
-## 数据与目标
-
-- 宇宙：同花顺行业 + 概念板块，类型为 `{', '.join(cfg['universe']['main'])}`。
-- 发现期：{cfg['split']['discovery_start']} 至 {cfg['split']['discovery_end']}。
-- 验证期：{cfg['split']['validation_start']} 至 {cfg['split']['validation_end']}。
-- 观察期：{cfg['split']['test_start']} 至 {cfg['split']['test_end']}，不参与筛选。
-- 主标签：`future_ret_10d`。
-- 主目标：Top10 未来 10 日 alpha。
-
-## 遗传搜索设置
-
-```text
-population_size = {cfg['ga']['population_size']}
-generations = {cfg['ga']['generations']}
-elite_size = {cfg['ga']['elite_size']}
-tournament_size = {cfg['ga']['tournament_size']}
-crossover_rate = {cfg['ga']['crossover_rate']}
-mutation_rate = {cfg['ga']['mutation_rate']}
-max_depth = {cfg['ga']['max_depth']}
-library_size = {cfg['ga']['library_size']}
-```
-
-fitness 使用 robust 版：
-
-```text
-1.50 * mean(monthly_top10_alpha)
-+ 0.50 * min(best_contiguous_2_month_alpha, 3%)
-+ 0.50 * min(mean(top3 monthly_top10_alpha), 3%)
-+ 0.02 * (positive_month_ratio - 50%)
-- 0.10 * std(daily_top10_alpha)
-- 0.0005 * expression_nodes
-```
-
-## 因子库概览
-
-- 最终因子数：{len(validation)}
-- core 因子数：{core_count}
-- diagnostic 因子数：{len(validation) - core_count}
-
-{md_table(['因子', '状态', '类别', '发现期Top10 alpha', '验证期Top10 alpha', '验证期正月份', '验证期Rank IC', '峰值月', '公式'], summary_rows)}
-
-![验证期Top10 Alpha]({fig1.name})
-
-![验证期月度Alpha热力图]({fig2.name})
-
-## 代表性因子说明
-
-{chr(10).join(factor_sections)}
-
-## 结论
-
-本轮因子挖掘把未来 10 日 Top10 alpha 作为主目标，更贴近“板块主升浪入场信号”。`core` 因子表示发现期和验证期都有正向 Top10 alpha，`diagnostic` 因子表示发现期强但验证期不完全达标，后续可以作为模型输入或人工观察项。
-
-下一步建议先不要急着扩大模型复杂度，而是用这些因子做两件事：
-
-1. 看 Top10 alpha 在 2024、2025、2026 各月份是否集中在少数行情阶段。
-2. 用 core 因子构造简单投票或 LightGBM 滚动模型，比较是否优于之前直接使用原始板块特征。
-"""
-    md_path = out_dir / "FACTOR_MINING_REPORT.md"
-    html_path = out_dir / "FACTOR_MINING_REPORT.html"
-    pdf_path = out_dir / "FACTOR_MINING_REPORT.pdf"
-    md_path.write_text(md, encoding="utf-8")
-    html = markdown_to_html(md)
-    html_path.write_text(html, encoding="utf-8")
-    export_pdf(html_path, pdf_path)
-    return md_path, pdf_path
-
-
-def markdown_to_html(md: str) -> str:
-    if markdown is None:
-        body = "<pre>" + md + "</pre>"
-    else:
-        body = markdown.markdown(md, extensions=["tables", "sane_lists", "fenced_code"])
-    css = """
-    @page { size: A4; margin: 18mm 16mm; }
-    body { font-family: "Microsoft YaHei", "SimSun", Arial, sans-serif; color: #20242a; line-height: 1.6; font-size: 12.5px; }
-    h1 { color: #17365d; border-bottom: 2px solid #17365d; padding-bottom: 8px; }
-    h2 { color: #17365d; border-left: 5px solid #5b8cc0; padding-left: 10px; margin-top: 24px; }
-    h3 { color: #2f4f6f; }
-    table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 9.5px; }
-    th { background: #eaf1f8; color: #17365d; }
-    th, td { border: 1px solid #cfd8e3; padding: 4px 5px; vertical-align: middle; }
-    tr:nth-child(even) td { background: #fbfcfe; }
-    code, pre { background: #f4f6f8; border: 1px solid #e5e8ec; border-radius: 3px; }
-    code { padding: 1px 4px; }
-    pre { padding: 8px 10px; white-space: pre-wrap; }
-    img { display: block; max-width: 94%; margin: 12px auto 18px; }
-    """
-    return f"<!doctype html><html lang='zh-CN'><head><meta charset='utf-8'><style>{css}</style></head><body>{body}</body></html>"
-
-
-def find_browser() -> str | None:
-    candidates = [
-        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        shutil.which("msedge"),
-        shutil.which("chrome"),
-    ]
-    for candidate in candidates:
-        if candidate and Path(candidate).exists():
-            return str(candidate)
-    return None
-
-
-def export_pdf(html_path: Path, pdf_path: Path) -> None:
-    browser = find_browser()
-    if not browser:
-        print("[warn] no browser found, skip pdf export")
-        return
-    if pdf_path.exists():
-        pdf_path.unlink()
-    subprocess.run(
-        [
-            browser,
-            "--headless",
-            "--disable-gpu",
-            "--allow-file-access-from-files",
-            "--print-to-pdf-no-header",
-            "--no-pdf-header-footer",
-            f"--print-to-pdf={pdf_path}",
-            html_path.as_uri(),
-        ],
-        check=True,
-        cwd=str(ROOT),
-    )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="configs/sector/factor_mining.json")
-    parser.add_argument("--report-only", action="store_true", help="只基于已有验证CSV重新生成报告")
     args = parser.parse_args()
     cfg = load_config(args.config)
     out_dir = Path(cfg["paths"]["artifacts"])
-    report_dir = Path(cfg["paths"]["reports"])
     out_dir.mkdir(parents=True, exist_ok=True)
-    report_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "config_snapshot.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
-    if args.report_only:
-        validation = pd.read_csv(out_dir / "factor_full_validation.csv")
-        if "factor_name" not in validation.columns and "name" in validation.columns:
-            validation.insert(1, "factor_name", validation["name"])
-            validation.to_csv(out_dir / "factor_full_validation.csv", index=False, encoding="utf-8-sig")
-        monthly = pd.read_csv(out_dir / "factor_monthly_alpha.csv")
-        md_path, pdf_path = build_report(validation, monthly, cfg, report_dir)
-        print(f"[done] {md_path}")
-        print(f"[done] {pdf_path}")
-        return
+    (out_dir / "config_snapshot.json").write_text(
+        json.dumps(cfg, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
     print("[load] feature panel")
     frame, terminals = load_discovery_frame(cfg)
     print(f"[load] rows={len(frame):,} sectors={frame.ts_code.nunique():,} dates={frame.trade_date.nunique():,}")
     print(f"[load] terminals={len(terminals)}")
     library, _candidates = run_ga(frame, terminals, cfg, out_dir)
     print(f"[validate] selected factors={len(library)}")
-    validation, monthly = evaluate_library(frame, library, cfg, out_dir)
+    evaluate_library(frame, library, cfg, out_dir)
     compute_correlation_matrix(frame, library, cfg, out_dir)
-    md_path, pdf_path = build_report(validation, monthly, cfg, report_dir)
     print(f"[done] {out_dir / 'sector_factor_library.csv'}")
     print(f"[done] {out_dir / 'factor_full_validation.csv'}")
-    print(f"[done] {md_path}")
-    print(f"[done] {pdf_path}")
+    print(f"[done] {out_dir / 'factor_monthly_alpha.csv'}")
 
 
 if __name__ == "__main__":

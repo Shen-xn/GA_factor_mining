@@ -10,7 +10,7 @@ from ga_factor_mining.common.expression_tree import (
     replace_subtree,
     valid_expression,
 )
-from ga_factor_mining.common.paths import DATA_ROOT, OUTPUT_ROOT, REPORT_ROOT, REPOSITORY_ROOT
+from ga_factor_mining.common.paths import DATA_ROOT, OUTPUT_ROOT, REPOSITORY_ROOT, ensure_output_dir
 
 
 class CommonStructureTests(unittest.TestCase):
@@ -28,8 +28,7 @@ class CommonStructureTests(unittest.TestCase):
     def test_repository_roots_are_isolated(self):
         self.assertEqual(DATA_ROOT.parent, REPOSITORY_ROOT)
         self.assertEqual(OUTPUT_ROOT.parent, REPOSITORY_ROOT)
-        self.assertEqual(REPORT_ROOT.parent, REPOSITORY_ROOT)
-        self.assertNotEqual(OUTPUT_ROOT, REPORT_ROOT)
+        self.assertEqual(ensure_output_dir("sector", "rotation"), OUTPUT_ROOT / "sector" / "rotation")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,20 @@
+{
+  "variant": "expanding",
+  "feature_protocol_version": 4,
+  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86",
+  "selection_period": "2024-2025 model selection",
+  "independent_out_of_sample_available": false,
+  "observation_used_for_selection": false,
+  "selection_rule": "max_drawdown<=20%, daily_turnover<=10%, then highest Sharpe",
+  "score_history_start": "20180101",
+  "score_history_purpose": "warm up smoothing and portfolio state without future data",
+  "score_column": "score_frozen_selected_5d",
+  "observation_boundary_mode": "continuous_from_selection",
+  "training_years": null,
+  "half_life_years": null,
+  "retrain_months": 12,
+  "low_risk_code": "511880.SH",
+  "low_risk_data_signature": "1eeb18eb7051fac89a37d46a8a1005708be84514dfefb9ae9762187fd5e40bdd",
+  "score_data_end": "20260810",
+  "last_incremental_refresh": "2026-08-11T00:48:20+08:00"
+}

@@ -1,0 +1,36 @@
+{
+  "mapping_protocol_version": 1,
+  "candidate_asof_date": "20260529",
+  "candidate_method": "strict normalized tracked-index name; candidate is not an accepted mapping",
+  "candidate_sectors": 34,
+  "candidate_etfs": 115,
+  "equity_etf_daily_available": true,
+  "equity_etf_adj_available": true,
+  "etf_master_pit_complete": false,
+  "sector_catalog_pit_complete": false,
+  "backtest_promotable": false,
+  "unmapped_policy": "allocate to 511880.SH",
+  "policy": {
+    "lookback_sessions": 120,
+    "stability_sessions": 60,
+    "minimum_observations": 100,
+    "minimum_listing_sessions": 120,
+    "minimum_recent_completeness": 0.95,
+    "minimum_median_amount_thousand_rmb": 50000.0,
+    "minimum_corr_120": 0.6,
+    "minimum_corr_60": 0.5,
+    "minimum_beta": 0.5,
+    "maximum_beta": 1.5,
+    "minimum_distinct_index_gap": 0.05
+  },
+  "data_signature": "f898349106e3c5cb7d11ef8bc626d5c72939141e0e317ffdb32296ed38134abe",
+  "selected_mappings": 708,
+  "selected_sectors": 28,
+  "strategy_coverage_period": [
+    "20240103",
+    "20260527"
+  ],
+  "strategy_risk_weighted_mapping_coverage": 0.014722842261904762,
+  "strategy_zero_mapping_days": 257,
+  "strategy_positive_risk_days": 273
+}

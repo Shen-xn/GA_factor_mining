@@ -1,0 +1,44 @@
+{
+  "feature_protocol_version": 4,
+  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86",
+  "baseline_variant": "expanding_quarterly",
+  "baseline_feature_count": 18,
+  "candidates": {
+    "drop_risk_adj_5_20": "risk_adj_5_20_rank",
+    "drop_risk_adj_10_20": "risk_adj_10_20_rank",
+    "drop_risk_adj_20_60": "risk_adj_20_60_rank"
+  },
+  "development_period": [
+    "20180101",
+    "20231231"
+  ],
+  "selection_period": [
+    "20240101",
+    "20251231"
+  ],
+  "observation_evaluated": false,
+  "observation_used_for_decision": false,
+  "lightgbm_hyperparameters_changed": false,
+  "strategy_policy_changed": false,
+  "frozen_baseline_replay_matched": true,
+  "development_gate": {
+    "total_return_loss_max": 0.02,
+    "sharpe_loss_max": 0.1,
+    "max_drawdown_worsening_max": 0.02,
+    "turnover_worsening_max": 0.01,
+    "positive_years_not_lower": true,
+    "bad_year_worsening_max": 0.02
+  },
+  "selection_gate": {
+    "total_return_loss_max": 0.02,
+    "sharpe_loss_max": 0.05,
+    "max_drawdown_worsening_max": 0.02,
+    "turnover_worsening_max": 0.01,
+    "each_year_positive": true
+  },
+  "development_passers": [],
+  "selection_passers": [],
+  "selected_candidate_for_future_protocol": null,
+  "formal_feature_set_changed": false,
+  "promotion_requires_explicit_command": true
+}

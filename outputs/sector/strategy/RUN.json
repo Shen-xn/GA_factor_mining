@@ -1,0 +1,32 @@
+{
+  "default_prototype": true,
+  "feature_protocol_version": 4,
+  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86",
+  "strategy_policy_version": 5,
+  "score_name": "score_frozen_selected_5d",
+  "policy_name": "simple_v1",
+  "cost_bps": 20.0,
+  "cost_sensitivity_run": true,
+  "boundary_sensitivity_run": false,
+  "product_history_start": "20180101",
+  "boundary_mode": "continuous_carry_from_2018",
+  "independent_out_of_sample_available": false,
+  "period_roles": {
+    "development": "2018-2023",
+    "selection": "2024-2025",
+    "observation": "2026_seen_but_not_selectable"
+  },
+  "memory_mode": "projected feature columns; one default product replay",
+  "data_freshness": {
+    "data_end_date": "20260810",
+    "data_age_days": 1,
+    "data_stale": false,
+    "strategy_action": "持有不动",
+    "execution_message": "无需交易"
+  },
+  "runtime": {
+    "python": "3.12.7",
+    "pandas": "2.2.2",
+    "numpy": "1.26.4"
+  }
+}

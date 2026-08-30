@@ -1,5 +1,6 @@
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
@@ -25,6 +26,11 @@ data/
 *.log
 *.tmp
 *.bak
+/tmp/
+
+# 报告排版检查截图由 Codex 在项目外维护，不进入研究仓库。
+reports/**/preview*/
+reports/**/paper_preview*/
 
 # sector_dev 本地可保留旧个股大文件，但不在本分支显示或提交。
 /outputs/stock/

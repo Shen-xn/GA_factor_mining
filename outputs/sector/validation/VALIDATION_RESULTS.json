@@ -1,0 +1,146 @@
+{
+  "generated_at": "2026-08-11T03:18:29+08:00",
+  "scope": "simple runnable sector prototype; quarterly expanding model; continuous ledger; cost stress and forward freeze",
+  "passed": true,
+  "passed_checks": 26,
+  "total_checks": 26,
+  "metrics": {
+    "development_total_return": 0.1347704399362295,
+    "selection_total_return": 0.366407507858943,
+    "observation_total_return": 0.0019246989637979,
+    "full_total_return": 0.5535432078349014,
+    "full_max_drawdown": -0.189337019965376
+  },
+  "checks": [
+    {
+      "name": "default_run",
+      "passed": true,
+      "detail": "Quarterly expanding LightGBM + simple_v1 + 20bp"
+    },
+    {
+      "name": "memory_mode",
+      "passed": true,
+      "detail": "projected feature columns; one default product replay"
+    },
+    {
+      "name": "feature_signature",
+      "passed": true,
+      "detail": "Feature, score and product signatures match"
+    },
+    {
+      "name": "data_integrity",
+      "passed": true,
+      "detail": "Score data ends 2026-08-10"
+    },
+    {
+      "name": "missing_return_policy",
+      "passed": true,
+      "detail": "Missing open returns are never converted to zero; live-position gaps raise an error"
+    },
+    {
+      "name": "strategy_protocol",
+      "passed": true,
+      "detail": "simple_v1 protocol v5"
+    },
+    {
+      "name": "period_roles",
+      "passed": true,
+      "detail": "Period roles are explicit"
+    },
+    {
+      "name": "model_frequency",
+      "passed": true,
+      "detail": "Quarterly challenger passed the frozen 2024-2025 gate and was promoted"
+    },
+    {
+      "name": "forward_protocol",
+      "passed": true,
+      "detail": "Protocol 380103452ae6 frozen; zero unseen days"
+    },
+    {
+      "name": "single_state_path",
+      "passed": true,
+      "detail": "Continuous portfolio state from 2018"
+    },
+    {
+      "name": "selection_return",
+      "passed": true,
+      "detail": "Selection total 0.366408"
+    },
+    {
+      "name": "selection_drawdown",
+      "passed": true,
+      "detail": "Selection MDD -0.100099"
+    },
+    {
+      "name": "observation_return",
+      "passed": true,
+      "detail": "Observed 2026 total 0.001925; viewed only after promotion"
+    },
+    {
+      "name": "long_horizon_drawdown",
+      "passed": true,
+      "detail": "Continuous-path MDD -0.189337; total 0.553543"
+    },
+    {
+      "name": "positive_years",
+      "passed": true,
+      "detail": "6 of 8 complete years are positive"
+    },
+    {
+      "name": "accounting_identities",
+      "passed": true,
+      "detail": "Maximum accounting error 2.97e-18; trading cost is compounded multiplicatively"
+    },
+    {
+      "name": "cost_stress",
+      "passed": true,
+      "detail": "30bp selection stays positive while development turns negative"
+    },
+    {
+      "name": "data_freshness",
+      "passed": true,
+      "detail": "Data end 20260810, age 1 day"
+    },
+    {
+      "name": "latest_status",
+      "passed": true,
+      "detail": "Latest target is 0.00% sector and 100.00% low risk"
+    },
+    {
+      "name": "tradability_disclosure",
+      "passed": true,
+      "detail": "Ordinary sectors are not presented as executable ETF orders"
+    },
+    {
+      "name": "documentation",
+      "passed": true,
+      "detail": "README and report reflect current prototype"
+    },
+    {
+      "name": "tests",
+      "passed": true,
+      "detail": "74 unit tests passed"
+    },
+    {
+      "name": "return_bridge",
+      "passed": true,
+      "detail": "Return bridge passed on 2086 common dates"
+    },
+    {
+      "name": "factor_redundancy",
+      "passed": true,
+      "detail": "9 development-period pairs flagged; later periods diagnostic only; no automatic deletion"
+    },
+    {
+      "name": "derived_feature_ablation",
+      "passed": true,
+      "detail": "Three direct derived representations failed development; selection and observation remained sealed"
+    },
+    {
+      "name": "bad_year_attribution",
+      "passed": true,
+      "detail": "2018 and 2022 exact-linked attribution identifies market exposure as the common primary loss driver"
+    }
+  ]
+}

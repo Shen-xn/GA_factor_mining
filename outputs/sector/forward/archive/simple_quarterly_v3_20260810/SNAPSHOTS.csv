@@ -1,0 +1,2 @@
+﻿recorded_at,evidence_role,protocol_hash,data_end_date,strategy_date,last_rebalance_signal_date,strategy_action,regime,sector_exposure,low_risk_exposure,position_count,target_hash,snapshot_hash
+2026-08-11T02:22:41+08:00,freeze_baseline,18fb4f049ca9eb202958b095bbd0e9564c0759ff8ee59799f954181fe9e38336,20260810,20260806,20260714,持有不动,CASH,0.00%,100.00%,0,69f6a7dd52ecd86748df5c65dd73a37aed67b767026aa115839cbd7b70c24c4b,643ac06bf09c230f240d91bd419233befd55df3ceaad59490c22a8b4520e7eda

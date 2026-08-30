@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-08-11T03:18:29+08:00",
+  "passed": true,
+  "reports": [
+    {
+      "name": "rotation",
+      "markdown_path": "reports/sector/rotation/SECTOR_ROTATION_REPORT.md",
+      "markdown_sha256": "284fa2319f6720c171ec9b4cb87803ab5c5afc0dea325d306d848aec6c47cc72",
+      "pdf_path": "reports/sector/rotation/SECTOR_ROTATION_REPORT.pdf",
+      "pdf_sha256": "e597d04ad1e190623cea614dacf36cafa75b83fe20e6cb56b1b6183d8740b146",
+      "pdf_pages": 4,
+      "replacement_character_found": false,
+      "visual_review": "passed"
+    },
+    {
+      "name": "factor_mining",
+      "markdown_path": "reports/sector/factor_mining/FACTOR_MINING_REPORT.md",
+      "markdown_sha256": "5d483aab7333ea04b71c4eee590e2fbb2b427d76aa7460b9b8e130950c7ae374",
+      "pdf_path": "reports/sector/factor_mining/FACTOR_MINING_REPORT.pdf",
+      "pdf_sha256": "0afcb6d4e9b2584932f65b5aca7eb253a63000a6b9dac1162307993130a1ad17",
+      "pdf_pages": 3,
+      "replacement_character_found": false,
+      "visual_review": "passed"
+    }
+  ]
+}

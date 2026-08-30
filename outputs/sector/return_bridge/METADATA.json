@@ -1,0 +1,18 @@
+{
+  "feature_protocol_version": 4,
+  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86",
+  "score_name": "score_frozen_selected_5d",
+  "score_file_sha256": "840c1721e64c9b3298a80c14d4aacd40e2c926f16283545f94cba5ce439de2da",
+  "period": [
+    "20180103",
+    "20260810"
+  ],
+  "requested_end": "20261231",
+  "boundary_mode": "continuous_carry",
+  "observation_used_for_selection": false,
+  "cost_bps": 20.0,
+  "score_smoothing_sessions": 3,
+  "low_risk_code": "511880.SH",
+  "low_risk_data_signature": "1eeb18eb7051fac89a37d46a8a1005708be84514dfefb9ae9762187fd5e40bdd",
+  "interpretation": "fixed-order scenario bridge; deltas are not independent Shapley contributions"
+}

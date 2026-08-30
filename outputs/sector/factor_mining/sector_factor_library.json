@@ -33,7 +33,11 @@
     "min_daily_sectors": 80,
     "min_month_days": 12,
     "daily_alpha_volatility_penalty": 0.1,
-    "complexity_penalty": 0.0005
+    "complexity_penalty": 0.0005,
+    "terminal_transform": "centered_rank",
+    "protected_div_epsilon": 0.1,
+    "value_clip": 10.0,
+    "corr_sample_size": 20000
   },
   "universe": [
     "I",
@@ -43,214 +47,166 @@
     {
       "name": "sector_factor_01",
       "expression": [
-        "mul",
-        [
-          "sub",
-          [
-            "mul",
-            "close_pos_20d_rank",
-            "volume_z_20d"
-          ],
-          "ret_3d_rank"
-        ],
-        "risk_adj_5_20_rank"
+        "sub",
+        "risk_adj_20_60_rank",
+        "volume_z_20d_rank"
       ],
-      "expression_text": "mul(sub(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)",
-      "direction": -1,
+      "expression_text": "sub(risk_adj_20_60_rank, volume_z_20d_rank)",
+      "direction": 1,
       "category": "trend",
-      "fitness": 0.04200996138808065,
-      "raw_alpha": 0.047931635544311214,
-      "top3_month_alpha": 0.06185660981983592,
-      "best_contiguous_2m_alpha": 0.05192234164758519,
-      "daily_alpha_std": 0.02421674156230558,
-      "peak_month": "201702",
-      "nodes": 7,
-      "depth": 3
+      "fitness": 0.03353983112862551,
+      "raw_alpha": 0.037337573201332096,
+      "top3_month_alpha": 0.039411111833433925,
+      "best_contiguous_2m_alpha": 0.03165401572200329,
+      "daily_alpha_std": 0.02297742072706579,
+      "peak_month": "202107",
+      "nodes": 3,
+      "depth": 1
     },
     {
       "name": "sector_factor_02",
       "expression": [
-        "mul",
-        [
-          "sub",
-          "close_pos_20d_rank",
-          "volume_z_20d"
-        ],
-        "risk_adj_5_20_rank"
+        "ts_rank_20",
+        "risk_adj_10_20_rank"
       ],
-      "expression_text": "mul(sub(close_pos_20d_rank, volume_z_20d), risk_adj_5_20_rank)",
+      "expression_text": "ts_rank_20(risk_adj_10_20_rank)",
       "direction": 1,
-      "category": "breakout",
-      "fitness": 0.04134717271177579,
-      "raw_alpha": 0.046075177044680414,
-      "top3_month_alpha": 0.04904286871446765,
-      "best_contiguous_2m_alpha": 0.041139757645830305,
-      "daily_alpha_std": 0.022280043329046217,
-      "peak_month": "201702",
-      "nodes": 5,
-      "depth": 2
+      "category": "trend",
+      "fitness": 0.03317043091982122,
+      "raw_alpha": 0.03612849139246436,
+      "top3_month_alpha": 0.03085643965954615,
+      "best_contiguous_2m_alpha": 0.03281008716203675,
+      "daily_alpha_std": 0.019580604726431347,
+      "peak_month": "201505",
+      "nodes": 2,
+      "depth": 1
     },
     {
       "name": "sector_factor_03",
       "expression": [
-        "mul",
-        [
-          "mul",
-          [
-            "mul",
-            "ret_3d_rank",
-            "volume_z_20d"
-          ],
-          "ret_3d_rank"
-        ],
-        "risk_adj_5_20_rank"
+        "ts_rank_20",
+        "risk_adj_20_60_rank"
       ],
-      "expression_text": "mul(mul(mul(ret_3d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)",
-      "direction": -1,
+      "expression_text": "ts_rank_20(risk_adj_20_60_rank)",
+      "direction": 1,
       "category": "trend",
-      "fitness": 0.039383842568084734,
-      "raw_alpha": 0.045215124601954725,
-      "top3_month_alpha": 0.04993490624232647,
-      "best_contiguous_2m_alpha": 0.04173540212988927,
-      "daily_alpha_std": 0.02331282033869984,
+      "fitness": 0.03229611605141003,
+      "raw_alpha": 0.03509386913505186,
+      "top3_month_alpha": 0.030245711674482017,
+      "best_contiguous_2m_alpha": 0.03279571143058953,
+      "daily_alpha_std": 0.01797753083641827,
       "peak_month": "201505",
-      "nodes": 7,
-      "depth": 3
+      "nodes": 2,
+      "depth": 1
     },
     {
       "name": "sector_factor_04",
       "expression": [
-        "mul",
-        "ret_5d",
-        [
-          "sub",
-          "close_pos_20d_rank",
-          "volume_z_20d"
-        ]
+        "delta_5",
+        "risk_adj_20_60_rank"
       ],
-      "expression_text": "mul(ret_5d, sub(close_pos_20d_rank, volume_z_20d))",
+      "expression_text": "delta_5(risk_adj_20_60_rank)",
       "direction": 1,
-      "category": "raw_state",
-      "fitness": 0.03933639467832465,
-      "raw_alpha": 0.04444637285020956,
-      "top3_month_alpha": 0.06366871681769232,
-      "best_contiguous_2m_alpha": 0.058259278777676844,
-      "daily_alpha_std": 0.02609978171884907,
+      "category": "trend",
+      "fitness": 0.032191161331278896,
+      "raw_alpha": 0.03560824570594883,
+      "top3_month_alpha": 0.033183994688873335,
+      "best_contiguous_2m_alpha": 0.02878383031159131,
+      "daily_alpha_std": 0.02417084374669935,
       "peak_month": "201505",
-      "nodes": 5,
-      "depth": 2
+      "nodes": 2,
+      "depth": 1
     },
     {
       "name": "sector_factor_05",
       "expression": [
-        "mul",
-        [
-          "mul",
-          "ret_3d",
-          "volume_z_20d"
-        ],
-        "ret_3d_rank"
+        "sub",
+        "ret_10d_rank",
+        "ma_gap_10_60_rank"
       ],
-      "expression_text": "mul(mul(ret_3d, volume_z_20d), ret_3d_rank)",
-      "direction": -1,
-      "category": "raw_state",
-      "fitness": 0.03849571518720088,
-      "raw_alpha": 0.04341207961232628,
-      "top3_month_alpha": 0.04537368039147146,
-      "best_contiguous_2m_alpha": 0.041457071774306256,
-      "daily_alpha_std": 0.024163644251253984,
-      "peak_month": "201505",
-      "nodes": 5,
-      "depth": 2
+      "expression_text": "sub(ret_10d_rank, ma_gap_10_60_rank)",
+      "direction": 1,
+      "category": "breakout",
+      "fitness": 0.03186901155041069,
+      "raw_alpha": 0.035684507832447386,
+      "top3_month_alpha": 0.02975235341593661,
+      "best_contiguous_2m_alpha": 0.02824062308289699,
+      "daily_alpha_std": 0.0231549628203669,
+      "peak_month": "201904",
+      "nodes": 3,
+      "depth": 1
     },
     {
       "name": "sector_factor_06",
       "expression": [
-        "mul",
-        [
-          "max",
-          [
-            "sub",
-            "close_pos_20d_rank",
-            "volume_z_20d"
-          ],
-          "ret_3d_rank"
-        ],
-        "risk_adj_5_20_rank"
+        "delta_5",
+        "risk_adj_10_20_rank"
       ],
-      "expression_text": "mul(max(sub(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)",
+      "expression_text": "delta_5(risk_adj_10_20_rank)",
       "direction": 1,
       "category": "trend",
-      "fitness": 0.03847897943770738,
-      "raw_alpha": 0.04461270994298338,
-      "top3_month_alpha": 0.06449429853811235,
-      "best_contiguous_2m_alpha": 0.05599072000811886,
-      "daily_alpha_std": 0.026337305052759982,
-      "peak_month": "201702",
-      "nodes": 7,
-      "depth": 3
+      "fitness": 0.030989939966425094,
+      "raw_alpha": 0.034488772136740654,
+      "top3_month_alpha": 0.03562026558728101,
+      "best_contiguous_2m_alpha": 0.03074975725732199,
+      "daily_alpha_std": 0.024988321703155573,
+      "peak_month": "202001",
+      "nodes": 2,
+      "depth": 1
     },
     {
       "name": "sector_factor_07",
       "expression": [
-        "mul",
+        "signed_log",
         [
           "delta_5",
           "close_pos_20d_rank"
-        ],
-        "risk_adj_5_20_rank"
+        ]
       ],
-      "expression_text": "mul(delta_5(close_pos_20d_rank), risk_adj_5_20_rank)",
+      "expression_text": "signed_log(delta_5(close_pos_20d_rank))",
       "direction": 1,
       "category": "breakout",
-      "fitness": 0.03346131197915681,
-      "raw_alpha": 0.03798403212335689,
-      "top3_month_alpha": 0.030037405602741804,
-      "best_contiguous_2m_alpha": 0.032618235193052764,
-      "daily_alpha_std": 0.025227201442000764,
+      "fitness": 0.030874365712406926,
+      "raw_alpha": 0.03477744010641261,
+      "top3_month_alpha": 0.027286942729718,
+      "best_contiguous_2m_alpha": 0.028276282446950678,
+      "daily_alpha_std": 0.024030743940056776,
       "peak_month": "201703",
-      "nodes": 4,
+      "nodes": 3,
       "depth": 2
     },
     {
       "name": "sector_factor_08",
       "expression": [
-        "add",
-        "risk_adj_10_20_rank",
-        [
-          "signed_sqrt",
-          [
-            "neg",
-            "ma_gap_10_60_rank"
-          ]
-        ]
+        "mean_5",
+        "range_1d_rank"
       ],
-      "expression_text": "add(risk_adj_10_20_rank, signed_sqrt(neg(ma_gap_10_60_rank)))",
+      "expression_text": "mean_5(range_1d_rank)",
       "direction": 1,
       "category": "breakout",
-      "fitness": 0.033439741194613695,
-      "raw_alpha": 0.03821722369376405,
-      "top3_month_alpha": 0.036963162200709075,
-      "best_contiguous_2m_alpha": 0.030279028050661856,
-      "daily_alpha_std": 0.022774824991503528,
-      "peak_month": "201802",
-      "nodes": 5,
-      "depth": 3
+      "fitness": 0.030596638888292782,
+      "raw_alpha": 0.03546096679693853,
+      "top3_month_alpha": 0.06805282746087767,
+      "best_contiguous_2m_alpha": 0.059281870741732745,
+      "daily_alpha_std": 0.0386432790864575,
+      "peak_month": "201702",
+      "nodes": 2,
+      "depth": 1
     },
     {
       "name": "sector_factor_09",
       "expression": [
-        "delta_5",
-        "ret_10d_rank"
+        "std_20",
+        "volatility_20d_rank"
       ],
-      "expression_text": "delta_5(ret_10d_rank)",
-      "direction": 1,
-      "category": "trend",
-      "fitness": 0.032305868217778234,
-      "raw_alpha": 0.03605610206280119,
-      "top3_month_alpha": 0.03399562083916495,
-      "best_contiguous_2m_alpha": 0.03203238102056436,
-      "daily_alpha_std": 0.027502338450229542,
+      "expression_text": "std_20(volatility_20d_rank)",
+      "direction": -1,
+      "category": "volatility",
+      "fitness": 0.03005142294021219,
+      "raw_alpha": 0.03412801554669986,
+      "top3_month_alpha": 0.06374074840024697,
+      "best_contiguous_2m_alpha": 0.05685803253943422,
+      "daily_alpha_std": 0.03076592606487665,
       "peak_month": "202001",
       "nodes": 2,
       "depth": 1
@@ -259,138 +215,52 @@
       "name": "sector_factor_10",
       "expression": [
         "std_20",
-        "ma_gap_10_60_rank"
+        "range_1d_rank"
       ],
-      "expression_text": "std_20(ma_gap_10_60_rank)",
+      "expression_text": "std_20(range_1d_rank)",
       "direction": -1,
       "category": "breakout",
-      "fitness": 0.031989008923489805,
-      "raw_alpha": 0.03556257099737767,
-      "top3_month_alpha": 0.06258297013756149,
-      "best_contiguous_2m_alpha": 0.044070389140717675,
-      "daily_alpha_std": 0.025735620738878605,
-      "peak_month": "202001",
+      "fitness": 0.030020612395298036,
+      "raw_alpha": 0.035075517887173994,
+      "top3_month_alpha": 0.08577422787935239,
+      "best_contiguous_2m_alpha": 0.07836496914952149,
+      "daily_alpha_std": 0.040549054918759576,
+      "peak_month": "201509",
       "nodes": 2,
       "depth": 1
     },
     {
       "name": "sector_factor_11",
       "expression": [
-        "delta_5",
-        "ret_3d"
+        "abs",
+        [
+          "max",
+          [
+            "sub",
+            "ma_gap_5_20_rank",
+            "ma_gap_10_60_rank"
+          ],
+          [
+            "mul",
+            "ret_10d_rank",
+            "volatility_10d_rank"
+          ]
+        ]
       ],
-      "expression_text": "delta_5(ret_3d)",
+      "expression_text": "abs(max(sub(ma_gap_5_20_rank, ma_gap_10_60_rank), mul(ret_10d_rank, volatility_10d_rank)))",
       "direction": 1,
-      "category": "raw_state",
-      "fitness": 0.0313023659541363,
-      "raw_alpha": 0.03564587232511752,
-      "top3_month_alpha": 0.0439063069787017,
-      "best_contiguous_2m_alpha": 0.040976286030398226,
-      "daily_alpha_std": 0.03343506370981214,
-      "peak_month": "202012",
-      "nodes": 2,
-      "depth": 1
+      "category": "breakout",
+      "fitness": 0.029934251310989365,
+      "raw_alpha": 0.03634286941563311,
+      "top3_month_alpha": 0.035880924634216854,
+      "best_contiguous_2m_alpha": 0.03408201570550605,
+      "daily_alpha_std": 0.02408618104643745,
+      "peak_month": "201701",
+      "nodes": 8,
+      "depth": 3
     },
     {
       "name": "sector_factor_12",
-      "expression": [
-        "mul",
-        [
-          "std_20",
-          "volatility_10d_rank"
-        ],
-        [
-          "neg",
-          "ma_gap_10_60_rank"
-        ]
-      ],
-      "expression_text": "mul(std_20(volatility_10d_rank), neg(ma_gap_10_60_rank))",
-      "direction": 1,
-      "category": "breakout",
-      "fitness": 0.03128788442546975,
-      "raw_alpha": 0.03609754740890743,
-      "top3_month_alpha": 0.047039727203292914,
-      "best_contiguous_2m_alpha": 0.030757302458790742,
-      "daily_alpha_std": 0.023096629834376742,
-      "peak_month": "201506",
-      "nodes": 5,
-      "depth": 2
-    },
-    {
-      "name": "sector_factor_13",
-      "expression": [
-        "zscore_20",
-        "ma_gap_5_20_rank"
-      ],
-      "expression_text": "zscore_20(ma_gap_5_20_rank)",
-      "direction": 1,
-      "category": "breakout",
-      "fitness": 0.03113550607442491,
-      "raw_alpha": 0.0341334972988761,
-      "top3_month_alpha": 0.03426506578303921,
-      "best_contiguous_2m_alpha": 0.03787938552087457,
-      "daily_alpha_std": 0.019979912244511896,
-      "peak_month": "201506",
-      "nodes": 2,
-      "depth": 1
-    },
-    {
-      "name": "sector_factor_14",
-      "expression": "volatility_60d",
-      "expression_text": "volatility_60d",
-      "direction": 1,
-      "category": "raw_state",
-      "fitness": 0.030994151793034608,
-      "raw_alpha": 0.03532594589368585,
-      "top3_month_alpha": 0.07458020549347488,
-      "best_contiguous_2m_alpha": 0.06156139271498469,
-      "daily_alpha_std": 0.03831794100651246,
-      "peak_month": "202001",
-      "nodes": 1,
-      "depth": 0
-    },
-    {
-      "name": "sector_factor_15",
-      "expression": [
-        "std_20",
-        "range_1d_rank"
-      ],
-      "expression_text": "std_20(range_1d_rank)",
-      "direction": -1,
-      "category": "breakout",
-      "fitness": 0.030824711936572685,
-      "raw_alpha": 0.03847809089861465,
-      "top3_month_alpha": 0.1446129644799126,
-      "best_contiguous_2m_alpha": 0.16551468977591552,
-      "daily_alpha_std": 0.06653378962041961,
-      "peak_month": "201509",
-      "nodes": 2,
-      "depth": 1
-    },
-    {
-      "name": "sector_factor_16",
-      "expression": [
-        "mul",
-        [
-          "slope_5",
-          "risk_adj_20_60_rank"
-        ],
-        "ret_20d"
-      ],
-      "expression_text": "mul(slope_5(risk_adj_20_60_rank), ret_20d)",
-      "direction": -1,
-      "category": "raw_state",
-      "fitness": 0.03078037296400076,
-      "raw_alpha": 0.03532182834018724,
-      "top3_month_alpha": 0.036124693560929726,
-      "best_contiguous_2m_alpha": 0.03338650261317823,
-      "daily_alpha_std": 0.02541455376186473,
-      "peak_month": "202107",
-      "nodes": 4,
-      "depth": 2
-    },
-    {
-      "name": "sector_factor_17",
       "expression": [
         "delta_5",
         "ret_5d_rank"
@@ -398,39 +268,171 @@
       "expression_text": "delta_5(ret_5d_rank)",
       "direction": 1,
       "category": "trend",
-      "fitness": 0.030758881429410072,
-      "raw_alpha": 0.03472068456343711,
-      "top3_month_alpha": 0.033296196486919526,
-      "best_contiguous_2m_alpha": 0.028521609524158296,
-      "daily_alpha_std": 0.029618031340270398,
+      "fitness": 0.02989934714678137,
+      "raw_alpha": 0.03378125531915781,
+      "top3_month_alpha": 0.03218584954523577,
+      "best_contiguous_2m_alpha": 0.026958702450075082,
+      "daily_alpha_std": 0.028819081723764333,
       "peak_month": "202012",
       "nodes": 2,
       "depth": 1
     },
     {
-      "name": "sector_factor_18",
+      "name": "sector_factor_13",
+      "expression": [
+        "sub",
+        "ret_10d_rank",
+        "ret_20d_rank"
+      ],
+      "expression_text": "sub(ret_10d_rank, ret_20d_rank)",
+      "direction": 1,
+      "category": "trend",
+      "fitness": 0.029806195262276527,
+      "raw_alpha": 0.033518552248600134,
+      "top3_month_alpha": 0.03039110975235426,
+      "best_contiguous_2m_alpha": 0.031159924424645484,
+      "daily_alpha_std": 0.022123569863236037,
+      "peak_month": "201506",
+      "nodes": 3,
+      "depth": 1
+    },
+    {
+      "name": "sector_factor_14",
+      "expression": [
+        "sub",
+        [
+          "min",
+          [
+            "signed_sqrt",
+            "ma_gap_10_60_rank"
+          ],
+          "risk_adj_10_20_rank"
+        ],
+        "ret_10d_rank"
+      ],
+      "expression_text": "sub(min(signed_sqrt(ma_gap_10_60_rank), risk_adj_10_20_rank), ret_10d_rank)",
+      "direction": -1,
+      "category": "trend",
+      "fitness": 0.02975991028933844,
+      "raw_alpha": 0.03508585604157202,
+      "top3_month_alpha": 0.03173799052644924,
+      "best_contiguous_2m_alpha": 0.029341993889747127,
+      "daily_alpha_std": 0.02325945752233581,
+      "peak_month": "202001",
+      "nodes": 6,
+      "depth": 3
+    },
+    {
+      "name": "sector_factor_15",
+      "expression": [
+        "abs",
+        [
+          "add",
+          [
+            "slope_5",
+            "risk_adj_10_20_rank"
+          ],
+          [
+            "mul",
+            "volatility_10d_rank",
+            "volatility_10d_rank"
+          ]
+        ]
+      ],
+      "expression_text": "abs(add(slope_5(risk_adj_10_20_rank), mul(volatility_10d_rank, volatility_10d_rank)))",
+      "direction": 1,
+      "category": "volatility",
+      "fitness": 0.029025892539160107,
+      "raw_alpha": 0.03533798406260838,
+      "top3_month_alpha": 0.03843772597298993,
+      "best_contiguous_2m_alpha": 0.036436403392766596,
+      "daily_alpha_std": 0.02812091523448271,
+      "peak_month": "201701",
+      "nodes": 7,
+      "depth": 3
+    },
+    {
+      "name": "sector_factor_16",
+      "expression": [
+        "sub",
+        [
+          "std_20",
+          "ma_gap_10_60_rank"
+        ],
+        [
+          "sub",
+          [
+            "add",
+            "ret_20d_rank",
+            "risk_adj_5_20_rank"
+          ],
+          [
+            "add",
+            "ret_10d_rank",
+            "volume_z_20d_rank"
+          ]
+        ]
+      ],
+      "expression_text": "sub(std_20(ma_gap_10_60_rank), sub(add(ret_20d_rank, risk_adj_5_20_rank), add(ret_10d_rank, volume_z_20d_rank)))",
+      "direction": -1,
+      "category": "trend",
+      "fitness": 0.02900487797805611,
+      "raw_alpha": 0.03644357942594334,
+      "top3_month_alpha": 0.03149552668421147,
+      "best_contiguous_2m_alpha": 0.02998261040338041,
+      "daily_alpha_std": 0.02438701447887226,
+      "peak_month": "202012",
+      "nodes": 10,
+      "depth": 3
+    },
+    {
+      "name": "sector_factor_17",
       "expression": [
         "add",
+        "volatility_10d_rank",
+        "risk_adj_10_20_rank"
+      ],
+      "expression_text": "add(volatility_10d_rank, risk_adj_10_20_rank)",
+      "direction": 1,
+      "category": "volatility",
+      "fitness": 0.028917441268160197,
+      "raw_alpha": 0.03405968978206982,
+      "top3_month_alpha": 0.06052044220881616,
+      "best_contiguous_2m_alpha": 0.045576301163904424,
+      "daily_alpha_std": 0.036422485139096225,
+      "peak_month": "201707",
+      "nodes": 3,
+      "depth": 1
+    },
+    {
+      "name": "sector_factor_18",
+      "expression": [
+        "mul",
         [
-          "signed_sqrt",
+          "sub",
           [
             "sub",
-            "volatility_60d",
-            "ma_gap_10_60_rank"
+            "volume_z_20d_rank",
+            "risk_adj_5_20_rank"
+          ],
+          [
+            "add",
+            "ma_gap_10_60_rank",
+            "risk_adj_20_60_rank"
           ]
         ],
         "ret_5d_rank"
       ],
-      "expression_text": "add(signed_sqrt(sub(volatility_60d, ma_gap_10_60_rank)), ret_5d_rank)",
-      "direction": 1,
-      "category": "raw_state",
-      "fitness": 0.030548590897156728,
-      "raw_alpha": 0.03585206000001559,
-      "top3_month_alpha": 0.03829426419204875,
-      "best_contiguous_2m_alpha": 0.03344359750577171,
-      "daily_alpha_std": 0.02303469102858863,
-      "peak_month": "201506",
-      "nodes": 6,
+      "expression_text": "mul(sub(sub(volume_z_20d_rank, risk_adj_5_20_rank), add(ma_gap_10_60_rank, risk_adj_20_60_rank)), ret_5d_rank)",
+      "direction": -1,
+      "category": "trend",
+      "fitness": 0.028860330117848016,
+      "raw_alpha": 0.035788989619567786,
+      "top3_month_alpha": 0.03927827141728077,
+      "best_contiguous_2m_alpha": 0.040372312459274626,
+      "daily_alpha_std": 0.024286595017197692,
+      "peak_month": "201702",
+      "nodes": 9,
       "depth": 3
     },
     {
@@ -442,175 +444,139 @@
       "expression_text": "std_20(risk_adj_10_20_rank)",
       "direction": 1,
       "category": "trend",
-      "fitness": 0.03043140447440429,
-      "raw_alpha": 0.034227523818515966,
-      "top3_month_alpha": 0.0553478205916112,
-      "best_contiguous_2m_alpha": 0.03872451868927214,
-      "daily_alpha_std": 0.027961193441116788,
-      "peak_month": "202109",
+      "fitness": 0.02868002304658245,
+      "raw_alpha": 0.03193658022582067,
+      "top3_month_alpha": 0.031701411524154954,
+      "best_contiguous_2m_alpha": 0.029660945313120503,
+      "daily_alpha_std": 0.022565571792382187,
+      "peak_month": "201703",
       "nodes": 2,
       "depth": 1
     },
     {
       "name": "sector_factor_20",
       "expression": [
-        "zscore_20",
-        "ret_3d"
+        "signed_log",
+        [
+          "std_20",
+          "ret_60d_rank"
+        ]
       ],
-      "expression_text": "zscore_20(ret_3d)",
-      "direction": 1,
-      "category": "raw_state",
-      "fitness": 0.030091565216434947,
-      "raw_alpha": 0.034274224592068414,
-      "top3_month_alpha": 0.05081968863371463,
-      "best_contiguous_2m_alpha": 0.04623120026491004,
-      "daily_alpha_std": 0.03182659375633466,
-      "peak_month": "201701",
-      "nodes": 2,
-      "depth": 1
+      "expression_text": "signed_log(std_20(ret_60d_rank))",
+      "direction": -1,
+      "category": "trend",
+      "fitness": 0.02867429204711302,
+      "raw_alpha": 0.0330245271057954,
+      "top3_month_alpha": 0.05198782308244512,
+      "best_contiguous_2m_alpha": 0.038490401379033055,
+      "daily_alpha_std": 0.028502350586823783,
+      "peak_month": "202012",
+      "nodes": 3,
+      "depth": 2
     },
     {
       "name": "sector_factor_21",
       "expression": [
-        "slope_5",
-        "range_1d"
+        "min",
+        "ret_20d_rank",
+        [
+          "delta_5",
+          "close_pos_20d_rank"
+        ]
       ],
-      "expression_text": "slope_5(range_1d)",
+      "expression_text": "min(ret_20d_rank, delta_5(close_pos_20d_rank))",
       "direction": 1,
-      "category": "raw_state",
-      "fitness": 0.029897943631597788,
-      "raw_alpha": 0.03399175849873789,
-      "top3_month_alpha": 0.03029250284056802,
-      "best_contiguous_2m_alpha": 0.029725175704778277,
-      "daily_alpha_std": 0.030938148671400996,
-      "peak_month": "201703",
-      "nodes": 2,
-      "depth": 1
+      "category": "breakout",
+      "fitness": 0.028557306572836887,
+      "raw_alpha": 0.03336103748997191,
+      "top3_month_alpha": 0.032423511269836315,
+      "best_contiguous_2m_alpha": 0.0293665913077052,
+      "daily_alpha_std": 0.02803730917135029,
+      "peak_month": "202108",
+      "nodes": 4,
+      "depth": 2
     },
     {
       "name": "sector_factor_22",
       "expression": [
-        "sub",
-        "drawdown_60d_rank",
+        "min",
         [
-          "mean_5",
-          "volatility_10d_rank"
-        ]
-      ],
-      "expression_text": "sub(drawdown_60d_rank, mean_5(volatility_10d_rank))",
-      "direction": -1,
-      "category": "breakout",
-      "fitness": 0.02987922578350302,
-      "raw_alpha": 0.034744631516643934,
-      "top3_month_alpha": 0.04667260107510942,
-      "best_contiguous_2m_alpha": 0.03203452081533699,
-      "daily_alpha_std": 0.02865405733140913,
-      "peak_month": "202004",
-      "nodes": 4,
-      "depth": 2
-    },
-    {
-      "name": "sector_factor_23",
-      "expression": [
-        "mul",
-        "volatility_60d",
-        [
-          "zscore_20",
-          "volatility_20d"
-        ]
-      ],
-      "expression_text": "mul(volatility_60d, zscore_20(volatility_20d))",
-      "direction": 1,
-      "category": "raw_state",
-      "fitness": 0.029855413922389426,
-      "raw_alpha": 0.03497597087112622,
-      "top3_month_alpha": 0.05381956085499398,
-      "best_contiguous_2m_alpha": 0.03515714213739349,
-      "daily_alpha_std": 0.031205569487367964,
-      "peak_month": "201707",
-      "nodes": 4,
-      "depth": 2
-    },
-    {
-      "name": "sector_factor_24",
-      "expression": [
-        "ts_rank_20",
-        "ret_60d"
-      ],
-      "expression_text": "ts_rank_20(ret_60d)",
-      "direction": 1,
-      "category": "raw_state",
-      "fitness": 0.02976730000675621,
-      "raw_alpha": 0.033376599244308386,
-      "top3_month_alpha": 0.03836384802581178,
-      "best_contiguous_2m_alpha": 0.03904747460691067,
-      "daily_alpha_std": 0.026092992375521762,
-      "peak_month": "201701",
-      "nodes": 2,
-      "depth": 1
-    },
-    {
-      "name": "sector_factor_25",
-      "expression": [
-        "mul",
-        [
-          "neg",
-          [
-            "zscore_20",
-            "risk_adj_5_20_rank"
-          ]
+          "abs",
+          "close_pos_20d_rank"
         ],
         [
-          "mul",
+          "sub",
           [
-            "mul",
-            "close_pos_20d_rank",
-            "volume_z_20d"
+            "signed_sqrt",
+            "ma_gap_10_60_rank"
           ],
-          "ret_3d"
+          "ret_3d_rank"
         ]
       ],
-      "expression_text": "mul(neg(zscore_20(risk_adj_5_20_rank)), mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d))",
-      "direction": 1,
-      "category": "raw_state",
-      "fitness": 0.029632950415443473,
-      "raw_alpha": 0.036309861352053906,
-      "top3_month_alpha": 0.028542221744861956,
-      "best_contiguous_2m_alpha": 0.02516136856687829,
-      "daily_alpha_std": 0.021769109366104353,
-      "peak_month": "201704",
-      "nodes": 9,
-      "depth": 3
-    },
-    {
-      "name": "sector_factor_26",
-      "expression": [
-        "min",
-        "drawdown_60d_rank",
-        [
-          "div",
-          [
-            "div",
-            "volatility_60d",
-            "risk_adj_10_20_rank"
-          ],
-          "ret_10d_rank"
-        ]
-      ],
-      "expression_text": "min(drawdown_60d_rank, div(div(volatility_60d, risk_adj_10_20_rank), ret_10d_rank))",
+      "expression_text": "min(abs(close_pos_20d_rank), sub(signed_sqrt(ma_gap_10_60_rank), ret_3d_rank))",
       "direction": -1,
-      "category": "trend",
-      "fitness": 0.02950380995270192,
-      "raw_alpha": 0.03516747545556219,
-      "top3_month_alpha": 0.03320635537682424,
-      "best_contiguous_2m_alpha": 0.03480787270898167,
-      "daily_alpha_std": 0.021636655028602667,
-      "peak_month": "201704",
+      "category": "breakout",
+      "fitness": 0.028506316011218943,
+      "raw_alpha": 0.03430203537878958,
+      "top3_month_alpha": 0.03040691537803694,
+      "best_contiguous_2m_alpha": 0.029393936509524946,
+      "daily_alpha_std": 0.02295719367570636,
+      "peak_month": "201506",
       "nodes": 7,
       "depth": 3
     },
     {
-      "name": "sector_factor_27",
+      "name": "sector_factor_23",
+      "expression": [
+        "signed_log",
+        [
+          "signed_sqrt",
+          [
+            "add",
+            "range_1d_rank",
+            "risk_adj_5_20_rank"
+          ]
+        ]
+      ],
+      "expression_text": "signed_log(signed_sqrt(add(range_1d_rank, risk_adj_5_20_rank)))",
+      "direction": 1,
+      "category": "breakout",
+      "fitness": 0.02840154596937747,
+      "raw_alpha": 0.034482769252282566,
+      "top3_month_alpha": 0.06710428006728764,
+      "best_contiguous_2m_alpha": 0.07244754264410076,
+      "daily_alpha_std": 0.035812232829050945,
+      "peak_month": "201702",
+      "nodes": 5,
+      "depth": 3
+    },
+    {
+      "name": "sector_factor_24",
+      "expression": [
+        "neg",
+        [
+          "max",
+          [
+            "neg",
+            "volatility_20d_rank"
+          ],
+          "drawdown_60d_rank"
+        ]
+      ],
+      "expression_text": "neg(max(neg(volatility_20d_rank), drawdown_60d_rank))",
+      "direction": 1,
+      "category": "volatility",
+      "fitness": 0.02804518110523738,
+      "raw_alpha": 0.03330804246188156,
+      "top3_month_alpha": 0.048305278833296106,
+      "best_contiguous_2m_alpha": 0.03021016258195164,
+      "daily_alpha_std": 0.02762861356644179,
+      "peak_month": "202305",
+      "nodes": 5,
+      "depth": 3
+    },
+    {
+      "name": "sector_factor_25",
       "expression": [
         "slope_5",
         "close_pos_20d_rank"
@@ -618,82 +584,123 @@
       "expression_text": "slope_5(close_pos_20d_rank)",
       "direction": 1,
       "category": "breakout",
-      "fitness": 0.029365502407811276,
-      "raw_alpha": 0.032703268088749626,
-      "top3_month_alpha": 0.024146345557982632,
-      "best_contiguous_2m_alpha": 0.025735765631551416,
-      "daily_alpha_std": 0.023377656809383505,
+      "fitness": 0.02799073023530445,
+      "raw_alpha": 0.03131824059719301,
+      "top3_month_alpha": 0.022678069113842247,
+      "best_contiguous_2m_alpha": 0.024443499437336886,
+      "daily_alpha_std": 0.02327510361888556,
       "peak_month": "201703",
+      "nodes": 2,
+      "depth": 1
+    },
+    {
+      "name": "sector_factor_26",
+      "expression": [
+        "sub",
+        "ret_20d_rank",
+        "ret_5d_rank"
+      ],
+      "expression_text": "sub(ret_20d_rank, ret_5d_rank)",
+      "direction": -1,
+      "category": "trend",
+      "fitness": 0.027942205009946694,
+      "raw_alpha": 0.03174255600811528,
+      "top3_month_alpha": 0.033665597311416905,
+      "best_contiguous_2m_alpha": 0.030106419049991326,
+      "daily_alpha_std": 0.023003509981685804,
+      "peak_month": "201506",
+      "nodes": 3,
+      "depth": 1
+    },
+    {
+      "name": "sector_factor_27",
+      "expression": [
+        "std_20",
+        "ret_3d_rank"
+      ],
+      "expression_text": "std_20(ret_3d_rank)",
+      "direction": -1,
+      "category": "trend",
+      "fitness": 0.027509059455112554,
+      "raw_alpha": 0.030566323526332956,
+      "top3_month_alpha": 0.038650926694635844,
+      "best_contiguous_2m_alpha": 0.04314729228999565,
+      "daily_alpha_std": 0.020572640712204014,
+      "peak_month": "201509",
       "nodes": 2,
       "depth": 1
     },
     {
       "name": "sector_factor_28",
       "expression": [
-        "std_20",
-        "close_pos_20d_rank"
+        "delta_5",
+        "drawdown_60d_rank"
       ],
-      "expression_text": "std_20(close_pos_20d_rank)",
+      "expression_text": "delta_5(drawdown_60d_rank)",
       "direction": 1,
       "category": "breakout",
-      "fitness": 0.029340128490076136,
-      "raw_alpha": 0.032577110354798,
-      "top3_month_alpha": 0.042042181876582325,
-      "best_contiguous_2m_alpha": 0.03863498035759746,
-      "daily_alpha_std": 0.02236981864721865,
-      "peak_month": "202305",
+      "fitness": 0.027357743807262944,
+      "raw_alpha": 0.031055275049891043,
+      "top3_month_alpha": 0.030016937706626983,
+      "best_contiguous_2m_alpha": 0.026694937297660995,
+      "daily_alpha_std": 0.026975312426280974,
+      "peak_month": "201912",
       "nodes": 2,
       "depth": 1
     },
     {
       "name": "sector_factor_29",
       "expression": [
-        "std_20",
-        "ret_60d_rank"
+        "min",
+        "range_1d_rank",
+        "risk_adj_20_60_rank"
       ],
-      "expression_text": "std_20(ret_60d_rank)",
-      "direction": -1,
-      "category": "trend",
-      "fitness": 0.029244493622805977,
-      "raw_alpha": 0.03312685926573654,
-      "top3_month_alpha": 0.051593983646819774,
-      "best_contiguous_2m_alpha": 0.03822538058386104,
-      "daily_alpha_std": 0.02882365642930559,
-      "peak_month": "202012",
-      "nodes": 2,
+      "expression_text": "min(range_1d_rank, risk_adj_20_60_rank)",
+      "direction": 1,
+      "category": "breakout",
+      "fitness": 0.027028850991501808,
+      "raw_alpha": 0.03214108812522146,
+      "top3_month_alpha": 0.05301834999003357,
+      "best_contiguous_2m_alpha": 0.04822147347705193,
+      "daily_alpha_std": 0.036122371337196535,
+      "peak_month": "202107",
+      "nodes": 3,
       "depth": 1
     },
     {
       "name": "sector_factor_30",
       "expression": [
-        "mul",
+        "add",
         [
-          "mul",
-          "close_pos_20d_rank",
-          "volume_z_20d"
+          "max",
+          [
+            "abs",
+            "ret_60d_rank"
+          ],
+          [
+            "mul",
+            "ret_5d_rank",
+            "close_pos_20d_rank"
+          ]
         ],
         [
-          "sub",
-          "ma_gap_10_60_rank",
-          [
-            "std_20",
-            "range_1d_rank"
-          ]
+          "zscore_20",
+          "drawdown_60d_rank"
         ]
       ],
-      "expression_text": "mul(mul(close_pos_20d_rank, volume_z_20d), sub(ma_gap_10_60_rank, std_20(range_1d_rank)))",
-      "direction": -1,
+      "expression_text": "add(max(abs(ret_60d_rank), mul(ret_5d_rank, close_pos_20d_rank)), zscore_20(drawdown_60d_rank))",
+      "direction": 1,
       "category": "breakout",
-      "fitness": 0.02923149726473401,
-      "raw_alpha": 0.035569076324626546,
-      "top3_month_alpha": 0.03930268370811824,
-      "best_contiguous_2m_alpha": 0.0322991877613849,
-      "daily_alpha_std": 0.023375790598925313,
-      "peak_month": "202107",
-      "nodes": 8,
+      "fitness": 0.026858603276423063,
+      "raw_alpha": 0.03358405578706766,
+      "top3_month_alpha": 0.034793122235405635,
+      "best_contiguous_2m_alpha": 0.032132950043632987,
+      "daily_alpha_std": 0.022254525106445985,
+      "peak_month": "201701",
+      "nodes": 9,
       "depth": 3
     }
   ],
-  "unique_expressions": 1048,
-  "seconds": 876.5716814994812
+  "unique_expressions": 787,
+  "seconds": 616.8010792732239
 }

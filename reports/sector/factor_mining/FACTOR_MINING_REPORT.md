@@ -1,287 +1,124 @@
-# 板块高 Alpha 因子挖掘报告
+# 板块遗传因子挖掘报告
 
-生成日期：2026-07-01
+**版本日期：2026-08-10｜研究分支：`sector_dev`｜结论：没有GA因子进入正式模型**
 
-## 目的
+## 结论摘要
 
-本轮只做板块因子挖掘，不训练滚动模型。目标是找到一批能够提示板块未来 10 个交易日进入主升浪的高 alpha 因子。评价标准优先看 Top10 板块未来 10 日相对全板块均值的超额收益，而不是单纯 IC。
+新GA流程已经修复旧版最明显的尺度混用和只在GA内部去重问题，但搜索内优势仍没有转化为产品级增量。
+
+- 18个GA终端全部先转换为每日横截面 `[-1, 1]` centered rank，不再混用原始收益、波动、z-score和rank。
+- 候选同时与人工因子库和已选GA因子做相关性剪枝；最终30个因子的最大两两绝对相关为0.7896，低于0.8门槛。
+- 24代、种群96、深度不超过3，共评估787个唯一表达式，最终形成30因子诊断库。
+- 发现期30/30因子的Top10 alpha为正，但验证期只有4/30为正，观察期12/30为正。全库平均Top10 alpha从发现期+0.223%降为验证期-0.294%和观察期-0.307%，显示明显的搜索内乐观偏差。
+- 只有 `sector_factor_27 = -std_20(ret_3d_rank)` 通过shadow门。它偏好近20日内三日动量横截面位置更稳定的板块。
+- 该因子加入当时冻结的年度扩展 LightGBM 后，2024-2025验证期年化由12.61%降至11.46%，Sharpe由0.88降至0.81，因此被产品增量门拒绝。当前正式模型后来升级为季度重训；如果未来重新启用GA候选，必须在当前季度基线上重新做增量消融，不能直接沿用旧年度基线的数值。
 
 ## 数据与目标
 
-- 宇宙：同花顺行业 + 概念板块，类型为 `I, N`。
-- 发现期：20150101 至 20231231。
-- 验证期：20240101 至 20251231。
-- 观察期：20260101 至 20260529，不参与筛选。
-- 主标签：`future_ret_10d`。
-- 主目标：Top10 未来 10 日 alpha。
+| 区间 | 日期 | 用途 |
+|---|---|---|
+| 发现期 | 2015-01-01至2023-12-31 | GA搜索和初步适应度 |
+| 验证期 | 2024-01-01至2025-12-31 | shadow门与产品增量验收 |
+| 观察期 | 2026-01-01至2026-05-29 | 只报告，不参与选择 |
 
-## 遗传搜索设置
+投资宇宙为同花顺行业和概念板块（I+N）。单因子目标为未来10日板块收益的每日Top10超额收益；最终是否有价值，必须通过5日标签 LightGBM 和产品持仓规则下的增量消融，而不是只看单因子Top10。
 
-```text
-population_size = 96
-generations = 24
-elite_size = 16
-tournament_size = 5
-crossover_rate = 0.55
-mutation_rate = 0.35
-max_depth = 3
-library_size = 30
-```
+## 搜索协议
 
-fitness 使用 robust 版：
+### 统一尺度
 
-```text
-1.50 * mean(monthly_top10_alpha)
-+ 0.50 * min(best_contiguous_2_month_alpha, 3%)
-+ 0.50 * min(mean(top3 monthly_top10_alpha), 3%)
-+ 0.02 * (positive_month_ratio - 50%)
-- 0.10 * std(daily_top10_alpha)
-- 0.0005 * expression_nodes
-```
+GA只接收18个排名终端：收益、风险调整动量、均线距离、区间位置、回撤、波动、振幅、成交量和换手排名。所有终端统一映射到 `[-1, 1]`。原始状态终端组为空。
 
-## 因子库概览
+- 除法分母保护值：0.1；
+- 表达式值限制：`[-10, 10]`；
+- 相关性采样：20000行；
+- 人工因子与GA因子联合去重阈值：0.8；
+- 同一峰值月份最多保留3个因子；
+- 固定随机种子：42。
 
-- 最终因子数：30
-- core 因子数：6
-- diagnostic 因子数：24
+### 搜索与去重结果
 
-| 因子 | 状态 | 类别 | 发现期Top10 alpha | 验证期Top10 alpha | 验证期正月份 | 验证期Rank IC | 峰值月 | 公式 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| sector_factor_26 | core | trend | 0.28% | 0.29% | 58.33% | -0.0120 | 201704 | min(drawdown_60d_rank, div(div(volatility_60d, risk_adj_10_20_rank), ret_10d_rank)) |
-| sector_factor_25 | core | raw_state | 0.43% | 0.22% | 62.50% | 0.0176 | 201704 | mul(neg(zscore_20(risk_adj_5_20_rank)), mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d)) |
-| sector_factor_08 | core | breakout | 0.39% | 0.18% | 50.00% | 0.0215 | 201802 | add(risk_adj_10_20_rank, signed_sqrt(neg(ma_gap_10_60_rank))) |
-| sector_factor_18 | core | raw_state | 0.29% | 0.13% | 54.17% | 0.0186 | 201506 | add(signed_sqrt(sub(volatility_60d, ma_gap_10_60_rank)), ret_5d_rank) |
-| sector_factor_22 | core | breakout | 0.18% | 0.02% | 50.00% | 0.0111 | 202004 | sub(drawdown_60d_rank, mean_5(volatility_10d_rank)) |
-| sector_factor_03 | core | trend | 0.67% | 0.00% | 58.33% | 0.0441 | 201505 | mul(mul(mul(ret_3d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank) |
-| sector_factor_12 | diagnostic | breakout | 0.24% | 0.29% | 45.83% | 0.0493 | 201506 | mul(std_20(volatility_10d_rank), neg(ma_gap_10_60_rank)) |
-| sector_factor_13 | diagnostic | breakout | 0.18% | 0.20% | 41.67% | 0.0000 | 201506 | zscore_20(ma_gap_5_20_rank) |
-| sector_factor_05 | diagnostic | raw_state | 0.56% | 0.05% | 45.83% | 0.0206 | 201505 | mul(mul(ret_3d, volume_z_20d), ret_3d_rank) |
-| sector_factor_01 | diagnostic | trend | 0.82% | -0.01% | 62.50% | 0.0325 | 201702 | mul(sub(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank) |
-| sector_factor_16 | diagnostic | raw_state | 0.23% | -0.05% | 41.67% | 0.0071 | 202107 | mul(slope_5(risk_adj_20_60_rank), ret_20d) |
-| sector_factor_04 | diagnostic | raw_state | 0.66% | -0.09% | 45.83% | 0.0205 | 201505 | mul(ret_5d, sub(close_pos_20d_rank, volume_z_20d)) |
-| sector_factor_27 | diagnostic | breakout | 0.29% | -0.09% | 45.83% | 0.0079 | 201703 | slope_5(close_pos_20d_rank) |
-| sector_factor_02 | diagnostic | breakout | 0.73% | -0.10% | 58.33% | 0.0449 | 201702 | mul(sub(close_pos_20d_rank, volume_z_20d), risk_adj_5_20_rank) |
-| sector_factor_23 | diagnostic | raw_state | 0.25% | -0.12% | 41.67% | 0.0259 | 201707 | mul(volatility_60d, zscore_20(volatility_20d)) |
-| sector_factor_07 | diagnostic | breakout | 0.34% | -0.18% | 50.00% | -0.0001 | 201703 | mul(delta_5(close_pos_20d_rank), risk_adj_5_20_rank) |
-| sector_factor_29 | diagnostic | trend | 0.20% | -0.18% | 41.67% | 0.0372 | 202012 | std_20(ret_60d_rank) |
-| sector_factor_09 | diagnostic | trend | 0.27% | -0.24% | 58.33% | 0.0062 | 202001 | delta_5(ret_10d_rank) |
-| sector_factor_30 | diagnostic | breakout | 0.34% | -0.27% | 33.33% | 0.0061 | 202107 | mul(mul(close_pos_20d_rank, volume_z_20d), sub(ma_gap_10_60_rank, std_20(range_1d_rank))) |
-| sector_factor_06 | diagnostic | trend | 0.71% | -0.28% | 50.00% | 0.0072 | 201702 | mul(max(sub(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank) |
-| sector_factor_15 | diagnostic | breakout | 0.52% | -0.30% | 33.33% | 0.0478 | 201509 | std_20(range_1d_rank) |
-| sector_factor_14 | diagnostic | raw_state | 0.31% | -0.36% | 33.33% | 0.0143 | 202001 | volatility_60d |
-| sector_factor_17 | diagnostic | trend | 0.28% | -0.38% | 37.50% | -0.0078 | 202012 | delta_5(ret_5d_rank) |
-| sector_factor_10 | diagnostic | breakout | 0.30% | -0.41% | 29.17% | 0.0217 | 202001 | std_20(ma_gap_10_60_rank) |
-| sector_factor_28 | diagnostic | breakout | 0.12% | -0.44% | 33.33% | -0.0604 | 202305 | std_20(close_pos_20d_rank) |
-| sector_factor_19 | diagnostic | trend | 0.18% | -0.45% | 29.17% | -0.0534 | 202109 | std_20(risk_adj_10_20_rank) |
-| sector_factor_24 | diagnostic | raw_state | 0.07% | -0.56% | 33.33% | -0.0395 | 201701 | ts_rank_20(ret_60d) |
-| sector_factor_20 | diagnostic | raw_state | 0.27% | -0.72% | 29.17% | 0.0055 | 201701 | zscore_20(ret_3d) |
-| sector_factor_21 | diagnostic | raw_state | 0.16% | -0.80% | 16.67% | 0.0053 | 201703 | slope_5(range_1d) |
-| sector_factor_11 | diagnostic | raw_state | 0.29% | -0.94% | 20.83% | -0.0127 | 202012 | delta_5(ret_3d) |
+填满30个因子库前，系统记录了195个高排名候选：93个因与人工因子重复被拒，3个因与已选GA因子重复被拒，69个因峰值月份配额被拒，30个进入库。该统计只是入库阶段实际检查到的高排名前缀，不代表787个表达式的完整拒绝原因分布。
 
-![验证期Top10 Alpha](validation_top10_alpha.png)
+最终库仍有5个简单线性重写被标记为结构重复，只保留作诊断，不允许晋级shadow。因子编号每轮会重新分配，`sector_factor_XX` 不能跨轮当成稳定身份；稳定身份应由表达式、依赖和版本共同决定。
 
-![验证期月度Alpha热力图](validation_monthly_alpha_heatmap.png)
+## 单因子验证
 
-## 代表性因子说明
+| 指标 | 发现期 | 验证期 | 2026观察期 |
+|---|---:|---:|---:|
+| 30因子平均Top10 alpha | +0.223% | -0.294% | -0.307% |
+| Top10 alpha为正的因子数 | 30/30 | 4/30 | 12/30 |
+| 用于选择 | 是 | 是 | 否 |
 
-### sector_factor_26
+唯一shadow因子：
 
-```text
-min(drawdown_60d_rank, div(div(volatility_60d, risk_adj_10_20_rank), ret_10d_rank))
-```
+| 指标 | 发现期 | 验证期 | 2026观察期 |
+|---|---:|---:|---:|
+| Top10 alpha | +0.1022% | +0.0812% | +0.6519% |
+| 正alpha月份比例 | 45.37% | 70.83% | 100% |
+| Rank IC | 0.0432 | 0.0733 | 0.1166 |
 
-- 方向：`-1`
-- 类别：`trend`
-- 验证期 Top10 alpha：0.29%
-- 验证期 Top5 alpha：0.05%
-- 验证期 Top20 alpha：0.22%
-- 验证期正 alpha 月份比例：58.33%
-- 验证期 Rank IC：-0.0120
-- 发现期峰值月份：`201704`
-- 状态：`core`
+观察期只有5个月，且没有参与shadow选择。它的短期正表现不能推翻产品消融的拒绝结论。
 
-### sector_factor_25
+## 产品级增量消融
 
-```text
-mul(neg(zscore_20(risk_adj_5_20_rank)), mul(mul(close_pos_20d_rank, volume_z_20d), ret_3d))
-```
+比较口径统一为：人工特征 LightGBM、年度扩展训练、2024-2025验证期、真实货币ETF底仓、状态化持仓规则和20bp单边成本。
 
-- 方向：`1`
-- 类别：`raw_state`
-- 验证期 Top10 alpha：0.22%
-- 验证期 Top5 alpha：0.25%
-- 验证期 Top20 alpha：0.24%
-- 验证期正 alpha 月份比例：62.50%
-- 验证期 Rank IC：0.0176
-- 发现期峰值月份：`201704`
-- 状态：`core`
+| 模型 | 年化收益 | Sharpe | 最大回撤 | 平均日换手 |
+|---|---:|---:|---:|---:|
+| 人工特征基线 | 12.61% | 0.88 | -10.12% | 8.50% |
+| 基线 + `sector_factor_27` | 11.46% | 0.81 | -8.57% | 8.61% |
+| 变化 | -1.15个百分点 | -0.08 | 改善1.55个百分点 | +0.11个百分点 |
 
-### sector_factor_08
+增量门要求：年化收益高于基线、Sharpe至少提高0.05、最大回撤恶化不超过2个百分点、平均日换手恶化不超过1个百分点。候选虽然减小回撤，但收益和Sharpe均下降，因此 `selected_factor=null`，`passing_factors=[]`。
 
-```text
-add(risk_adj_10_20_rank, signed_sqrt(neg(ma_gap_10_60_rank)))
-```
+观察期没有用GA模型重新挑选或“救回”该因子，这是样本外纪律的一部分。
 
-- 方向：`1`
-- 类别：`breakout`
-- 验证期 Top10 alpha：0.18%
-- 验证期 Top5 alpha：0.09%
-- 验证期 Top20 alpha：0.23%
-- 验证期正 alpha 月份比例：50.00%
-- 验证期 Rank IC：0.0215
-- 发现期峰值月份：`201802`
-- 状态：`core`
+## 人工因子设计仍存在的问题
 
-### sector_factor_18
+人工特征不是18个彼此独立的信息源。新版审计只用2015-2023开发期决定去重候选，2024-2025选择期和2026观察期只检查稳定性，不反向改变开发期决定。开发期共识别9组绝对相关超过0.8的组合，其中7组在三个期间都持续超过0.8：
 
-```text
-add(signed_sqrt(sub(volatility_60d, ma_gap_10_60_rank)), ret_5d_rank)
-```
+| 因子对 | 开发期 | 选择期 | 观察期 | 结构关系 |
+|---|---:|---:|---:|---|
+| `volume_z_20d` / `turnover_z_20d` | 0.9868 | 0.9878 | 0.9839 | 不同原始字段，但经验上几乎相同 |
+| `ret_20d` / `risk_adj_20_60` | 0.9501 | 0.9386 | 0.9368 | 后者由前者和波动派生 |
+| `ret_10d` / `risk_adj_10_20` | 0.9346 | 0.9212 | 0.9248 | 后者由前者和波动派生 |
+| `ret_5d` / `risk_adj_5_20` | 0.9293 | 0.9220 | 0.9285 | 后者由前者和波动派生 |
+| `volatility_10d` / `volatility_20d` | 0.8381 | 0.8540 | 0.8791 | 同源相邻期限表示 |
+| `ret_20d` / `ma_gap_5_20` | 0.8356 | 0.8137 | 0.8429 | 同源趋势表示 |
+| `ret_10d` / `ma_gap_5_20` | 0.8239 | 0.8150 | 0.8279 | 同源趋势表示 |
+| `ret_60d` / `ma_gap_10_60` | 0.8101 | 0.7903 | 0.8412 | 同源趋势表示 |
+| `risk_adj_20_60` / `ma_gap_5_20` | 0.8054 | 0.7814 | 0.7929 | 同源趋势表示 |
 
-- 方向：`1`
-- 类别：`raw_state`
-- 验证期 Top10 alpha：0.13%
-- 验证期 Top5 alpha：0.07%
-- 验证期 Top20 alpha：0.24%
-- 验证期正 alpha 月份比例：54.17%
-- 验证期 Rank IC：0.0186
-- 发现期峰值月份：`201506`
-- 状态：`core`
+完整依赖链已经写入因子目录：3组风险调整收益属于明确的派生表示；另外6组只能称经验重叠，不能仅凭相关性武断删除。正式特征集是否调整必须由同口径产品消融决定。
 
-### sector_factor_22
+### 当前产品口径下的派生因子消融
 
-```text
-sub(drawdown_60d_rank, mean_5(volatility_10d_rank))
-```
+三项明确派生表示已经在当前正式历史时间表和`simple_v1`下逐项测试：2018-2023沿用年度扩展训练，2024年起才应切换季度训练；因为三个候选都在开发期失败，系统没有打开2024-2025选择期，更没有读取2026。LightGBM参数、20bp成本、低风险ETF和连续持仓状态均保持不变，正式基线与当前产品账本精确一致。
 
-- 方向：`-1`
-- 类别：`breakout`
-- 验证期 Top10 alpha：0.02%
-- 验证期 Top5 alpha：-0.18%
-- 验证期 Top20 alpha：0.15%
-- 验证期正 alpha 月份比例：50.00%
-- 验证期 Rank IC：0.0111
-- 发现期峰值月份：`202004`
-- 状态：`core`
+| 开发期模型 | 累计收益 | Sharpe | 最大回撤 | 日均换手 | 2018 | 2022 |
+|---|---:|---:|---:|---:|---:|---:|
+| 18因子基线 | +13.48% | 0.24 | -18.93% | 8.36% | -12.73% | -7.87% |
+| 删除 `risk_adj_5_20` | -1.85% | 0.02 | -21.83% | 7.67% | -16.71% | -8.33% |
+| 删除 `risk_adj_10_20` | +5.96% | 0.15 | -20.95% | 7.17% | -19.50% | -5.05% |
+| 删除 `risk_adj_20_60` | -15.27% | -0.31 | -25.21% | 6.07% | -16.47% | -5.48% |
 
-### sector_factor_03
+三项均未通过预先冻结的开发门。结论不是“它们提供了新的原始信息”，而是这些派生表示对有限深度的树模型仍有明显表示价值；当前18因子基线保持不变。高相关只负责提出消融候选，不能代替消融结论。
 
-```text
-mul(mul(mul(ret_3d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)
-```
+## GA因子的定位
 
-- 方向：`-1`
-- 类别：`trend`
-- 验证期 Top10 alpha：0.00%
-- 验证期 Top5 alpha：-0.13%
-- 验证期 Top20 alpha：0.04%
-- 验证期正 alpha 月份比例：58.33%
-- 验证期 Rank IC：0.0441
-- 发现期峰值月份：`201505`
-- 状态：`core`
+GA所有终端都来自人工特征面板，因此它没有引入新的原始信息，只是在现有信息上搜索非线性变换与交互。GA因子不能因表达式复杂就被称为“独立新因子”。它的合理定位是受控的候选表示生成器，晋级需要三道门：
 
-### sector_factor_12
+1. **结构门**：规范化表达式，识别恒等变换、线性重写和相同依赖子树。
+2. **经验门**：在滚动窗口和不同市场状态内，与人工+GA全集比较相关、TopK重合和条件相关。
+3. **价值门**：在严格purged滚动折中做固定超参的基线与加因子消融，要求扣成本收益和IR跨折稳定改善，且不放大回撤和换手。
 
-```text
-mul(std_20(volatility_10d_rank), neg(ma_gap_10_60_rank))
-```
+## 下一轮更值得补充的信息
 
-- 方向：`1`
-- 类别：`breakout`
-- 验证期 Top10 alpha：0.29%
-- 验证期 Top5 alpha：0.40%
-- 验证期 Top20 alpha：0.32%
-- 验证期正 alpha 月份比例：45.83%
-- 验证期 Rank IC：0.0493
-- 发现期峰值月份：`201506`
-- 状态：`diagnostic`
+- 使用申万point-in-time历史成员构造行业宽度、上涨比例和龙头集中度；同花顺最新成员快照不能用于历史回测。
+- 补充趋势质量与市场扩散，如效率比、趋势回归质量、板块离散度和平均相关性，并只通过增量门进入模型。
+- 资金流数据历史较短，只能作为近期shadow特征，不能与2015年以来长样本混用。
 
-### sector_factor_13
+## 最终判断
 
-```text
-zscore_20(ma_gap_5_20_rank)
-```
-
-- 方向：`1`
-- 类别：`breakout`
-- 验证期 Top10 alpha：0.20%
-- 验证期 Top5 alpha：0.21%
-- 验证期 Top20 alpha：0.26%
-- 验证期正 alpha 月份比例：41.67%
-- 验证期 Rank IC：0.0000
-- 发现期峰值月份：`201506`
-- 状态：`diagnostic`
-
-### sector_factor_05
-
-```text
-mul(mul(ret_3d, volume_z_20d), ret_3d_rank)
-```
-
-- 方向：`-1`
-- 类别：`raw_state`
-- 验证期 Top10 alpha：0.05%
-- 验证期 Top5 alpha：0.02%
-- 验证期 Top20 alpha：0.03%
-- 验证期正 alpha 月份比例：45.83%
-- 验证期 Rank IC：0.0206
-- 发现期峰值月份：`201505`
-- 状态：`diagnostic`
-
-### sector_factor_01
-
-```text
-mul(sub(mul(close_pos_20d_rank, volume_z_20d), ret_3d_rank), risk_adj_5_20_rank)
-```
-
-- 方向：`-1`
-- 类别：`trend`
-- 验证期 Top10 alpha：-0.01%
-- 验证期 Top5 alpha：-0.10%
-- 验证期 Top20 alpha：0.03%
-- 验证期正 alpha 月份比例：62.50%
-- 验证期 Rank IC：0.0325
-- 发现期峰值月份：`201702`
-- 状态：`diagnostic`
-
-### sector_factor_16
-
-```text
-mul(slope_5(risk_adj_20_60_rank), ret_20d)
-```
-
-- 方向：`-1`
-- 类别：`raw_state`
-- 验证期 Top10 alpha：-0.05%
-- 验证期 Top5 alpha：-0.07%
-- 验证期 Top20 alpha：0.00%
-- 验证期正 alpha 月份比例：41.67%
-- 验证期 Rank IC：0.0071
-- 发现期峰值月份：`202107`
-- 状态：`diagnostic`
-
-### sector_factor_04
-
-```text
-mul(ret_5d, sub(close_pos_20d_rank, volume_z_20d))
-```
-
-- 方向：`1`
-- 类别：`raw_state`
-- 验证期 Top10 alpha：-0.09%
-- 验证期 Top5 alpha：0.00%
-- 验证期 Top20 alpha：-0.04%
-- 验证期正 alpha 月份比例：45.83%
-- 验证期 Rank IC：0.0205
-- 发现期峰值月份：`201505`
-- 状态：`diagnostic`
-
-
-## 结论
-
-本轮因子挖掘把未来 10 日 Top10 alpha 作为主目标，更贴近“板块主升浪入场信号”。`core` 因子表示发现期和验证期都有正向 Top10 alpha，`diagnostic` 因子表示发现期强但验证期不完全达标，后续可以作为模型输入或人工观察项。
-
-下一步建议先不要急着扩大模型复杂度，而是用这些因子做两件事：
-
-1. 看 Top10 alpha 在 2024、2025、2026 各月份是否集中在少数行情阶段。
-2. 用 core 因子构造简单投票或 LightGBM 滚动模型，比较是否优于之前直接使用原始板块特征。
+当前18个人工特征基线继续保留，GA库保持诊断状态。三项明确派生因子在当前产品开发期消融中都不可删除；唯一GA shadow因子在旧基线下也没有增加收益或Sharpe。因此本轮结论是：**没有人工因子被删除，也没有GA因子晋级；下一步应补充真正的新信息源，而不是继续机械删除高相关表示。**

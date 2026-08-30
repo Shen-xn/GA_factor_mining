@@ -1,0 +1,33 @@
+{
+  "feature_protocol_version": 4,
+  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86",
+  "strategy_policy_version": 5,
+  "policy_name": "simple_v1",
+  "policy": {
+    "target_positions": 5,
+    "entry_rank": 5,
+    "retain_rank": 10,
+    "min_hold_sessions": 5,
+    "hard_drawdown": -0.12,
+    "weak_momentum_rank": 0.2,
+    "extreme_volatility_rank": 0.95,
+    "score_smoothing_sessions": 3,
+    "rebalance_tolerance": 0.03
+  },
+  "selection_period": "2018-2023 development and 2024-2025 model/policy selection",
+  "independent_out_of_sample_available": false,
+  "period_roles": {
+    "2018-2023": "development",
+    "2024-2025": "model_and_policy_selection",
+    "2026": "observed_diagnostic_only",
+    "future_unseen_data": "independent_out_of_sample"
+  },
+  "selection_rule": "frozen rolling-LightGBM product baseline; rejected challengers do not alter the default run",
+  "parameter_search_performed": true,
+  "observation_used_for_selection": false,
+  "observation_hypothesis_disclosure": "2026 market structure motivated the review; 2026 metrics are diagnostic, not confirmatory evidence",
+  "boundary_mode": "continuous_carry_from_2018",
+  "low_risk_code": "511880.SH",
+  "low_risk_data_signature": "1eeb18eb7051fac89a37d46a8a1005708be84514dfefb9ae9762187fd5e40bdd",
+  "starting_capital_assumption": "fully invested in low-risk ETF before first signal"
+}

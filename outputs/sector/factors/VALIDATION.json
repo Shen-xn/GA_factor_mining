@@ -1,0 +1,33 @@
+{
+  "registry_version": 1,
+  "factor_count": 23,
+  "periods": {
+    "development": [
+      "20150101",
+      "20231231"
+    ],
+    "selection": [
+      "20240101",
+      "20251231"
+    ],
+    "observation": [
+      "20260101",
+      "20260810"
+    ]
+  },
+  "decision_period": "development",
+  "selection_safe": true,
+  "observation_used_for_decision": false,
+  "streaming_read": true,
+  "cross_scope_pairs_excluded": true,
+  "correlation_threshold": 0.8,
+  "flagged_pairs": 9,
+  "derived_representation_pairs": 3,
+  "controlled_pair_ablation_pairs": 6,
+  "most_redundant_pair": {
+    "left_factor": "volume_z_20d",
+    "right_factor": "turnover_z_20d",
+    "abs_correlation_development": 0.9868211620125746
+  },
+  "formal_feature_set_changed": false
+}

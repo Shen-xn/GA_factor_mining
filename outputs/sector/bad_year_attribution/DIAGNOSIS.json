@@ -1,0 +1,29 @@
+{
+  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86",
+  "product_history_path": "outputs\\sector\\strategy\\HISTORY_DAILY.parquet",
+  "years": [
+    2018,
+    2022
+  ],
+  "benchmark": "daily equal-weight I+N sector open-to-open return",
+  "exact_linking_identity": true,
+  "observation_used_for_design": false,
+  "year_diagnostics": {
+    "2018": {
+      "primary_negative_driver": "market",
+      "worst_month": "201808",
+      "worst_month_return": -0.04724000486534152,
+      "average_held_exposure": 0.224835185894436,
+      "cost_share_of_absolute_loss": 0.22155098120396757
+    },
+    "2022": {
+      "primary_negative_driver": "market",
+      "worst_month": "202201",
+      "worst_month_return": -0.06195816983507174,
+      "average_held_exposure": 0.25007642551733783,
+      "cost_share_of_absolute_loss": 0.3048398526201347
+    }
+  },
+  "same_primary_negative_driver": true,
+  "strategy_changed": false
+}

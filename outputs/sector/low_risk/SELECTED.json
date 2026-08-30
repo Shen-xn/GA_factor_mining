@@ -1,0 +1,14 @@
+{
+  "selected_code": "511880.SH",
+  "selected_name": "银华货币ETF-A",
+  "selection_period": [
+    "20170101",
+    "20171231"
+  ],
+  "post_2017_returns_used_for_selection": false,
+  "minimum_trading_days": 200,
+  "minimum_median_amount_thousand_rmb": 50000.0,
+  "maximum_adjusted_price_nav_gap": 0.01,
+  "data_signature": "a878f636fc4b0e7720e1ce23a2392e53c6a4db26ed4f4284f71bdc44ce05905a",
+  "starting_capital_assumption": "backtest starts fully invested in the selected money ETF"
+}

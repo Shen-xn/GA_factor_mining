@@ -2,16 +2,21 @@
   "seed": 42,
   "paths": {
     "feature_panel": "C:\\Users\\s1171\\Documents\\ChatGPT\\GA_factor_mining\\outputs\\sector\\rotation\\sector_feature_panel.parquet",
-    "artifacts": "C:\\Users\\s1171\\Documents\\ChatGPT\\GA_factor_mining\\outputs\\sector\\factor_mining",
-    "reports": "C:\\Users\\s1171\\Documents\\ChatGPT\\GA_factor_mining\\reports\\sector\\factor_mining"
+    "artifacts": "C:\\Users\\s1171\\Documents\\ChatGPT\\GA_factor_mining\\outputs\\sector\\factor_mining"
   },
   "split": {
     "discovery_start": "20150101",
     "discovery_end": "20231231",
     "validation_start": "20240101",
     "validation_end": "20251231",
-    "test_start": "20260101",
-    "test_end": "20260529"
+    "observation_start": "20260101",
+    "observation_end": "20260529"
+  },
+  "period_roles": {
+    "discovery": "development_and_ga_search",
+    "validation": "factor_selection_not_independent_oos",
+    "observation": "seen_diagnostic_only",
+    "independent_out_of_sample_available": false
   },
   "universe": {
     "main": [
@@ -55,7 +60,11 @@
     "min_daily_sectors": 80,
     "min_month_days": 12,
     "daily_alpha_volatility_penalty": 0.1,
-    "complexity_penalty": 0.0005
+    "complexity_penalty": 0.0005,
+    "terminal_transform": "centered_rank",
+    "protected_div_epsilon": 0.1,
+    "value_clip": 10.0,
+    "corr_sample_size": 20000
   },
   "terminal_groups": {
     "trend": [
@@ -85,19 +94,7 @@
       "volume_z_20d_rank",
       "turnover_z_20d_rank"
     ],
-    "raw_state": [
-      "ret_3d",
-      "ret_5d",
-      "ret_10d",
-      "ret_20d",
-      "ret_60d",
-      "volatility_10d",
-      "volatility_20d",
-      "volatility_60d",
-      "volume_z_20d",
-      "turnover_z_20d",
-      "range_1d"
-    ]
+    "raw_state": []
   },
   "operators": {
     "unary": [
@@ -124,7 +121,7 @@
     ]
   },
   "selection": {
-    "core_validation_top10_alpha_min": 0.0,
-    "core_validation_positive_month_ratio_min": 0.5
+    "shadow_validation_top10_alpha_min": 0.0005,
+    "shadow_validation_positive_month_ratio_min": 0.55
   }
 }

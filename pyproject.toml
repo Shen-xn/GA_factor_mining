@@ -15,8 +15,7 @@ dependencies = [
   "scikit-learn>=1.9",
   "joblib",
   "lightgbm>=4.6",
-  "matplotlib",
-  "markdown",
+  "tushare>=1.4",
 ]
 
 [tool.setuptools.packages.find]

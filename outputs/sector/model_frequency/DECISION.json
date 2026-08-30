@@ -1,0 +1,122 @@
+{
+  "feature_protocol_version": 4,
+  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86",
+  "baseline": "annual_expanding",
+  "challenger": "quarterly_expanding",
+  "challenge_period": [
+    "20240101",
+    "20251231"
+  ],
+  "shared_product_history_start": "20180101",
+  "shared_state_before_challenge": true,
+  "observation_used_for_selection": false,
+  "observation_evaluated": false,
+  "lightgbm_hyperparameters_changed": false,
+  "passed": true,
+  "selected_variant_for_future_protocol": "quarterly_expanding",
+  "current_frozen_product_changed": true,
+  "promoted": true,
+  "promoted_variant": "expanding_quarterly",
+  "promoted_score_data_end": "20260810",
+  "gate": {
+    "selection_total_return_improvement_min": 0.02,
+    "sharpe_not_lower": true,
+    "max_drawdown_worsening_max": 0.02,
+    "daily_turnover_worsening_max": 0.01,
+    "each_selection_year_positive": true
+  },
+  "stability": {
+    "mean_rank_correlation": 0.9384005752081359,
+    "p10_rank_correlation": 0.8938084363701501,
+    "mean_top5_overlap": 0.6317525773195876,
+    "p10_top5_overlap": 0.2
+  },
+  "retrain_windows": [
+    {
+      "train_end": "20231231",
+      "predict_start": "20240101",
+      "predict_end": "20240331"
+    },
+    {
+      "train_end": "20240331",
+      "predict_start": "20240401",
+      "predict_end": "20240630"
+    },
+    {
+      "train_end": "20240630",
+      "predict_start": "20240701",
+      "predict_end": "20240930"
+    },
+    {
+      "train_end": "20240930",
+      "predict_start": "20241001",
+      "predict_end": "20241231"
+    },
+    {
+      "train_end": "20241231",
+      "predict_start": "20250101",
+      "predict_end": "20250331"
+    },
+    {
+      "train_end": "20250331",
+      "predict_start": "20250401",
+      "predict_end": "20250630"
+    },
+    {
+      "train_end": "20250630",
+      "predict_start": "20250701",
+      "predict_end": "20250930"
+    },
+    {
+      "train_end": "20250930",
+      "predict_start": "20251001",
+      "predict_end": "20251231"
+    }
+  ],
+  "low_risk_code": "511880.SH",
+  "low_risk_data_signature": "1eeb18eb7051fac89a37d46a8a1005708be84514dfefb9ae9762187fd5e40bdd",
+  "selection_metrics": {
+    "annual_expanding": {
+      "retrain_months": 12,
+      "days": 485,
+      "total_ret": 0.2889246382596639,
+      "ann_ret": 0.1409664089374436,
+      "ann_vol": 0.1429313250382266,
+      "sharpe": 0.9940904570330404,
+      "max_drawdown": -0.109766631168842,
+      "win_rate": 0.5319587628865979,
+      "avg_turnover": 0.1039320272665506,
+      "total_cost": 0.100814066448554,
+      "median_position_count": 5.0,
+      "median_holding_sessions": 5.0,
+      "avg_exposure": 0.545781900724847,
+      "avg_low_risk_weight": 0.4542180992751529
+    },
+    "quarterly_expanding": {
+      "retrain_months": 3,
+      "days": 485,
+      "total_ret": 0.3675066760513465,
+      "ann_ret": 0.1765957174562877,
+      "ann_vol": 0.1493394750306668,
+      "sharpe": 1.1637490786689717,
+      "max_drawdown": -0.1000993482814016,
+      "win_rate": 0.5505154639175258,
+      "avg_turnover": 0.1038243757092033,
+      "total_cost": 0.1007096444379272,
+      "median_position_count": 5.0,
+      "median_holding_sessions": 5.0,
+      "avg_exposure": 0.5617566486416696,
+      "avg_low_risk_weight": 0.4382433513583303
+    }
+  },
+  "selection_year_returns": {
+    "annual_expanding": {
+      "2024": 0.1494452084874518,
+      "2025": 0.1213450008250105
+    },
+    "quarterly_expanding": {
+      "2024": 0.2411368171893069,
+      "2025": 0.1018178311301862
+    }
+  }
+}

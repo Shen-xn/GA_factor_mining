@@ -1,0 +1,45 @@
+{
+  "feature_protocol_version": 4,
+  "feature_cache_signature": "f681210f675c79ca32b298015fb4d403880a3aaf02ff97bf05d208b672766d86",
+  "candidate": "continuous_defensive_exposure",
+  "formula": "DEFENSIVE exposure = 0.30 * sqrt(clip((trend60+0.12)/0.12,0,1) * clip((breadth20-0.20)/0.25,0,1))",
+  "development_period": [
+    "20180101",
+    "20231231"
+  ],
+  "selection_period": [
+    "20240101",
+    "20251231"
+  ],
+  "observation_evaluated": false,
+  "observation_used_for_decision": false,
+  "development_gate": {
+    "cumulative_return_positive": true,
+    "positive_years_min": 4,
+    "worst_year_improvement_min": 0.04,
+    "worst_year_floor": -0.1,
+    "max_drawdown_floor": -0.2,
+    "average_turnover_max": 0.1,
+    "non_crisis_year_lag_max": 0.03
+  },
+  "selection_gate": {
+    "cumulative_return_retention_min": 0.8,
+    "each_year_positive": true,
+    "max_drawdown_floor": -0.12,
+    "max_drawdown_worsening_max": 0.02,
+    "average_turnover_max": 0.12,
+    "thirty_bp_cumulative_return_positive": true
+  },
+  "frozen_baseline_replay_matched": true,
+  "development_passed": false,
+  "development_failures": [
+    "fewer than four of six development years are positive",
+    "2019 lagged baseline by more than three percentage points",
+    "2020 lagged baseline by more than three percentage points"
+  ],
+  "selection_opened": false,
+  "selection_failures": [],
+  "selected_candidate_for_future_protocol": null,
+  "formal_policy_changed": false,
+  "promotion_requires_explicit_command": true
+}

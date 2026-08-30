@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "external_sources": ["close", "high", "low", "vol", "turnover_rate"],
+  "normalization": "daily_cross_sectional_rank_in_investment_universe",
+  "factors": [
+    {"factor_id": "ret_1d", "family": "trend", "kind": "basis", "dependencies": ["close"], "lookback": 1, "domain": "return", "status": "baseline"},
+    {"factor_id": "ret_3d", "family": "trend", "kind": "basis", "dependencies": ["close"], "lookback": 3, "domain": "return", "status": "baseline"},
+    {"factor_id": "ret_5d", "family": "trend", "kind": "basis", "dependencies": ["close"], "lookback": 5, "domain": "return", "status": "baseline"},
+    {"factor_id": "ret_10d", "family": "trend", "kind": "basis", "dependencies": ["close"], "lookback": 10, "domain": "return", "status": "baseline"},
+    {"factor_id": "ret_20d", "family": "trend", "kind": "basis", "dependencies": ["close"], "lookback": 20, "domain": "return", "status": "baseline"},
+    {"factor_id": "ret_60d", "family": "trend", "kind": "basis", "dependencies": ["close"], "lookback": 60, "domain": "return", "status": "baseline"},
+    {"factor_id": "volatility_10d", "family": "risk", "kind": "derived", "dependencies": ["ret_1d"], "lookback": 10, "domain": "volatility", "status": "baseline"},
+    {"factor_id": "volatility_20d", "family": "risk", "kind": "derived", "dependencies": ["ret_1d"], "lookback": 20, "domain": "volatility", "status": "baseline"},
+    {"factor_id": "risk_adj_5_20", "family": "trend", "kind": "convenience", "dependencies": ["ret_5d", "volatility_20d"], "lookback": 20, "domain": "ratio", "status": "baseline_retained_after_ablation"},
+    {"factor_id": "risk_adj_10_20", "family": "trend", "kind": "convenience", "dependencies": ["ret_10d", "volatility_20d"], "lookback": 20, "domain": "ratio", "status": "baseline_retained_after_ablation"},
+    {"factor_id": "risk_adj_20_60", "family": "trend", "kind": "convenience", "dependencies": ["ret_20d", "ret_1d"], "lookback": 60, "domain": "ratio", "status": "baseline_retained_after_ablation"},
+    {"factor_id": "close_pos_20d", "family": "breakout", "kind": "derived", "dependencies": ["close", "high", "low"], "lookback": 20, "domain": "bounded_ratio", "status": "baseline"},
+    {"factor_id": "drawdown_60d", "family": "risk", "kind": "derived", "dependencies": ["close"], "lookback": 60, "domain": "return", "status": "baseline"},
+    {"factor_id": "ma_gap_5_20", "family": "trend", "kind": "derived", "dependencies": ["close"], "lookback": 20, "domain": "return", "status": "derived_review"},
+    {"factor_id": "ma_gap_10_60", "family": "trend", "kind": "derived", "dependencies": ["close"], "lookback": 60, "domain": "return", "status": "derived_review"},
+    {"factor_id": "volume_z_20d", "family": "activity", "kind": "derived", "dependencies": ["vol"], "lookback": 20, "domain": "zscore", "status": "derived_review"},
+    {"factor_id": "turnover_z_20d", "family": "activity", "kind": "derived", "dependencies": ["turnover_rate"], "lookback": 20, "domain": "zscore", "status": "derived_review"},
+    {"factor_id": "range_1d", "family": "risk", "kind": "derived", "dependencies": ["high", "low"], "lookback": 1, "domain": "return", "status": "baseline"},
+    {"factor_id": "market_breadth_20d", "model_column": "market_breadth_20d", "family": "market_context", "kind": "context", "dependencies": ["ret_20d"], "lookback": 20, "domain": "bounded_ratio", "status": "experimental"},
+    {"factor_id": "market_breadth_60d", "model_column": "market_breadth_60d", "family": "market_context", "kind": "context", "dependencies": ["ret_60d"], "lookback": 60, "domain": "bounded_ratio", "status": "experimental"},
+    {"factor_id": "market_dispersion_20d", "model_column": "market_dispersion_20d", "family": "market_context", "kind": "context", "dependencies": ["ret_20d"], "lookback": 20, "domain": "volatility", "status": "experimental"},
+    {"factor_id": "market_trend_60d", "model_column": "market_trend_60d", "family": "market_context", "kind": "context", "dependencies": ["ret_1d"], "lookback": 60, "domain": "return", "status": "experimental"},
+    {"factor_id": "market_vol_percentile", "model_column": "market_vol_percentile", "family": "market_context", "kind": "context", "dependencies": ["ret_1d"], "lookback": 252, "domain": "bounded_ratio", "status": "experimental"}
+  ]
+}

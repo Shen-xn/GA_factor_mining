@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "checks": {
+    "same_return_dates_across_layers": true,
+    "no_duplicate_layer_dates": true,
+    "gross_contribution_identity": true,
+    "net_return_identity": true
+  },
+  "layer_count": 5,
+  "return_days_per_layer": 2086,
+  "first_return_date": "20180103",
+  "last_return_date": "20260810",
+  "max_gross_identity_error": 2.969697513073577e-18,
+  "max_net_identity_error": 4.423544863740858e-17
+}
