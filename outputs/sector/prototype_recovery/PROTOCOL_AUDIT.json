@@ -1,0 +1,33 @@
+{
+  "comparison_role": "same annual expanding LightGBM schedule; no smoothing; daily Top5; no costs",
+  "corrected_score_file": "SELECTED_SCORES.parquet",
+  "corrected_score_sha256": "043f7b44d233a5ec1c5bc7d09ec467994c27320654469f866a752a9f772f74a6",
+  "changes_are_joint_not_shapley": true,
+  "legacy_protocol_findings": [
+    {
+      "name": "execution_return_mismatch",
+      "legacy": "signal after close but next row ret_1d is prior-close to current-close and includes an untradable overnight move",
+      "corrected": "signal at t close; enter t+1 open; exit subsequent open"
+    },
+    {
+      "name": "label_execution_mismatch",
+      "legacy": "five-day close-to-close label",
+      "corrected": "five-day next-open to later-open label aligned with execution"
+    },
+    {
+      "name": "training_boundary",
+      "legacy": "feature date <= cutoff and target non-null; labels may mature after cutoff",
+      "corrected": "both feature date and label realization date <= cutoff"
+    },
+    {
+      "name": "rank_universe",
+      "legacy": "ranks formed before selecting the I+N universe",
+      "corrected": "ranks formed inside the I+N research universe"
+    },
+    {
+      "name": "missing_returns",
+      "legacy": "drops missing holdings and can record zero when all are missing",
+      "corrected": "requires executable next-open returns and never fabricates zero"
+    }
+  ]
+}

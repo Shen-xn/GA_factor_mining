@@ -21,8 +21,10 @@
 |---|---|
 | `model_frequency/` | 为什么正式模型采用季度扩展窗口训练 |
 | `return_bridge/` | 理论Top5收益如何变成当前低频产品收益 |
+| `prototype_recovery/` | 旧高收益原型能否复现，以及旧协议与当前协议差在哪里 |
 | `bad_year_attribution/` | 2018和2022为什么亏损 |
 | `defensive_exposure/` | 为什么没有采用防御期连续降仓方案 |
+| `sector_strength_candidate/` | 为什么“领先板块强则恢复70%仓位”未晋级，且没有打开候选的2026结果 |
 | `factors/` | 当前因子目录、依赖与相关性 |
 | `feature_ablation/` | 为什么三项高相关派生因子仍被保留 |
 | `low_risk/` | 为什么低风险腿选择 `511880.SH` |

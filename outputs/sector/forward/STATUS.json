@@ -1,7 +1,7 @@
 {
   "status": "recorded",
-  "recorded_at": "2026-08-30T15:07:22+08:00",
-  "protocol_hash": "0737116c4b3a6b61b2f375c98a5a7787a276b9783f950353a678b1df6f44fa91",
+  "recorded_at": "2026-08-30T16:00:39+08:00",
+  "protocol_hash": "805f9871dc28ed8f152c1a719e3a89009b7d04291d5e473a1b18dda86d5fb92f",
   "data_end_date": "20260810",
   "evidence_role": "freeze_baseline",
   "snapshot_count": 1

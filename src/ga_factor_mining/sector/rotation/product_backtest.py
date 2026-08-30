@@ -22,6 +22,7 @@ from .risk import (
     advance_regime,
     build_market_state,
     classify_market,
+    leading_sector_strength,
     regime_exposure,
     technical_regime_exposure,
 )
@@ -475,6 +476,7 @@ def run_product_backtest(
     use_market_regime: bool = True,
     use_drawdown_cap: bool = True,
     use_continuous_defensive_exposure: bool = False,
+    use_sector_strength_override: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, float]]:
     """运行状态化产品回测，所有决策在收盘后产生并于次日开盘执行。"""
     if universe not in UNIVERSES:
@@ -552,7 +554,7 @@ def run_product_backtest(
     position_entry_open: dict[str, float] = {}
     position_close_peak: dict[str, float] = {}
 
-    def decide(signal_date: str) -> tuple[dict[str, float], str, float, pd.DataFrame]:
+    def decide(signal_date: str) -> tuple[dict[str, float], str, float, bool, pd.DataFrame]:
         nonlocal positions, regime_state, drawdown_state, risk_peak
         market_row = market.loc[signal_date]
         if use_market_regime:
@@ -594,6 +596,12 @@ def run_product_backtest(
         drawdown = marked_equity / risk_peak - 1.0
         if use_drawdown_cap:
             drawdown_state = advance_drawdown_state(drawdown_state, drawdown)
+        day_source = daily_groups.get_group(signal_date)
+        strength_override = (
+            use_sector_strength_override
+            and regime_state.current == "DEFENSIVE"
+            and leading_sector_strength(day_source, product_score)
+        )
         if use_market_regime and use_continuous_defensive_exposure:
             market_exposure = technical_regime_exposure(
                 regime_state.current, market_row, regime_policy
@@ -602,10 +610,15 @@ def run_product_backtest(
             market_exposure = regime_exposure(regime_state.current, regime_policy)
         else:
             market_exposure = 1.0
+        # 大盘防御但领先板块自身仍强时保留七成仓位；组合回撤上限仍可继续压低它。
+        if strength_override:
+            market_exposure = max(market_exposure, 0.7)
         drawdown_cap = drawdown_state.exposure_cap if use_drawdown_cap else 1.0
         exposure = min(market_exposure, drawdown_cap)
         target_positions = (
-            REGIME_POSITION_LIMITS[regime_state.current]
+            base_policy.target_positions
+            if strength_override and exposure > 0
+            else REGIME_POSITION_LIMITS[regime_state.current]
             if use_market_regime and exposure > 0
             else base_policy.target_positions if exposure > 0 else 0
         )
@@ -614,7 +627,6 @@ def run_product_backtest(
             "ts_code", product_score, "ret_5d_rank", "ret_20d",
             "volatility_20d", "volatility_20d_rank",
         ]
-        day_source = daily_groups.get_group(signal_date)
         available = [column for column in columns if column in day_source.columns]
         daily = day_source[available].copy().rename(columns={product_score: "score"})
         daily = daily.dropna(subset=["score"]).copy()
@@ -625,10 +637,11 @@ def run_product_backtest(
         daily["position_return"] = daily["ts_code"].map(position_returns)
         daily["position_drawdown"] = daily["ts_code"].map(position_drawdowns)
         positions, targets, decisions = step_portfolio(signal_date, daily, positions, exposure, policy)
-        return _target_dict(targets), regime_state.current, exposure, decisions
+        return _target_dict(targets), regime_state.current, exposure, strength_override, decisions
 
     first_signal = score_dates[0]
-    first_target, first_regime, first_exposure, first_decisions = decide(first_signal)
+    first_target, first_regime, first_exposure, first_override, first_decisions = decide(first_signal)
+    last_strength_override = first_override
     initial_turnover = _turnover({}, first_target)
     initial_net = (1.0 - initial_turnover * cost_rate) - 1.0
     equity *= 1.0 + initial_net
@@ -667,6 +680,7 @@ def run_product_backtest(
             "drawdown": equity / peak - 1.0,
             "regime": first_regime,
             "exposure": first_exposure,
+            "sector_strength_override": first_override,
             "low_risk_code": low_risk_code,
             "low_risk_weight": 1.0 - sum(live_weights.values()),
             "low_risk_return": 0.0,
@@ -676,7 +690,8 @@ def run_product_backtest(
 
     for index in range(1, len(score_dates)):
         signal_date = score_dates[index]
-        desired_target, regime, exposure, decisions = decide(signal_date)
+        desired_target, regime, exposure, strength_override, decisions = decide(signal_date)
+        last_strength_override = strength_override
         prior_signal = score_dates[index - 1]
         asset_returns = return_pivot.loc[prior_signal].reindex(live_weights)
         if asset_returns.isna().any():
@@ -743,6 +758,7 @@ def run_product_backtest(
                 "drawdown": equity / peak - 1.0,
                 "regime": regime,
                 "exposure": sum(live_weights.values()),
+                "sector_strength_override": strength_override,
                 "low_risk_code": low_risk_code,
                 "low_risk_weight": 1.0 - sum(live_weights.values()),
                 "low_risk_return": period_low_risk_return,
@@ -779,6 +795,7 @@ def run_product_backtest(
             "drawdown": equity / peak - 1.0,
             "regime": regime_state.current,
             "exposure": sum(live_weights.values()),
+            "sector_strength_override": last_strength_override,
             "low_risk_code": low_risk_code,
             "low_risk_weight": final_low_risk_weight,
             "low_risk_return": final_low_risk_return,

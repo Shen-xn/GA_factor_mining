@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-30T15:18:50+08:00",
+  "generated_at": "2026-08-30T16:09:56+08:00",
   "passed": true,
   "reports": [
     {
       "name": "rotation",
       "markdown_path": "reports/sector/rotation/SECTOR_ROTATION_REPORT.md",
-      "markdown_sha256": "c4e65ba8455b622bdb57363d84f5a804abe51939a3feecc5803b9c2e933d776a",
+      "markdown_sha256": "b6ac2e62031c341c10d5a9bcf11e5783a9e207572be7baff05f027815fffeee9",
       "pdf_path": "reports/sector/rotation/SECTOR_ROTATION_REPORT.pdf",
-      "pdf_sha256": "022084131e27965c13f17c67bbfdff78c3bc58e28b287fa463fb0b6e061f2438",
-      "pdf_pages": 4,
+      "pdf_sha256": "74fd2bcc9a04e3e1487ded9efbe814c04fc7146c26c7a4348f49e234dba0f2e6",
+      "pdf_pages": 5,
       "replacement_character_found": false,
       "visual_review": "passed"
     },

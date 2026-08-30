@@ -8,6 +8,7 @@
     "20260810"
   ],
   "requested_end": "20261231",
+  "legacy_comparison_end": "20260529",
   "boundary_mode": "continuous_carry",
   "observation_used_for_selection": false,
   "cost_bps": 20.0,

@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-30T15:07:22+08:00",
-  "scope": "user-ready sector prototype; locked environment; preflight; portable data contract; continuous ledger and forward freeze",
+  "generated_at": "2026-08-30T16:08:52+08:00",
+  "scope": "user-ready sector prototype; legacy protocol audit; fixed-order return bridge; sealed candidate gate; continuous ledger and forward freeze",
   "passed": true,
-  "passed_checks": 29,
-  "total_checks": 29,
+  "passed_checks": 31,
+  "total_checks": 31,
   "metrics": {
     "development_total_return": 0.1347704399362295,
     "selection_total_return": 0.366407507858943,
@@ -55,7 +55,7 @@
     {
       "name": "strategy_protocol",
       "passed": true,
-      "detail": "simple_v1 protocol v5"
+      "detail": "simple_v1 strategy policy v5; optional sector-strength candidate remains disabled"
     },
     {
       "name": "period_roles",
@@ -70,7 +70,7 @@
     {
       "name": "forward_protocol",
       "passed": true,
-      "detail": "Protocol v5 0737116c4b3a frozen; zero unseen days; superseded protocols removed from current outputs"
+      "detail": "Protocol v6 805f9871dc28 frozen; zero unseen days; superseded protocols removed from current outputs"
     },
     {
       "name": "single_state_path",
@@ -135,12 +135,22 @@
     {
       "name": "tests",
       "passed": true,
-      "detail": "81 unit tests passed in the clean environment"
+      "detail": "83 unit tests passed in the clean environment"
     },
     {
       "name": "return_bridge",
       "passed": true,
-      "detail": "Return bridge passed on 2086 common dates"
+      "detail": "Six-layer fixed-order return bridge passed on 2086 common dates; risk control is the largest historical return reduction but improves the 2026 observation path"
+    },
+    {
+      "name": "legacy_prototype_reproduction",
+      "passed": true,
+      "detail": "Nine legacy annual results reproduced within 1e-6; same-schedule corrected open protocol materially reduces the old headline returns"
+    },
+    {
+      "name": "sector_strength_candidate",
+      "passed": true,
+      "detail": "Candidate gate executed only through 2025 and rejected; candidate 2026 observation was not opened and simple_v1 remains unchanged"
     },
     {
       "name": "factor_redundancy",

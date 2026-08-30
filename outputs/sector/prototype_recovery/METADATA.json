@@ -1,0 +1,30 @@
+{
+  "source_file": "sector_feature_panel.parquet",
+  "source_size": 184782150,
+  "source_sha256": "dab037548a229fa39a0e498dc4467ca122e12b2a1b4f75cb8460014695669ef4",
+  "legacy_test_end": "20260529",
+  "memory_mode": "projected columns; I/N filter; one yearly model at a time; n_jobs=1",
+  "protocol_role": "historical reproduction only; not an executable strategy",
+  "expected_validation": {
+    "passed": true,
+    "tolerance": 1e-06,
+    "compared_years": [
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025,
+      2026
+    ],
+    "max_absolute_error": {
+      "total_ret": 1.770521879107534e-08,
+      "ann_ret": 6.5177562458274e-08,
+      "sharpe": 1.5278435805399226e-07,
+      "max_drawdown": 1.6653345369377348e-16
+    },
+    "expected_file": "ROLLING_VALIDATION_RESULTS.csv"
+  }
+}

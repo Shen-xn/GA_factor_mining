@@ -10,11 +10,34 @@ from ga_factor_mining.sector.rotation.risk import (
     advance_regime,
     classify_market,
     effective_exposure,
+    leading_sector_strength,
     technical_regime_exposure,
 )
 
 
 class MarketRiskTests(unittest.TestCase):
+    def test_leading_sector_strength_requires_three_strong_top_five(self):
+        frame = pd.DataFrame(
+            {
+                "score": [0.9, 0.8, 0.7, 0.6, 0.5, 0.4],
+                "ret_20d": [0.1, 0.08, 0.03, -0.02, -0.03, 0.2],
+                "ret_5d_rank": [0.9, 0.8, 0.6, 0.7, 0.4, 1.0],
+            }
+        )
+        self.assertTrue(leading_sector_strength(frame, "score"))
+        frame.loc[2, "ret_20d"] = -0.01
+        self.assertFalse(leading_sector_strength(frame, "score"))
+
+    def test_leading_sector_strength_does_not_use_assets_below_top_five(self):
+        frame = pd.DataFrame(
+            {
+                "score": [0.9, 0.8, 0.7, 0.6, 0.5, 0.4],
+                "ret_20d": [-0.1, -0.1, -0.1, -0.1, -0.1, 0.2],
+                "ret_5d_rank": [0.9, 0.8, 0.7, 0.6, 0.5, 1.0],
+            }
+        )
+        self.assertFalse(leading_sector_strength(frame, "score"))
+
     def test_market_deterioration_requires_two_confirmations(self):
         state = RegimeState("RISK_ON")
         state = advance_regime(state, "DEFENSIVE")

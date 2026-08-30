@@ -33,7 +33,8 @@ python -m ga_factor_mining.sector --check
 | 数据维护 | `refresh_data.py` | 仅`--update` |
 | 研究 | `run_experiments.py`、`rolling_validation.py`、`adaptive_validation.py` | 否 |
 | 研究 | `feature_ablation.py`、`ga_ablation.py`、`market_context_ablation.py` | 否 |
-| 诊断 | `return_bridge.py`、`bad_year_attribution.py`、`etf_mapping.py` | 否 |
+| 诊断 | `return_bridge.py`、`prototype_recovery.py`、`sector_strength_validation.py` | 否 |
+| 诊断 | `bad_year_attribution.py`、`etf_mapping.py` | 否 |
 
 研究产物保留在 `outputs/sector/`，但未通过固定门槛的模块不能改变默认模型和策略。
 
@@ -58,11 +59,14 @@ python -m ga_factor_mining.sector --check
 
 ```powershell
 python -m ga_factor_mining.sector.rotation.return_bridge
+python -m ga_factor_mining.sector.rotation.sector_strength_validation
 python -m ga_factor_mining.sector.rotation.product_backtest --cost-sensitivity
 python -m ga_factor_mining.sector.rotation.product_backtest --boundary-sensitivity
 ```
 
 这些命令会写入结构化输出，但不会自动改变正式策略。
+
+`prototype_recovery`只用于审计旧缓存，需要显式传入`--legacy-panel`和可选的`--expected-results`；个人旧目录不会写入项目代码。当前复现结论已经结构化保存在`outputs/sector/prototype_recovery/`。
 
 ## 提交前检查
 

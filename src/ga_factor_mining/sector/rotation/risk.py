@@ -156,6 +156,24 @@ def technical_regime_exposure(
     return policy.defensive_exposure * float(np.sqrt(trend_strength * breadth_strength))
 
 
+def leading_sector_strength(
+    daily_scores: pd.DataFrame,
+    score_column: str,
+    *,
+    top_k: int = 5,
+    minimum_strong: int = 3,
+) -> bool:
+    """判断领先板块是否自身仍保持正趋势，仅使用当日及历史信息。"""
+    required = {score_column, "ret_20d", "ret_5d_rank"}
+    if required - set(daily_scores.columns):
+        return False
+    leaders = daily_scores.dropna(subset=[score_column]).nlargest(top_k, score_column)
+    if len(leaders) < top_k:
+        return False
+    strong = leaders["ret_20d"].gt(0.0) & leaders["ret_5d_rank"].ge(0.5)
+    return int(strong.sum()) >= minimum_strong
+
+
 def effective_exposure(
     regime: str,
     drawdown: float,

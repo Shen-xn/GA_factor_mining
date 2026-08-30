@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "tolerance": 1e-06,
+  "compared_years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "max_absolute_error": {
+    "total_ret": 1.770521879107534e-08,
+    "ann_ret": 6.5177562458274e-08,
+    "sharpe": 1.5278435805399226e-07,
+    "max_drawdown": 1.6653345369377348e-16
+  },
+  "expected_file": "ROLLING_VALIDATION_RESULTS.csv"
+}

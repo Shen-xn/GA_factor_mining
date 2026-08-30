@@ -1,0 +1,36 @@
+{
+  "passed": false,
+  "checks": {
+    "majority_years_positive": true,
+    "2018_not_worse": false,
+    "2022_not_worse": false,
+    "2024_positive": true,
+    "2025_positive": true,
+    "full_max_drawdown_within_20pct": false,
+    "turnover_increase_within_1pct": true,
+    "selection_return_improves_5pct": false,
+    "selection_drawdown_not_worse_2pct": true
+  },
+  "observation_opened": false,
+  "candidate_name": "sector_strength_candidate",
+  "candidate_rule": {
+    "active_regime": "DEFENSIVE only",
+    "leader_definition": "at least 3 of score Top5 have ret_20d > 0 and ret_5d_rank >= 0.5",
+    "effect": "raise market exposure floor to 70% and retain five positions",
+    "drawdown_cap_still_applies": true
+  },
+  "selection_metrics": {
+    "baseline_total_ret": 0.36750667605134657,
+    "candidate_total_ret": 0.36904303443409514,
+    "baseline_max_drawdown": -0.10009934828140166,
+    "candidate_max_drawdown": -0.10009934828140221
+  },
+  "pre_observation_metrics": {
+    "baseline_total_ret": 0.5518061523985174,
+    "candidate_total_ret": 0.5496135622302558,
+    "baseline_max_drawdown": -0.18933701996537633,
+    "candidate_max_drawdown": -0.22727832922895086,
+    "baseline_avg_turnover": 0.08863211566991505,
+    "candidate_avg_turnover": 0.09832699194485878
+  }
+}

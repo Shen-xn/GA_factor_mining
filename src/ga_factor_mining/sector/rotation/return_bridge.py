@@ -213,14 +213,6 @@ def main() -> None:
             smoothing_sessions=1,
             cost_bps=0.0,
         ),
-        "raw_top5_20bp": _direct_topk_backtest(
-            scored,
-            score_name,
-            PRODUCT_HISTORY_START,
-            OBSERVATION_END,
-            smoothing_sessions=1,
-            cost_bps=20.0,
-        ),
         "smoothed_top5_gross": _direct_topk_backtest(
             scored,
             score_name,
@@ -229,17 +221,30 @@ def main() -> None:
             smoothing_sessions=smoothing_sessions,
             cost_bps=0.0,
         ),
-        "smoothed_top5_20bp": _direct_topk_backtest(
-            scored,
-            score_name,
-            PRODUCT_HISTORY_START,
-            OBSERVATION_END,
-            smoothing_sessions=smoothing_sessions,
-            cost_bps=20.0,
-        ),
     }
 
     product_specs = {
+        "stateful_full_exposure_gross": dict(
+            strategy_policy=simple,
+            cost_bps=0.0,
+            low_risk_frame=None,
+            use_market_regime=False,
+            use_drawdown_cap=False,
+        ),
+        "risk_control_cash_gross": dict(
+            strategy_policy=simple,
+            cost_bps=0.0,
+            low_risk_frame=None,
+            use_market_regime=True,
+            use_drawdown_cap=True,
+        ),
+        "risk_control_low_risk_gross": dict(
+            strategy_policy=simple,
+            cost_bps=0.0,
+            low_risk_frame=low_risk_frame,
+            use_market_regime=True,
+            use_drawdown_cap=True,
+        ),
         "simple_product_20bp": dict(
             strategy_policy=simple,
             cost_bps=20.0,
@@ -260,11 +265,11 @@ def main() -> None:
     period_specs = (
         ("development", PRODUCT_HISTORY_START, TRAIN_END),
         ("selection", VAL_START, VAL_END),
+        ("same_window_2026", OBSERVATION_START, "20260529"),
         ("observation", OBSERVATION_START, OBSERVATION_END),
     )
     summary_rows: list[dict] = []
     daily_rows: list[pd.DataFrame] = []
-    monthly_rows: list[dict] = []
     for layer, daily in layers.items():
         tagged = daily.copy()
         tagged.insert(0, "layer", layer)
@@ -287,25 +292,14 @@ def main() -> None:
                     **metrics,
                 }
             )
-            for month, month_daily in period_daily.groupby(period_daily["date"].str[:6]):
-                monthly_rows.append(
-                    {
-                        "period": period,
-                        "layer": layer,
-                        "month": month,
-                        "gross_ret": float((1.0 + month_daily["gross_return"]).prod() - 1.0),
-                        "net_ret": float((1.0 + month_daily["net_return"]).prod() - 1.0),
-                        "total_cost": float(month_daily["cost"].sum()),
-                    }
-                )
-
     summary = pd.DataFrame(summary_rows)
     daily_output = pd.concat(daily_rows, ignore_index=True)
     bridge_pairs = (
-        ("raw_top5_gross", "raw_top5_20bp", "raw_daily_cost"),
         ("raw_top5_gross", "smoothed_top5_gross", "score_smoothing"),
-        ("smoothed_top5_gross", "smoothed_top5_20bp", "smoothed_daily_cost"),
-        ("smoothed_top5_20bp", "simple_product_20bp", "simple_execution_layer"),
+        ("smoothed_top5_gross", "stateful_full_exposure_gross", "holding_rules"),
+        ("stateful_full_exposure_gross", "risk_control_cash_gross", "market_and_drawdown_control"),
+        ("risk_control_cash_gross", "risk_control_low_risk_gross", "low_risk_residual_asset"),
+        ("risk_control_low_risk_gross", "simple_product_20bp", "trading_cost_20bp"),
     )
     bridge_rows: list[dict] = []
     for period, _, _ in period_specs:
@@ -330,9 +324,6 @@ def main() -> None:
     summary.to_csv(output_dir / "RETURN_BRIDGE_SUMMARY.csv", index=False, encoding="utf-8-sig")
     pd.DataFrame(bridge_rows).to_csv(
         output_dir / "RETURN_BRIDGE.csv", index=False, encoding="utf-8-sig"
-    )
-    pd.DataFrame(monthly_rows).to_csv(
-        output_dir / "RETURN_BRIDGE_MONTHLY.csv", index=False, encoding="utf-8-sig"
     )
     daily_output.to_parquet(output_dir / "RETURN_BRIDGE_DAILY.parquet", index=False)
     layer_dates = {
@@ -392,6 +383,7 @@ def main() -> None:
                 "score_file_sha256": _file_sha256(score_path),
                 "period": [reference_dates[0], reference_dates[-1]],
                 "requested_end": OBSERVATION_END,
+                "legacy_comparison_end": "20260529",
                 "boundary_mode": "continuous_carry",
                 "observation_used_for_selection": False,
                 "cost_bps": 20.0,
