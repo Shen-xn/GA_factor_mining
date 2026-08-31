@@ -1,0 +1,35 @@
+{
+  "data": {
+    "date_range": "20150105-20260529",
+    "market_dates": 2769,
+    "daily_rows": 11316866,
+    "daily_basic_rows": 11226171,
+    "moneyflow_rows": 10986986,
+    "raw_data_committed": false
+  },
+  "information_timing": "same_day_close_available_for_next_open_decision",
+  "signal_construction": {
+    "name": "net_flow_ratio_20d_pct_3y",
+    "daily_ratio": "sum(net_mf_amount) / sum(stock_amount)",
+    "smoothing_sessions": 20,
+    "historical_percentile_sessions": 756,
+    "minimum_history_sessions": 252
+  },
+  "exploratory_development_audit": {
+    "period": "20180101-20231231",
+    "target": "all-A equal-weight forward 20-session return",
+    "rows": 1457,
+    "spearman": 0.262881,
+    "lowest_quintile_mean_forward_return": -0.003811,
+    "highest_quintile_mean_forward_return": 0.056969,
+    "highest_minus_lowest": 0.060780,
+    "caveat": "Forward windows overlap; this establishes directional information only, not an independent trading result."
+  },
+  "sealed_validation": {
+    "development_period": "20180101-20231231",
+    "selection_period_opened": false,
+    "observation_2026_used": false,
+    "candidate_count": 14,
+    "result": "no_candidate_passed_all_development_and_cost_gates"
+  }
+}

@@ -23,9 +23,14 @@
       "point_in_time_membership_fields_present": true
     },
     "money_flow": {
-      "ths_date_range": "20240910-20260529",
-      "dc_date_range": "20230912-20260529",
-      "selection_use": "rejected_insufficient_history"
+      "individual_stock": {
+        "date_range": "20150105-20260529",
+        "rows": 10986986,
+        "selection_use": "aggregated_to_market_level"
+      },
+      "industry_ths_date_range": "20240910-20260529",
+      "industry_dc_date_range": "20230912-20260529",
+      "industry_selection_use": "rejected_insufficient_history"
     }
   },
   "memory_safety": {

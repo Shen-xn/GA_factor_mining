@@ -1,0 +1,18 @@
+{
+  "decision": "keep_simple_v1",
+  "simple_v2_created": false,
+  "selection_2024_2025_opened": false,
+  "observation_2026_used": false,
+  "findings": [
+    "All-A 20-session net flow percentile contains useful medium-term market information in the development sample.",
+    "Boost-only overlays preserved four positive development years but did not reduce turnover and failed the 30bp complete-path stress.",
+    "Removing portfolio drawdown feedback made low-frequency holdings cost-path stable, but drawdown widened beyond the predeclared 20% envelope.",
+    "Cost-independent market or gross-equity drawdown references restored path stability but lost a positive development year and too much return."
+  ],
+  "rejected_engineering_changes": [
+    "No flow threshold or market-drawdown rule was added to formal strategy code.",
+    "No portfolio drawdown reference change was retained.",
+    "No 2024-2025 or 2026 result was used to rescue a failed candidate."
+  ],
+  "next_step": "Treat market-wide net flow as a registered explanatory feature; require a predeclared walk-forward market-risk model or genuinely lower-friction execution design before it can control formal exposure."
+}
