@@ -1,0 +1,52 @@
+{
+  "protocol": "quarterly_expanding_ridge_v1",
+  "target": "all-A equal-weight forward 20-session return",
+  "target_horizon_sessions": 20,
+  "ridge_alpha": 10.0,
+  "features": [
+    "market_ret_20d",
+    "market_ret_60d",
+    "market_vol_20d",
+    "advance_ratio_20d",
+    "net_flow_20d_pct",
+    "large_flow_20d_pct",
+    "turnover_5d_pct",
+    "earnings_yield_60d_pct",
+    "book_yield_60d_pct"
+  ],
+  "training": {
+    "schedule": "quarterly_expanding_window",
+    "fold_count": 24,
+    "first_train_end": "20171231",
+    "last_train_end": "20230930",
+    "first_train_rows": 712,
+    "last_train_rows": 2109,
+    "label_maturity_enforced": true
+  },
+  "development": {
+    "period": "20180101-20231231",
+    "rows": 1457,
+    "spearman": -0.204737515,
+    "lowest_prediction_quintile_forward_return": 0.046650647,
+    "highest_prediction_quintile_forward_return": 0.006875404,
+    "highest_minus_lowest": -0.039775243,
+    "yearly_spearman": {
+      "2018": 0.059354934,
+      "2019": -0.318380564,
+      "2020": -0.219173018,
+      "2021": -0.128156043,
+      "2022": -0.188125016,
+      "2023": -0.072199848
+    }
+  },
+  "gates": {
+    "overall_spearman_at_least_0_10": false,
+    "high_minus_low_at_least_0_02": false,
+    "positive_yearly_spearman_at_least_4_of_6": false
+  },
+  "passed": false,
+  "selection_2024_2025_opened": false,
+  "observation_2026_used": false,
+  "strategy_replay_run": false,
+  "decision": "rejected_without_post_hoc_sign_inversion"
+}

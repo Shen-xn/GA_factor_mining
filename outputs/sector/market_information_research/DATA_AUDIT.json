@@ -31,6 +31,14 @@
       "industry_ths_date_range": "20240910-20260529",
       "industry_dc_date_range": "20230912-20260529",
       "industry_selection_use": "rejected_insufficient_history"
+    },
+    "financial_indicator": {
+      "report_period_range": "20141231-20230930",
+      "announcement_date_range": "20150115-20231110",
+      "initial_point_in_time_rows": 130886,
+      "company_count": 5175,
+      "later_listed_historical_disclosures_removed": 19633,
+      "selection_use": "rejected_at_signal_audit_before_strategy_replay"
     }
   },
   "memory_safety": {

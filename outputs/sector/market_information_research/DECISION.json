@@ -6,12 +6,14 @@
     "Broad-index and all-A breadth alternatives did not improve the sealed 2018-2025 baseline.",
     "SW L1 medium-term price scoring reduced turnover but lost the selection return.",
     "retain_top20_hold10 passed the 20bp gates but failed because drawdown feedback made the 30bp path non-robust.",
-    "Market-wide stock money flow contains medium-term information, but the sealed exposure candidates failed the development and cost gates."
+    "Market-wide stock money flow contains medium-term information, but the sealed exposure candidates failed the development and cost gates.",
+    "Initial financial-disclosure diffusion had near-zero forward correlation and failed before strategy replay.",
+    "Fixed 5/10-session calendar rebalancing remained too active or became highly anchor-sensitive."
   ],
   "formal_changes": [
     "Avoid per-day namedtuple type creation during portfolio replay.",
     "Use standard-library scalar math in risk calculations to reduce Windows native runtime pressure."
   ],
   "strategy_behavior_changed": false,
-  "next_research_constraint": "Use the registered market-flow information only in a predeclared walk-forward risk model or lower-friction execution design; do not tune thresholds on 2024-2026."
+  "next_research_constraint": "Do not add another exposure rule without a genuinely independent point-in-time signal and a predeclared development-only gate; do not tune thresholds or calendar anchors on 2024-2026."
 }

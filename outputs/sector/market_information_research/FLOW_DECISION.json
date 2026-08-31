@@ -14,5 +14,12 @@
     "No portfolio drawdown reference change was retained.",
     "No 2024-2025 or 2026 result was used to rescue a failed candidate."
   ],
-  "next_step": "Treat market-wide net flow as a registered explanatory feature; require a predeclared walk-forward market-risk model or genuinely lower-friction execution design before it can control formal exposure."
+  "walk_forward_model_follow_up": {
+    "protocol": "quarterly_expanding_ridge_v1",
+    "development_spearman": -0.204737515,
+    "passed": false,
+    "selection_opened": false,
+    "decision": "rejected_without_post_hoc_sign_inversion"
+  },
+  "next_step": "Keep market-wide net flow as explanatory evidence only; seek a genuinely independent point-in-time source such as reported fundamental change before another exposure model is registered."
 }

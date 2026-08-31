@@ -1,0 +1,40 @@
+{
+  "protocol": "point_in_time_initial_financial_diffusion_v1",
+  "development_window": ["20180101", "20231231"],
+  "selection_window_opened": false,
+  "year_2026_used": false,
+  "source_rules": {
+    "record": "initial disclosure only (update_flag=0)",
+    "availability": "announcement date",
+    "listed_before_announcement": true,
+    "latest_record_max_age_calendar_days": 220,
+    "raw_rows_committed": false
+  },
+  "signal": "equal-weight mean of positive net-profit YoY, revenue YoY, operating-cash-flow YoY, and ROE shares",
+  "primary_test": {
+    "sampling": "month-end",
+    "target": "next 60 trading-day equal-weight all-A return",
+    "label_must_mature_by": "20231231",
+    "observations": 69,
+    "spearman": 0.033193581,
+    "lowest_quintile_return": 0.089258410,
+    "highest_quintile_return": 0.052996232,
+    "high_minus_low": -0.036262178,
+    "positive_year_spearman": 3,
+    "year_count": 6
+  },
+  "diagnostics": {
+    "daily_20d_spearman": -0.030449751,
+    "coverage_min": 3398,
+    "coverage_median": 4076,
+    "coverage_max": 5036
+  },
+  "gates": {
+    "monthly_60d_spearman_at_least_0_10": false,
+    "monthly_60d_high_low_at_least_0_05": false,
+    "positive_year_spearman_at_least_4_of_6": false,
+    "minimum_daily_coverage_at_least_1000": true
+  },
+  "strategy_replay_run": false,
+  "decision": "rejected_without_window_or_sign_retuning"
+}

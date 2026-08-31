@@ -1,0 +1,29 @@
+{
+  "protocol": "calendar_only_sector_and_regime_rebalance_v1",
+  "development_window": ["20180101", "20231231"],
+  "selection_window_opened": false,
+  "year_2026_used": false,
+  "parameters": {
+    "intervals": [5, 10],
+    "all_calendar_anchors_required": true,
+    "target_positions": 5,
+    "retain_rank": 15,
+    "score_smoothing_sessions": 3,
+    "portfolio_drawdown_feedback": false,
+    "market_regime_updates": "calendar rebalance dates only"
+  },
+  "interval_5": {
+    "20bp_total_return_range": [0.061397757, 0.390106470],
+    "20bp_max_drawdown_range": [-0.301639199, -0.197857984],
+    "annualized_turnover_range": [24.838713805, 25.995918943],
+    "all_gates_passed": false
+  },
+  "interval_10": {
+    "20bp_total_return_range": [-0.015063508, 1.064322459],
+    "20bp_max_drawdown_range": [-0.291508630, -0.163666197],
+    "annualized_turnover_range": [14.414736660, 15.512803225],
+    "all_gates_passed": false
+  },
+  "decision": "rejected_for_anchor_instability_drawdown_and_turnover",
+  "formal_strategy_changed": false
+}
