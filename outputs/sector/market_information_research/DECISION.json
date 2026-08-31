@@ -8,7 +8,8 @@
     "SW L1 medium-term price scoring reduced turnover but lost the selection return.",
     "retain_top20_hold10 passed the 20bp gates but failed because drawdown feedback made the 30bp path non-robust.",
     "Market-wide stock money flow contains medium-term information, but the sealed exposure candidates failed the development and cost gates.",
-    "Initial financial-disclosure diffusion had near-zero forward correlation and failed before strategy replay.",
+    "Market-wide initial financial-disclosure diffusion had near-zero forward correlation and failed before strategy replay.",
+    "Point-in-time Shenwan L1 constituent fundamental diffusion also failed: mean monthly cross-sectional IC was -0.0083, only two of six yearly mean IC values were positive, and no strategy replay was opened.",
     "Fixed 5/10-session calendar rebalancing remained too active or became highly anchor-sensitive."
   ],
   "formal_changes": [

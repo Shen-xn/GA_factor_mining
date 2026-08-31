@@ -1,0 +1,36 @@
+{
+  "protocol": "sw_l1_point_in_time_fundamental_diffusion",
+  "development_period": ["20180101", "20231231"],
+  "maximum_label_end": "20231229",
+  "selection_2024_2025_opened": false,
+  "observation_2026_used": false,
+  "metrics": {
+    "months": 69,
+    "industry_observations": 2139,
+    "mean_monthly_cross_sectional_spearman": -0.008342500642745231,
+    "positive_monthly_ic_ratio": 0.5072463768115942,
+    "positive_year_mean_ic": 2,
+    "yearly_mean_ic": {
+      "2018": -0.1680443548387097,
+      "2019": 0.10961021505376345,
+      "2020": 0.11646505376344087,
+      "2021": -0.01535616246874387,
+      "2022": -0.08145161290322582,
+      "2023": -0.012256689736413362
+    },
+    "mean_top_minus_bottom_quintile_return": 0.005537204947420649,
+    "median_constituent_coverage_per_industry": 103.0,
+    "minimum_industries_per_month": 31
+  },
+  "gates": {
+    "mean_monthly_cross_sectional_spearman_at_least_0_05": false,
+    "positive_monthly_ic_ratio_at_least_55pct": false,
+    "positive_year_mean_ic_at_least_4_of_6": false,
+    "mean_top_minus_bottom_spread_at_least_3pct": false,
+    "median_constituent_coverage_at_least_20": true,
+    "minimum_industries_per_month_at_least_25": true
+  },
+  "passed": false,
+  "strategy_replay_run": false,
+  "decision": "rejected_without_weight_age_or_horizon_retuning"
+}

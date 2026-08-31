@@ -1,0 +1,27 @@
+{
+  "research_name": "sw_l1_point_in_time_fundamental_diffusion",
+  "registered_before_execution": true,
+  "research_stage": "information_test_before_strategy_replay",
+  "development_period": "20180101-20231231",
+  "universe": "published Shenwan level-1 industries",
+  "availability_rules": {
+    "industry_membership": "in_date <= observation date and out_date is empty or out_date > observation date",
+    "financial_record": "initial disclosure only; ann_date <= observation date",
+    "maximum_record_age_calendar_days": 220,
+    "target_maturity": "future 60-session industry return must end by 20231231"
+  },
+  "signal": "equal-weight mean of constituent positive net-profit YoY, revenue YoY, operating-cash-flow YoY and ROE shares",
+  "sampling": "last available trading day of each month",
+  "primary_target": "next 60 trading-session Shenwan level-1 industry return",
+  "information_gate": {
+    "mean_monthly_cross_sectional_spearman": ">= 0.05",
+    "positive_monthly_ic_ratio": ">= 55%",
+    "positive_year_mean_ic": ">= 4 of 6 years",
+    "mean_top_minus_bottom_quintile_return": ">= 3 percentage points",
+    "median_constituent_coverage_per_industry": ">= 20",
+    "minimum_industries_per_month": ">= 25"
+  },
+  "selection_2024_2025_open_rule": "Only after the information gate and a separately registered development strategy gate pass.",
+  "observation_2026_used": false,
+  "failure_rule": "If any information gate fails, do not build or replay a strategy candidate and do not tune signal weights, age or horizon."
+}

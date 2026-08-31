@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-01T01:00:36+08:00",
+  "generated_at": "2026-09-01T01:04:29+08:00",
   "scope": "simple_v2 through 20260828; sealed 2018-2025 selection; development-only post-v2 research; memory-safe replay; forward v14 freeze",
   "engineering_validation_passed": true,
   "strategy_acceptance_passed": true,
@@ -74,6 +74,11 @@
       "name": "post_v2_development_research",
       "passed": true,
       "detail": "Seven predeclared families and 18 candidates were replayed only through 20231231; none passed every development gate, so 2024-2025 and 2026 remained closed and simple_v2 was not changed"
+    },
+    {
+      "name": "sw_fundamental_information_gate",
+      "passed": true,
+      "detail": "The point-in-time SW L1 fundamental signal failed its predeclared development information gate with -0.0083 mean monthly IC; no strategy replay, 2024-2025 selection or 2026 observation was opened"
     },
     {
       "name": "forward_protocol",

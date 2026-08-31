@@ -58,6 +58,8 @@
 
 这不等于“人工因子无效”，只说明这两条人工组合没有提供模型之外的新信息。下一项候选应来自新的、严格按当时可得时间记录的数据，而不是继续重排已有价格特征。
 
+初始财报数据也完成了两层时点检验。全市场扩散与未来60日收益的月末Spearman只有`0.033`；进一步按历史申万一级成分聚合后，69个月行业横截面平均IC为`-0.008`，仅2/6年方向为正，高分与低分行业未来60日平均差只有`+0.55`个百分点。数据覆盖中位达到每行业103只股票，因此该结果主要说明朴素的“正增长公司占比”缺少行业选择信息，而不是覆盖不足。协议要求在此停止，没有进入策略回放。
+
 ## GA状态
 
 GA不进入默认训练、默认回放或用户建议。旧GA结果来自已经被替代的模型频率、持仓规则和收益口径，不能与当前`simple_v2`直接比较。
@@ -84,3 +86,5 @@ GA不进入默认训练、默认回放或用户建议。旧GA结果来自已经�
 - `outputs/sector/post_v2_research/RECENCY_DEVELOPMENT_RESULTS.csv`
 - `outputs/sector/post_v2_research/RECENCY_DECISION.json`
 - `outputs/sector/post_v2_research/DECISION.json`
+- `outputs/sector/market_information_research/SW_FUNDAMENTAL_PROTOCOL.json`
+- `outputs/sector/market_information_research/SW_FUNDAMENTAL_AUDIT.json`
