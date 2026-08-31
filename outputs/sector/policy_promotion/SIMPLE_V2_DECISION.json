@@ -1,0 +1,40 @@
+{
+  "decision": "promote_simple_v2",
+  "selection_end": "20251231",
+  "observation_2026_used_for_selection": false,
+  "score_model_changed": false,
+  "market_regime_changed": false,
+  "policy_changes": {
+    "retain_rank": {"simple_v1": 10, "simple_v2": 20},
+    "minimum_holding_sessions": {"simple_v1": 5, "simple_v2": 10},
+    "risk_reference": {
+      "simple_v1": "actual net equity at replay cost",
+      "simple_v2": "policy reference equity at fixed 20bp"
+    },
+    "actual_accounting": "actual replay cost remains fully charged to reported equity"
+  },
+  "path_stability_audit": {
+    "days_compared": 1941,
+    "actions_compared": 3561,
+    "20bp_vs_30bp_position_and_risk_path_differences": 0,
+    "20bp_vs_30bp_action_differences": 0
+  },
+  "acceptance": {
+    "all_registered_gates_passed": true,
+    "20bp_total_return": 0.732384857,
+    "20bp_annualized_return": 0.073947858,
+    "20bp_maximum_drawdown": -0.167544145,
+    "20bp_annualized_turnover": 15.000745220,
+    "20bp_median_holding_sessions": 10,
+    "30bp_development_return": 0.134867338,
+    "30bp_selection_return": 0.359825063,
+    "30bp_full_return": 0.543221049,
+    "30bp_maximum_drawdown": -0.184406664,
+    "50bp_full_return": 0.224477794
+  },
+  "forward_protocol": {
+    "version": 14,
+    "freeze_data_end": "20260828",
+    "first_unseen_after": "20260828"
+  }
+}

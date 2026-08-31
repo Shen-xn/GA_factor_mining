@@ -1,6 +1,7 @@
 {
-  "decision": "keep_simple_v1",
-  "simple_v2_created": false,
+  "decision": "reject_flow_overlay",
+  "current_formal_policy": "simple_v2",
+  "simple_v2_created_elsewhere": true,
   "selection_2024_2025_opened": false,
   "observation_2026_used": false,
   "findings": [

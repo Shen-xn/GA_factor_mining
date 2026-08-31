@@ -118,6 +118,18 @@ python -m unittest discover -s tests -t . -v
 
 测试不读取大型行情数据，适合在新机器上先确认代码安装正常。
 
+如果Windows上的Pandas原生层异常退出，改用逐文件、逐进程串行验证；每个文件结束后系统会完整回收内存：
+
+```powershell
+$python = (Get-Command python).Source
+Get-ChildItem tests -Recurse -Filter "test_*.py" | Sort-Object FullName | ForEach-Object {
+    & $python -m unittest discover -s $_.DirectoryName -p $_.Name -t (Resolve-Path ".") -v
+    if ($LASTEXITCODE -ne 0) { throw "测试失败: $($_.FullName)" }
+}
+```
+
+不要并发运行这些测试。
+
 ## 6. 常见问题
 
 ### 显示“特征缓存不存在或已过期”
@@ -144,7 +156,7 @@ python -m pip install -e .
 
 ### 内存占用过高
 
-日常只运行 `python -m ga_factor_mining.sector`。不要把 `run_experiments`、`rolling_validation` 或GA模块放入日常更新脚本；它们属于研究重建流程。
+日常只运行 `python -m ga_factor_mining.sector`。入口会串行隔离产品与ETF阶段并在瞬时原生错误时重试；Windows下不要设置`PYTHONMALLOC=malloc`。不要把 `run_experiments`、`rolling_validation` 或GA模块放入日常更新脚本；它们属于研究重建流程。
 
 ## 7. 版本边界
 

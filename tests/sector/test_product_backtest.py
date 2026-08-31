@@ -17,6 +17,7 @@ from ga_factor_mining.sector.rotation.product_backtest import (
     product_feature_columns,
     run_product_backtest,
     summarize_backtest_period,
+    validated_cost_sensitivity_frame,
     write_latest_advice,
     write_latest_market_risk,
 )
@@ -24,6 +25,77 @@ from ga_factor_mining.sector.rotation.strategy import StrategyPolicy
 
 
 class ProductBacktestTests(unittest.TestCase):
+    @staticmethod
+    def _alternating_cost_panel(days: int = 90) -> pd.DataFrame:
+        dates = pd.bdate_range("2020-01-02", periods=days).strftime("%Y%m%d").tolist()
+        rows = []
+        for day_index, date in enumerate(dates):
+            for sector_index, code in enumerate(("A.TI", "B.TI")):
+                rows.append(
+                    {
+                        "ts_code": code,
+                        "trade_date": date,
+                        "type": "I",
+                        "open": 10.0,
+                        "close": 10.0,
+                        "forward_open_ret_1d": 0.0 if day_index < days - 2 else np.nan,
+                        "next_open_date": dates[day_index + 1] if day_index < days - 1 else np.nan,
+                        "return_end_date": dates[day_index + 2] if day_index < days - 2 else np.nan,
+                        "ret_1d": 0.0,
+                        "ret_5d": 0.0,
+                        "ret_20d": 0.0,
+                        "ret_60d": 0.0,
+                        "volatility_20d": 0.01,
+                        "ret_5d_rank": 0.5,
+                        "volatility_20d_rank": 0.5,
+                        "model_score": 1.0 if sector_index == day_index % 2 else 0.0,
+                    }
+                )
+        return pd.DataFrame(rows)
+
+    def test_fixed_risk_reference_cost_preserves_stress_holdings_path(self):
+        panel = self._alternating_cost_panel()
+        policy = StrategyPolicy(
+            target_positions=1,
+            entry_rank=1,
+            retain_rank=1,
+            min_hold_sessions=0,
+            score_smoothing_sessions=1,
+            rebalance_tolerance=0.0,
+        )
+        targets_20 = []
+        targets_30 = []
+        daily_20, _, _ = run_product_backtest(
+            panel,
+            "model_score",
+            panel["trade_date"].min(),
+            panel["trade_date"].max(),
+            cost_bps=20.0,
+            strategy_policy=policy,
+            use_market_regime=False,
+            risk_reference_cost_bps=20.0,
+            target_weight_sink=targets_20,
+        )
+        daily_30, _, _ = run_product_backtest(
+            panel,
+            "model_score",
+            panel["trade_date"].min(),
+            panel["trade_date"].max(),
+            cost_bps=30.0,
+            strategy_policy=policy,
+            use_market_regime=False,
+            risk_reference_cost_bps=20.0,
+            target_weight_sink=targets_30,
+        )
+        self.assertEqual(targets_20, targets_30)
+        self.assertTrue(
+            np.allclose(
+                daily_20["risk_reference_equity"],
+                daily_30["risk_reference_equity"],
+            )
+        )
+        self.assertLess(daily_30.iloc[-1]["equity"], daily_20.iloc[-1]["equity"])
+
     def test_cost_worker_cache_requires_matching_signatures(self):
         frame = pd.DataFrame(
             {
@@ -33,7 +105,7 @@ class ProductBacktestTests(unittest.TestCase):
                 "score_name": ["score_x"] * 4,
                 "feature_protocol_version": [4] * 4,
                 "feature_cache_signature": ["feature"] * 4,
-                "strategy_policy_version": [5] * 4,
+                "strategy_policy_version": [6] * 4,
                 "low_risk_data_signature": ["low_risk"] * 4,
                 "full_path_rerun": [True] * 4,
                 "stress_kind": ["full_system_replay_with_drawdown_feedback"] * 4,
@@ -57,6 +129,46 @@ class ProductBacktestTests(unittest.TestCase):
                 feature_signature="feature",
                 low_risk_signature="low_risk",
                 expected_score_name="score_x",
+            )
+        )
+
+    def test_cost_sensitivity_cache_requires_all_four_costs(self):
+        rows = []
+        for cost_bps in (10.0, 20.0, 30.0, 50.0):
+            for period in ("development", "selection", "full", "observation"):
+                rows.append(
+                    {
+                        "period": period,
+                        "cost_bps": cost_bps,
+                        "policy_name": "simple_v2",
+                        "score_name": "score_x",
+                        "feature_protocol_version": 4,
+                        "feature_cache_signature": "feature",
+                        "strategy_policy_version": 6,
+                        "low_risk_data_signature": "low_risk",
+                        "full_path_rerun": True,
+                        "stress_kind": (
+                            "full_system_replay_with_fixed_policy_cost_risk_reference"
+                        ),
+                    }
+                )
+        frame = pd.DataFrame(rows)
+        self.assertIsNotNone(
+            validated_cost_sensitivity_frame(
+                frame,
+                policy_name="simple_v2",
+                score_name="score_x",
+                feature_signature="feature",
+                low_risk_signature="low_risk",
+            )
+        )
+        self.assertIsNone(
+            validated_cost_sensitivity_frame(
+                frame.loc[frame["cost_bps"].ne(50.0)],
+                policy_name="simple_v2",
+                score_name="score_x",
+                feature_signature="feature",
+                low_risk_signature="low_risk",
             )
         )
 

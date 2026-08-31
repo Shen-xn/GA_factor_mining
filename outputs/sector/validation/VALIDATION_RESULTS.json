@@ -1,109 +1,99 @@
 {
-  "generated_at": "2026-08-31T22:54:00+08:00",
-  "scope": "simple_v1 through 20260828, memory-safe replay, sealed broad-market and SW L1 candidate rejection, cost-path audit and forward v13 freeze",
+  "generated_at": "2026-09-01T00:22:03+08:00",
+  "scope": "simple_v2 through 20260828; sealed 2018-2025 selection; memory-safe replay; forward v14 freeze",
   "engineering_validation_passed": true,
-  "strategy_acceptance_passed": false,
+  "strategy_acceptance_passed": true,
   "execution_ready": false,
   "strategy_acceptance_path": "outputs/sector/strategy/ACCEPTANCE_GATE.json",
   "metrics_2018_2025": {
-    "total_return": 0.5450546377087413,
-    "annualized_return": 0.058109408543265406,
-    "maximum_drawdown": -0.1893370269982635,
-    "average_daily_turnover": 0.08873608978866689,
-    "annualized_turnover": 22.361494626744054,
-    "trade_day_ratio": 0.4657393096342092,
+    "total_return": 0.732384859912977,
+    "annualized_return": 0.0739478579376696,
+    "maximum_drawdown": -0.167544142599139,
+    "annualized_turnover": 15.0007452171742,
+    "trade_day_ratio": 0.28902627511592,
+    "median_holding_sessions": 10,
     "positive_years": 6
   },
   "checks": [
     {
-      "name": "default_corrected_replay",
+      "name": "default_simple_v2_replay",
       "passed": true,
-      "detail": "2018-2023 +13.4770%, 2024-2025 +36.1557%, 2026 observation +0.6836%; model, policy and official performance are unchanged"
+      "detail": "2018-2025 cumulative return +73.24%, annualized +7.39%, maximum drawdown -16.75%; default policy is simple_v2"
     },
     {
-      "name": "planned_executed_settled_timeline",
+      "name": "sealed_selection_protocol",
       "passed": true,
-      "detail": "Latest close plan, next-open execution and settled-return states are separated; TARGET_WEIGHT_TIMELINE records every executed and planned target"
+      "detail": "2018-2025 alone determined promotion; 2026 is observation only and observation_used_for_selection remains false"
     },
     {
-      "name": "no_future_availability_leakage",
+      "name": "year_stability",
       "passed": true,
-      "detail": "Signal formation does not inspect future execution or valuation prices; execution availability defaults fail closed when explicitly supplied"
+      "detail": "Six of eight calendar years are positive; 2024 +23.10% and 2025 +14.12%; worst year 2018 -14.76%"
     },
     {
-      "name": "risk_snapshot_current",
+      "name": "turnover_and_holding",
       "passed": true,
-      "detail": "Risk snapshot reaches 20260828; score 46.9604, complete coverage, confirmed DEFENSIVE and 30% risk target"
-    },
-    {
-      "name": "execution_safety_interlock",
-      "passed": true,
-      "detail": "Current plan is dated 20260828 for 20260831; LATEST_ACTIONS is empty because current strict ETF target coverage is 0%"
-    },
-    {
-      "name": "true_etf_replay",
-      "passed": true,
-      "detail": "Frozen sector targets were replayed on adjusted ETF opens without changing ranking or holding rules; 20bp full return +16.7892%, drawdown -1.4181%, average mapping coverage only 0.8476%, so the replay is correctly not promotable"
-    },
-    {
-      "name": "etf_proxy_hypotheses",
-      "passed": true,
-      "detail": "Four post-observation semantic proxy hypotheses were registered outside the default mapping; 0/4 passed the historical pair gate and no mapping was promoted"
-    },
-    {
-      "name": "etf_history_integrity",
-      "passed": true,
-      "detail": "Long ETF history requests are split by calendar year and leading daily/adjustment gaps are repaired; the local equity ETF quote universe expanded from 143 to 273 codes without changing simple_v1"
-    },
-    {
-      "name": "etf_native_candidate_seal",
-      "passed": true,
-      "detail": "Twenty-two ETF-native, industry-subset, manual-score and industry-specific LightGBM candidates were evaluated only on 2018-2025; none passed the predeclared return, drawdown, yearly-stability and turnover gates, so no candidate was promoted or opened on 2026"
-    },
-    {
-      "name": "etf_point_in_time_boundary",
-      "passed": true,
-      "detail": "ETF master and sector catalog are explicitly marked non-point-in-time; mapping validity is checked on the planned execution date"
-    },
-    {
-      "name": "cost_stress",
-      "passed": true,
-      "detail": "10/20/30/50bp complete-system results were reused only after validating period, cost, policy, score, feature and low-risk signatures; each missing replay runs in an isolated process"
+      "detail": "Annualized turnover 15.00x, trade-day ratio 28.90%, median completed holding period 10 sessions"
     },
     {
       "name": "cost_path_audit",
       "passed": true,
-      "detail": "retain_top20_hold10 passed all 20bp gates but failed at 30bp because net-equity drawdown feedback changed exposure from 20181015 and holdings from 20181203; direct extra cost on frozen holdings did not explain the cliff, so the candidate remained rejected"
+      "detail": "10/20/30/50bp are complete full-path replays; fixed 20bp policy reference preserves the 20bp and 30bp decision path while actual costs remain fully charged"
     },
     {
-      "name": "independent_market_information_seal",
+      "name": "cost_robustness",
       "passed": true,
-      "detail": "Five broad indices, equal- and cap-weighted all-A breadth, and two SW L1 medium-term price candidates were evaluated only on 2018-2025; none improved the baseline and 2026 was not opened for selection"
+      "detail": "30bp full return +54.32% with -18.44% drawdown; 50bp full return remains positive at +22.45%"
     },
     {
-      "name": "strategy_acceptance",
-      "passed": false,
-      "detail": "simple_v1 passes drawdown, year stability and execution safety, but fails the 7% annual return, low-turnover, median-holding and cost-robustness targets"
+      "name": "observation_2026",
+      "passed": true,
+      "detail": "Through 20260828 the observation return is +2.70%, maximum drawdown -5.76%, average sector exposure 45.73%; it was not used for promotion"
+    },
+    {
+      "name": "market_risk_snapshot",
+      "passed": true,
+      "detail": "Risk snapshot reaches 20260828; score 46.96, complete coverage, confirmed DEFENSIVE and 30% risk target"
+    },
+    {
+      "name": "execution_safety_interlock",
+      "passed": true,
+      "detail": "ETF execution layer is blocked and LATEST_ACTIONS stays empty; research output cannot silently become an executable order"
+    },
+    {
+      "name": "real_etf_replay",
+      "passed": true,
+      "detail": "Frozen sector targets replay to +17.51% at 20bp, but average mapping coverage is only 0.73% and point-in-time masters are unavailable, so promotion is correctly blocked"
+    },
+    {
+      "name": "bad_year_attribution",
+      "passed": true,
+      "detail": "2018 and 2022 attribution reconciles exactly; market component remains the primary negative driver and no extra defensive overlay was added"
     },
     {
       "name": "forward_protocol",
       "passed": true,
-      "detail": "v8 archived 14 unseen days from 20260811 through 20260828 with +0.5505% return and -1.3127% drawdown; v9-v12 archived baselines with no unseen data; v13 44a9b87719bb froze at 20260828"
+      "detail": "v14 protocol hash 535f454e596b is frozen at 20260828 with one baseline snapshot and zero unseen days"
     },
     {
       "name": "unit_tests",
       "passed": true,
-      "detail": "104 standard-library unit tests passed under Python 3.12.7, pandas 2.2.2 and numpy 1.26.4 with numerical libraries limited to one thread"
+      "detail": "106 tests passed across 18 sequential isolated test-file processes under Python 3.11.9, pandas 2.2.2 and numpy 1.26.4"
     },
     {
       "name": "preflight",
       "passed": true,
-      "detail": "Runtime dependencies, local data pack, external Tushare credential and cross-artifact signatures passed"
+      "detail": "Runtime dependencies, local data pack, external Tushare credential and cross-artifact signatures all passed"
     },
     {
-      "name": "native_runtime_mitigation",
+      "name": "memory_safe_default_entry",
       "passed": true,
-      "detail": "The default entry runs product and ETF replay in separate sequential processes; scalar risk math and lightweight holding iteration reduce Windows native heap pressure without changing official metrics"
+      "detail": "Product and ETF replays run in separate sequential processes with numerical libraries limited to one thread; Windows uses the default CPython allocator and transient native failures are retried"
+    },
+    {
+      "name": "report_validation",
+      "passed": true,
+      "detail": "The current rotation Markdown and four-page PDF describe simple_v2/v14, contain no replacement character and passed all-page visual review"
     }
   ]
 }

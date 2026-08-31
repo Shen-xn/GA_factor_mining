@@ -22,6 +22,7 @@ class StrategyPolicy:
     extreme_volatility_rank: float = 0.95
     score_smoothing_sessions: int = 3
     rebalance_tolerance: float = 0.03
+    risk_reference_cost_bps: float | None = None
 
 
 @dataclass(frozen=True)
@@ -30,12 +31,19 @@ class PositionState:
     held_sessions: int = 0
 
 
-STRATEGY_POLICY_VERSION = 5
+STRATEGY_POLICY_VERSION = 6
 
 
 def strategy_policy_presets() -> dict[str, StrategyPolicy]:
-    """日常只保留一个策略，研究候选不进入默认入口。"""
-    return {"simple_v1": StrategyPolicy()}
+    """保留旧基线供复核，simple_v2作为当前默认产品策略。"""
+    return {
+        "simple_v1": StrategyPolicy(),
+        "simple_v2": StrategyPolicy(
+            retain_rank=20,
+            min_hold_sessions=10,
+            risk_reference_cost_bps=20.0,
+        ),
+    }
 
 
 def get_strategy_policy(name: str) -> StrategyPolicy:

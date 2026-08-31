@@ -1,17 +1,17 @@
 {
-  "created_at": "2026-09-01T00:17:46+08:00",
-  "protocol_hash": "535f454e596b384f537d89696f7f2cd7f4f603c0ff79b8a9670e9e39e448010a",
+  "created_at": "2026-08-31T22:49:45+08:00",
+  "protocol_hash": "44a9b87719bbb04c4260d2c42cc4703ec6b194b15da7ba72cc194ef39e484db4",
   "payload": {
     "config": {
-      "version": 14,
+      "version": 13,
       "freeze_data_end": "20260828",
       "first_unseen_after": "20260828",
-      "evidence_name": "sector_simple_quarterly_forward_v14",
+      "evidence_name": "sector_simple_quarterly_forward_v13",
       "execution_layer": "planned_executed_settled_with_frozen_target_real_etf_replay_and_process_isolation",
       "cost_bps": 20.0,
       "model_retraining_schedule": "quarterly_expanding_window",
-      "policy_name": "simple_v2",
-      "notes": "v14保留冻结季度LightGBM、市场状态和风险阈值，只把持仓保留区扩到Top20、最低持有期提高到10日，并以固定20bp政策参考净值驱动组合回撤状态；实际账户仍按真实成本记账。2018-2025的20/30/50bp完整路径已封存且准入门通过，默认运行只复用签名完全匹配的四档成本结果。2026未参与晋级选择；2026-08-28及以前均已被看到，只有之后的数据可作为v14前向证据。"
+      "policy_name": "simple_v1",
+      "notes": "v8已记录2026-08-11至2026-08-28共14个真正未见交易日并归档；v9至v12在同一冻结日都只有基线、没有未见数据。v13不改变模型、因子、simple_v1仓位或买卖规则，只用等价标量计算和轻量持仓遍历降低Windows长回放的原生内存压力。宽基、全A宽度、申万一级中期信号和Top20成本路径候选均在2018-2025封存闸门失败。2026-08-28及以前均已被看到，只有之后的数据可作为v13前向证据。"
     },
     "model": {
       "variant": "expanding_quarterly",
@@ -22,19 +22,18 @@
       "feature_protocol_version": 4
     },
     "policy": {
-      "strategy_policy_version": 6,
-      "policy_name": "simple_v2",
+      "strategy_policy_version": 5,
+      "policy_name": "simple_v1",
       "policy": {
         "target_positions": 5,
         "entry_rank": 5,
-        "retain_rank": 20,
-        "min_hold_sessions": 10,
+        "retain_rank": 10,
+        "min_hold_sessions": 5,
         "hard_drawdown": -0.12,
         "weak_momentum_rank": 0.2,
         "extreme_volatility_rank": 0.95,
         "score_smoothing_sessions": 3,
-        "rebalance_tolerance": 0.03,
-        "risk_reference_cost_bps": 20.0
+        "rebalance_tolerance": 0.03
       },
       "boundary_mode": "continuous_carry_from_2018",
       "low_risk_code": "511880.SH"
@@ -42,10 +41,10 @@
     "source_sha256": {
       "src/ga_factor_mining/sector/rotation/run_experiments.py": "dbd2d48a1c60761fdf22ec597daa1c07454737b263bdff32e4288432af953f2e",
       "src/ga_factor_mining/sector/rotation/rolling_validation.py": "32ae70523c76bd583435188e0e53edda6a8aa065a8b8a5c92e14f2f7c054e0fd",
-      "src/ga_factor_mining/sector/rotation/strategy.py": "2282106d2b41b06a4f0114b6a7cbcd46fd08358b8401a51489518e96ad5f08d5",
+      "src/ga_factor_mining/sector/rotation/strategy.py": "518c75d93f01b377bb459ca15ea8b7d18a8b92aad210cfdfd3f5a36839bf7370",
       "src/ga_factor_mining/sector/rotation/risk.py": "1bebbcdf8019fa716430afa277f99298d4fa37968cf477eac16149a1edcb5fea",
       "src/ga_factor_mining/sector/rotation/low_risk.py": "6ccee3b89125ddca4ba92c982a97f7351c4925a354ec50701d9e46f4579a75b0",
-      "src/ga_factor_mining/sector/rotation/product_backtest.py": "7329debe0f0f8347efb131ebc59fc5eb163a548cda51c5852628321a9cfe5a36",
+      "src/ga_factor_mining/sector/rotation/product_backtest.py": "743be2f8ce7ce5042f23aa1fbfa604eaa465ff30370e7c6295f20b628b3fe830",
       "src/ga_factor_mining/sector/rotation/etf_mapping.py": "09bdcb053595dae82d240dc0f84253ada0dc446a85e9c879abe1d2cfcd4aa415",
       "src/ga_factor_mining/sector/rotation/etf_backtest.py": "6a08ae6bdf6dc83734b4b8eda4d72656524b7cf695b585381c7ddb085b83cda7",
       "src/ga_factor_mining/sector/rotation/refresh_data.py": "5d972947187174a986ad8a8f497b89256cf9282330bc721292189f18a7db96bd"

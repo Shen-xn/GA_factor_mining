@@ -45,7 +45,8 @@ def main() -> None:
     worker_env = os.environ.copy()
     for name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
         worker_env[name] = "1"
-    worker_env["PYTHONMALLOC"] = "malloc"
+    # Windows下让CPython使用默认分配器；进程隔离已能完整释放Pandas内存。
+    worker_env.pop("PYTHONMALLOC", None)
     python = worker_env.get("GA_FACTOR_WORKER_PYTHON", sys.executable)
     commands = (
         [python, "-X", "faulthandler", "-m", "ga_factor_mining.sector.rotation.product_backtest", *product_args],

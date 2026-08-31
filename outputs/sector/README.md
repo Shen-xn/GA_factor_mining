@@ -13,10 +13,10 @@
 5. `strategy/LATEST_TARGET_PORTFOLIO.csv`：完整板块目标组合；
 6. `strategy/LATEST_MARKET_RISK.csv`：板块广度风险、仓位来源与确认进度；
 7. `strategy/SUMMARY.csv`、`strategy/ANNUAL_RESULTS.csv`：分段与逐年表现；
-8. `strategy/ACCEPTANCE_GATE.json`：当前版本距收益、低频和成本目标还差什么；
+8. `strategy/ACCEPTANCE_GATE.json`：当前版本是否通过收益、低频、风险和成本目标；
 9. `strategy/TARGET_WEIGHT_TIMELINE.csv`：全部已执行和计划目标的完整权重时间线；
 10. `etf_backtest/READINESS.json`：冻结目标翻译到真实ETF后的覆盖率、收益与晋级结论；
-11. `forward/STATUS.json`：当前前向协议是否正常；`forward/archive/v8/`保留14日未见证据，后续归档保留无未见数据的冻结基线。
+11. `forward/STATUS.json`：当前前向协议是否正常；`forward/archive/v8/`保留14日未见证据，v9-v13保留后续冻结基线。
 
 `rotation/sector_feature_panel.parquet` 和 `adaptation/SELECTED_SCORES.parquet` 是本地运行缓存，不进入Git，但默认策略必须使用。对应JSON元数据会提交。
 
@@ -39,6 +39,7 @@
 | `etf_proxy_research/` | 事后登记的语义ETF代理为何没有进入默认映射 |
 | `etf_native_research/` | ETF原生、行业子宇宙和行业专用模型为何全部未晋级 |
 | `market_information_research/` | 宽基、全A宽度、申万一级、资金流和初始财报扩散为何尚未替代当前基准，以及Top20与固定日历低频候选为何失效 |
+| `policy_promotion/` | `simple_v2`为何晋级，以及20/30bp完整路径是否保持相同投资决策 |
 | `validation/` | 当前代码、文档和正式结果的验收摘要 |
 
 除此之外的研究尝试不代表当前产品，不应重新放回本目录；如需恢复，应该作为新的研究协议单独运行。

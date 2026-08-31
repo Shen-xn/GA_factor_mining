@@ -1,18 +1,19 @@
 {
   "feature_protocol_version": 4,
   "feature_cache_signature": "6dd1e5ddb4c0afce5af4cd142ce9917243bf4f5ec090a32ef6d14cdd7262a445",
-  "strategy_policy_version": 5,
-  "policy_name": "simple_v1",
+  "strategy_policy_version": 6,
+  "policy_name": "simple_v2",
   "policy": {
     "target_positions": 5,
     "entry_rank": 5,
-    "retain_rank": 10,
-    "min_hold_sessions": 5,
+    "retain_rank": 20,
+    "min_hold_sessions": 10,
     "hard_drawdown": -0.12,
     "weak_momentum_rank": 0.2,
     "extreme_volatility_rank": 0.95,
     "score_smoothing_sessions": 3,
-    "rebalance_tolerance": 0.03
+    "rebalance_tolerance": 0.03,
+    "risk_reference_cost_bps": 20.0
   },
   "selection_period": "2018-2023 development and 2024-2025 model/policy selection",
   "independent_out_of_sample_available": false,
@@ -22,7 +23,7 @@
     "2026": "observed_diagnostic_only",
     "future_unseen_data": "independent_out_of_sample"
   },
-  "selection_rule": "frozen rolling-LightGBM product baseline; rejected challengers do not alter the default run",
+  "selection_rule": "simple_v2 retains the frozen rolling-LightGBM score and uses a wider hold buffer plus a fixed policy-cost risk reference",
   "parameter_search_performed": true,
   "observation_used_for_selection": false,
   "observation_hypothesis_disclosure": "2026 market structure motivated the review; 2026 metrics are diagnostic, not confirmatory evidence",

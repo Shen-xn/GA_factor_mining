@@ -11,12 +11,16 @@ from ga_factor_mining.sector.rotation.strategy import (
 
 
 class StatefulStrategyTests(unittest.TestCase):
-    def test_default_policy_has_only_one_readable_preset(self):
-        policy = get_strategy_policy("simple_v1")
-        self.assertEqual(policy.target_positions, 5)
-        self.assertEqual(policy.entry_rank, 5)
-        self.assertEqual(policy.retain_rank, 10)
-        self.assertEqual(policy.min_hold_sessions, 5)
+    def test_default_policy_preserves_v1_and_promotes_v2(self):
+        baseline = get_strategy_policy("simple_v1")
+        promoted = get_strategy_policy("simple_v2")
+        self.assertEqual(baseline.retain_rank, 10)
+        self.assertEqual(baseline.min_hold_sessions, 5)
+        self.assertEqual(promoted.target_positions, 5)
+        self.assertEqual(promoted.entry_rank, 5)
+        self.assertEqual(promoted.retain_rank, 20)
+        self.assertEqual(promoted.min_hold_sessions, 10)
+        self.assertEqual(promoted.risk_reference_cost_bps, 20.0)
 
     def test_small_score_change_does_not_force_replacement(self):
         policy = StrategyPolicy(target_positions=2, entry_rank=2, retain_rank=4, min_hold_sessions=3)

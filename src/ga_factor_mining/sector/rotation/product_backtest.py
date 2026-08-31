@@ -819,12 +819,15 @@ def run_product_backtest(
     latest_plan_sink: dict | None = None,
     planned_execution_date: str | None = None,
     target_weight_sink: list[dict] | None = None,
+    risk_reference_cost_bps: float | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, float]]:
     """运行状态化产品回测，所有决策在收盘后产生并于次日开盘执行。"""
     if universe not in UNIVERSES:
         raise ValueError(f"未知投资宇宙: {universe}")
     if cost_bps < 0:
         raise ValueError("cost_bps 不能为负数")
+    if risk_reference_cost_bps is not None and risk_reference_cost_bps < 0:
+        raise ValueError("风险参考成本不能为负数")
 
     base_policy = strategy_policy or StrategyPolicy()
     regime_policy = regime_policy or RegimePolicy()
@@ -887,9 +890,17 @@ def run_product_backtest(
     positions: dict[str, PositionState] = {}
     live_weights: dict[str, float] = {}
     equity = 1.0
+    risk_equity = 1.0
     peak = 1.0
     risk_peak = 1.0
     cost_rate = cost_bps / 10_000.0
+    configured_risk_cost = (
+        risk_reference_cost_bps
+        if risk_reference_cost_bps is not None
+        else base_policy.risk_reference_cost_bps
+    )
+    risk_cost_bps = cost_bps if configured_risk_cost is None else configured_risk_cost
+    risk_cost_rate = risk_cost_bps / 10_000.0
     rows: list[dict] = []
     actions: list[pd.DataFrame] = []
     position_entry_open: dict[str, float] = {}
@@ -933,7 +944,8 @@ def run_product_backtest(
             regime_state = RegimeState(current="RISK_ON")
 
         # 收盘先盯市，再生成下一交易日开盘订单；不把次日开盘收益用于当日判断。
-        marked_equity = equity
+        # 风险参考成本固定后，压力测试只改变真实净值，不反向改写投资路径。
+        marked_equity = risk_equity
         position_returns: dict[str, float] = {}
         position_drawdowns: dict[str, float] = {}
         low_risk_weight = 1.0 - float(sum(live_weights.values()))
@@ -1057,7 +1069,9 @@ def run_product_backtest(
     positions = {code: state for code, state in positions.items() if code in first_target}
     initial_turnover = _turnover({}, first_target)
     initial_net = (1.0 - initial_turnover * cost_rate) - 1.0
+    initial_risk_net = (1.0 - initial_turnover * risk_cost_rate) - 1.0
     equity *= 1.0 + initial_net
+    risk_equity *= 1.0 + initial_risk_net
     peak = max(peak, equity)
     live_weights = first_target
     record_targets(first_signal, first_execution_date, live_weights, "executed")
@@ -1089,6 +1103,9 @@ def run_product_backtest(
             "net_return": initial_net,
             "equity": equity,
             "drawdown": equity / peak - 1.0,
+            "risk_reference_equity": risk_equity,
+            "risk_reference_drawdown": risk_equity / risk_peak - 1.0,
+            "risk_reference_cost_bps": risk_cost_bps,
             "regime": first_regime,
             "exposure": sum(live_weights.values()),
             "sector_strength_override": first_override,
@@ -1150,9 +1167,13 @@ def run_product_backtest(
         }
         turnover = _turnover(pretrade, target)
         net_return = (1.0 + gross_return) * (1.0 - turnover * cost_rate) - 1.0
+        risk_net_return = (
+            (1.0 + gross_return) * (1.0 - turnover * risk_cost_rate) - 1.0
+        )
         equity *= 1.0 + net_return
+        risk_equity *= 1.0 + risk_net_return
         peak = max(peak, equity)
-        risk_peak = max(risk_peak, equity)
+        risk_peak = max(risk_peak, risk_equity)
         prior_codes = set(live_weights)
         live_weights = target
         record_targets(signal_date, execution_date, live_weights, "executed")
@@ -1188,6 +1209,9 @@ def run_product_backtest(
                 "net_return": net_return,
                 "equity": equity,
                 "drawdown": equity / peak - 1.0,
+                "risk_reference_equity": risk_equity,
+                "risk_reference_drawdown": risk_equity / risk_peak - 1.0,
+                "risk_reference_cost_bps": risk_cost_bps,
                 "regime": regime,
                 "exposure": sum(live_weights.values()),
                 "sector_strength_override": strength_override,
@@ -1216,7 +1240,9 @@ def run_product_backtest(
         final_low_risk_contribution = final_low_risk_weight * final_low_risk_return
         final_gross = float(final_sector_contribution + final_low_risk_contribution)
         equity *= 1.0 + final_gross
+        risk_equity *= 1.0 + final_gross
         peak = max(peak, equity)
+        risk_peak = max(risk_peak, risk_equity)
         rows.append(
             {
                 "date": str(last_return_end),
@@ -1229,6 +1255,9 @@ def run_product_backtest(
                 "net_return": final_gross,
                 "equity": equity,
                 "drawdown": equity / peak - 1.0,
+                "risk_reference_equity": risk_equity,
+                "risk_reference_drawdown": risk_equity / risk_peak - 1.0,
+                "risk_reference_cost_bps": risk_cost_bps,
                 "regime": regime_state.current,
                 "exposure": sum(live_weights.values()),
                 "sector_strength_override": last_strength_override,
@@ -1359,6 +1388,12 @@ def build_cost_sensitivity_frame(
     policy_name: str,
 ) -> pd.DataFrame:
     """汇总单一成本路径；供隔离子进程回传小型结果表。"""
+    policy = get_strategy_policy(policy_name)
+    stress_kind = (
+        "full_system_replay_with_fixed_policy_cost_risk_reference"
+        if policy.risk_reference_cost_bps is not None
+        else "full_system_replay_with_drawdown_feedback"
+    )
     rows = []
     for period, start, end in (
         ("development", PRODUCT_HISTORY_START, TRAIN_END),
@@ -1375,7 +1410,8 @@ def build_cost_sensitivity_frame(
                 "policy_name": policy_name,
                 "cost_bps": cost_bps,
                 "full_path_rerun": True,
-                "stress_kind": "full_system_replay_with_drawdown_feedback",
+                "stress_kind": stress_kind,
+                "risk_reference_cost_bps": policy.risk_reference_cost_bps,
                 "feature_protocol_version": FEATURE_PROTOCOL_VERSION,
                 "feature_cache_signature": current_feature_cache_signature(),
                 "strategy_policy_version": STRATEGY_POLICY_VERSION,
@@ -1395,7 +1431,8 @@ def build_cost_sensitivity_frame(
                 "policy_name": policy_name,
                 "cost_bps": cost_bps,
                 "full_path_rerun": True,
-                "stress_kind": "full_system_replay_with_drawdown_feedback",
+                "stress_kind": stress_kind,
+                "risk_reference_cost_bps": policy.risk_reference_cost_bps,
                 "feature_protocol_version": FEATURE_PROTOCOL_VERSION,
                 "feature_cache_signature": current_feature_cache_signature(),
                 "strategy_policy_version": STRATEGY_POLICY_VERSION,
@@ -1434,6 +1471,12 @@ def cost_worker_frame_is_current(
     periods = set(frame["period"].astype(str))
     if not {"development", "selection", "full", "observation"}.issubset(periods):
         return False
+    policy = get_strategy_policy(policy_name)
+    expected_stress_kind = (
+        "full_system_replay_with_fixed_policy_cost_risk_reference"
+        if policy.risk_reference_cost_bps is not None
+        else "full_system_replay_with_drawdown_feedback"
+    )
     checks = (
         pd.to_numeric(frame["cost_bps"], errors="coerce").eq(cost_bps).all()
         and frame["policy_name"].astype(str).eq(policy_name).all()
@@ -1448,12 +1491,38 @@ def cost_worker_frame_is_current(
         and frame["full_path_rerun"].astype(str).str.lower().eq("true").all()
         and frame["stress_kind"]
         .astype(str)
-        .eq("full_system_replay_with_drawdown_feedback")
+        .eq(expected_stress_kind)
         .all()
     )
     if expected_score_name is not None:
         checks = checks and frame["score_name"].astype(str).eq(expected_score_name).all()
     return bool(checks)
+
+
+def validated_cost_sensitivity_frame(
+    frame: pd.DataFrame,
+    *,
+    policy_name: str,
+    score_name: str,
+    feature_signature: str,
+    low_risk_signature: str,
+) -> pd.DataFrame | None:
+    """仅当四档完整压力结果都匹配当前策略与数据时才允许复用。"""
+    if frame.empty or "cost_bps" not in frame.columns:
+        return None
+    costs = pd.to_numeric(frame["cost_bps"], errors="coerce")
+    for cost_bps in (10.0, 20.0, 30.0, 50.0):
+        subset = frame.loc[costs.eq(cost_bps)].copy()
+        if not cost_worker_frame_is_current(
+            subset,
+            cost_bps=cost_bps,
+            policy_name=policy_name,
+            feature_signature=feature_signature,
+            low_risk_signature=low_risk_signature,
+            expected_score_name=score_name,
+        ):
+            return None
+    return frame.sort_values(["cost_bps", "period"]).reset_index(drop=True)
 
 
 def write_acceptance_gate(
@@ -1749,7 +1818,7 @@ def main() -> None:
     parser.add_argument(
         "--policy",
         choices=sorted(strategy_policy_presets()),
-        default="simple_v1",
+        default="simple_v2",
     )
     args = parser.parse_args()
     if args.rolling_lgbm_horizon and (args.use_selected_adaptive or args.score):
@@ -1800,7 +1869,8 @@ def main() -> None:
             "NUMEXPR_NUM_THREADS",
         ):
             worker_env[name] = "1"
-        worker_env["PYTHONMALLOC"] = "malloc"
+        # 每档回放都会退出独立进程，无需替换Windows下的默认分配器。
+        worker_env.pop("PYTHONMALLOC", None)
         source_root = str(Path(__file__).resolve().parents[3])
         worker_env["PYTHONPATH"] = os.pathsep.join(
             value
@@ -2030,7 +2100,7 @@ def main() -> None:
                     "2026": "observed_diagnostic_only",
                     "future_unseen_data": "independent_out_of_sample",
                 },
-                "selection_rule": "frozen rolling-LightGBM product baseline; rejected challengers do not alter the default run",
+                "selection_rule": "simple_v2 retains the frozen rolling-LightGBM score and uses a wider hold buffer plus a fixed policy-cost risk reference",
                 "parameter_search_performed": True,
                 "observation_used_for_selection": False,
                 "observation_hypothesis_disclosure": "2026 market structure motivated the review; 2026 metrics are diagnostic, not confirmatory evidence",
@@ -2139,11 +2209,35 @@ def main() -> None:
         output_dir,
     )
     cost_sensitivity_frame: pd.DataFrame | None = None
+    cost_sensitivity_source = "not_available"
+    feature_signature = current_feature_cache_signature()
+    low_risk_signature = low_risk_data_signature()
     if precomputed_cost_frame is not None:
-        cost_sensitivity_frame = precomputed_cost_frame
+        cost_sensitivity_frame = validated_cost_sensitivity_frame(
+            precomputed_cost_frame,
+            policy_name=args.policy,
+            score_name=score_name,
+            feature_signature=feature_signature,
+            low_risk_signature=low_risk_signature,
+        )
+        if cost_sensitivity_frame is None:
+            raise RuntimeError("预计算成本压力结果与当前策略或数据不匹配")
+        cost_sensitivity_source = "isolated_process_replay"
         cost_sensitivity_frame.to_csv(
             output_dir / "COST_SENSITIVITY.csv", index=False, encoding="utf-8-sig"
         )
+    else:
+        official_cost_path = output_dir / "COST_SENSITIVITY.csv"
+        if official_cost_path.exists():
+            cost_sensitivity_frame = validated_cost_sensitivity_frame(
+                pd.read_csv(official_cost_path),
+                policy_name=args.policy,
+                score_name=score_name,
+                feature_signature=feature_signature,
+                low_risk_signature=low_risk_signature,
+            )
+            if cost_sensitivity_frame is not None:
+                cost_sensitivity_source = "validated_cache"
 
     write_acceptance_gate(
         continuous_daily,
@@ -2194,7 +2288,7 @@ def main() -> None:
     (output_dir / "RUN.json").write_text(
         json.dumps(
             {
-                "default_prototype": use_selected_adaptive and args.policy == "simple_v1",
+                "default_prototype": use_selected_adaptive and args.policy == "simple_v2",
                 "feature_protocol_version": FEATURE_PROTOCOL_VERSION,
                 "feature_cache_signature": current_feature_cache_signature(),
                 "strategy_policy_version": STRATEGY_POLICY_VERSION,
@@ -2202,6 +2296,7 @@ def main() -> None:
                 "policy_name": args.policy,
                 "cost_bps": args.cost_bps,
                 "cost_sensitivity_run": cost_sensitivity_frame is not None,
+                "cost_sensitivity_source": cost_sensitivity_source,
                 "boundary_sensitivity_run": args.boundary_sensitivity,
                 "product_history_start": PRODUCT_HISTORY_START,
                 "boundary_mode": "continuous_carry_from_2018",

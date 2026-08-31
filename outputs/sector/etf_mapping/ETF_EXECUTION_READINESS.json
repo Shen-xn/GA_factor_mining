@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-31T22:50:00+08:00",
+  "generated_at": "2026-09-01T00:17:56+08:00",
   "overall_status": "blocked",
   "execution_ready": false,
   "strategy_data_end": "20260828",
-  "strategy_data_age_days": 3,
+  "strategy_data_age_days": 4,
   "signal_date": "20260828",
   "planned_execution_date": "20260831",
   "mapping_asof": "20260731",

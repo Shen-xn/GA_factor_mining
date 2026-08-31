@@ -1,6 +1,7 @@
 {
-  "decision": "keep_simple_v1",
-  "simple_v2_created": false,
+  "decision": "reject_market_information_additions",
+  "current_formal_policy": "simple_v2",
+  "simple_v2_created_elsewhere": true,
   "observation_2026_used_for_candidate_selection": false,
   "findings": [
     "Broad-index and all-A breadth alternatives did not improve the sealed 2018-2025 baseline.",
@@ -14,6 +15,6 @@
     "Avoid per-day namedtuple type creation during portfolio replay.",
     "Use standard-library scalar math in risk calculations to reduce Windows native runtime pressure."
   ],
-  "strategy_behavior_changed": false,
+  "strategy_behavior_changed_by_this_research": false,
   "next_research_constraint": "Do not add another exposure rule without a genuinely independent point-in-time signal and a predeclared development-only gate; do not tune thresholds or calendar anchors on 2024-2026."
 }

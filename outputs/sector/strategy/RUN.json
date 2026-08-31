@@ -2,11 +2,12 @@
   "default_prototype": true,
   "feature_protocol_version": 4,
   "feature_cache_signature": "6dd1e5ddb4c0afce5af4cd142ce9917243bf4f5ec090a32ef6d14cdd7262a445",
-  "strategy_policy_version": 5,
+  "strategy_policy_version": 6,
   "score_name": "score_frozen_selected_5d",
-  "policy_name": "simple_v1",
+  "policy_name": "simple_v2",
   "cost_bps": 20.0,
-  "cost_sensitivity_run": false,
+  "cost_sensitivity_run": true,
+  "cost_sensitivity_source": "validated_cache",
   "boundary_sensitivity_run": false,
   "product_history_start": "20180101",
   "boundary_mode": "continuous_carry_from_2018",
@@ -19,7 +20,7 @@
   "memory_mode": "projected feature columns; one default product replay",
   "data_freshness": {
     "data_end_date": "20260828",
-    "data_age_days": 3,
+    "data_age_days": 4,
     "data_stale": false,
     "instruction_current": true,
     "action_plan_valid": true,
@@ -28,11 +29,11 @@
     "execution_message": "ETF执行层未就绪，禁止执行"
   },
   "etf_execution_readiness": {
-    "generated_at": "2026-08-31T22:49:39+08:00",
+    "generated_at": "2026-09-01T00:17:45+08:00",
     "overall_status": "blocked",
     "execution_ready": false,
     "strategy_data_end": "20260828",
-    "strategy_data_age_days": 3,
+    "strategy_data_age_days": 4,
     "signal_date": "20260828",
     "planned_execution_date": "20260831",
     "mapping_asof": "20260731",
@@ -62,7 +63,7 @@
     ]
   },
   "runtime": {
-    "python": "3.12.7",
+    "python": "3.11.9",
     "pandas": "2.2.2",
     "numpy": "1.26.4"
   }
