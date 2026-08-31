@@ -1,0 +1,51 @@
+{
+  "research_name": "broad_market_extreme_exposure_overlay",
+  "registered_before_execution": true,
+  "evidence_before_registration": {
+    "period": "20180101-20231231",
+    "formal_return_on_broad_risk_on_days": 0.6069541046273552,
+    "formal_return_on_broad_neutral_days": 0.143750893021642,
+    "formal_return_on_broad_defensive_days": -0.20749761987625182,
+    "formal_return_on_broad_cash_days": -0.15340003882575726
+  },
+  "post_execution_alignment_audit": {
+    "issue": "The descriptive pre-registration attribution joined broad regime on the return-accounting date instead of signal_date.",
+    "corrected_signal_date_returns": {
+      "RISK_ON": 0.4118779598459681,
+      "NEUTRAL": 0.09438134910160323,
+      "DEFENSIVE": -0.153656909137316,
+      "CASH": -0.05702225328426591
+    },
+    "impact": "The ordering and signs that motivated the predeclared overlay were unchanged. The candidate replay itself used correctly timed signal inputs and remains valid; the original attribution values must not be cited as evidence."
+  },
+  "candidate": {
+    "name": "broad_extremes_overlay_simple_v2",
+    "sector_state_role": "continues to control eligible position count and sector selection",
+    "broad_state_role": "changes absolute equity exposure only",
+    "broad_cash": "0% equity",
+    "broad_defensive": "cap existing sector-state exposure at 30%",
+    "broad_neutral": "leave existing sector-state exposure unchanged",
+    "broad_risk_on": "raise any non-CASH sector-state exposure to 100%",
+    "drawdown_control": "existing simple_v2 cap remains final upper bound"
+  },
+  "development_period": "20180101-20231231",
+  "frozen_components": [
+    "frozen LightGBM score and features",
+    "Top5 entry, Top20 retention and 10-session minimum hold",
+    "sector-derived regime thresholds and confirmation",
+    "broad-market thresholds and 20/60-session windows",
+    "fixed 20bp drawdown reference and actual cost",
+    "low-risk residual allocation"
+  ],
+  "development_gate": {
+    "positive_calendar_years": ">= 4 of 6",
+    "worst_calendar_year": ">= -16%",
+    "maximum_drawdown": ">= -20%",
+    "cumulative_return": ">= simple_v2 development return + 3 percentage points",
+    "annualized_turnover": "<= 19x",
+    "median_holding_sessions": ">= 8"
+  },
+  "selection_open_rule": "Only if every development gate passes may 2024-2025 and cost stress be inspected.",
+  "observation_2026_used": false,
+  "failure_rule": "Do not tune the four overlay actions after seeing this candidate."
+}

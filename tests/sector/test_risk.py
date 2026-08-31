@@ -1,5 +1,6 @@
 import unittest
 
+import numpy as np
 import pandas as pd
 
 from ga_factor_mining.sector.rotation.risk import (
@@ -15,9 +16,50 @@ from ga_factor_mining.sector.rotation.risk import (
     market_risk_components,
     technical_regime_exposure,
 )
+from ga_factor_mining.sector.rotation.reference_outputs import (
+    build_broad_market_diagnostic_state,
+)
 
 
 class MarketRiskTests(unittest.TestCase):
+    def test_broad_market_diagnostic_uses_indices_and_31_industries(self):
+        rng = np.random.default_rng(17)
+        dates = pd.bdate_range("2023-01-02", periods=320).strftime("%Y%m%d")
+        common = rng.normal(0.0003, 0.008, len(dates))
+        index_frames = []
+        for number in range(5):
+            returns = common + rng.normal(0.0, 0.002, len(dates))
+            index_frames.append(
+                pd.DataFrame(
+                    {
+                        "ts_code": f"INDEX{number}",
+                        "trade_date": dates,
+                        "close": 100.0 * np.cumprod(1.0 + returns),
+                    }
+                )
+            )
+        industry_frames = []
+        for number in range(31):
+            returns = common + rng.normal(0.0, 0.006, len(dates))
+            industry_frames.append(
+                pd.DataFrame(
+                    {
+                        "ts_code": f"SW{number:02d}",
+                        "trade_date": dates,
+                        "close": 100.0 * np.cumprod(1.0 + returns),
+                    }
+                )
+            )
+        state = build_broad_market_diagnostic_state(
+            pd.concat(index_frames, ignore_index=True),
+            pd.concat(industry_frames, ignore_index=True),
+        )
+        latest = state.iloc[-1]
+        self.assertEqual(latest["trade_date"], dates[-1])
+        self.assertEqual(int(latest["sector_count"]), 31)
+        self.assertEqual(latest["risk_data_quality"], "complete")
+        self.assertIn(latest["raw_regime"], {"CASH", "DEFENSIVE", "NEUTRAL", "RISK_ON"})
+
     def test_market_risk_score_is_monotonic_and_bounded(self):
         weak = pd.Series(
             {

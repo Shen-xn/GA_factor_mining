@@ -51,8 +51,9 @@ def main() -> None:
     commands = (
         [python, "-X", "faulthandler", "-m", "ga_factor_mining.sector.rotation.product_backtest", *product_args],
         [python, "-X", "faulthandler", "-m", "ga_factor_mining.sector.rotation.etf_backtest"],
+        [python, "-X", "faulthandler", "-m", "ga_factor_mining.sector.rotation.reference_outputs"],
     )
-    for label, command in zip(("product", "etf-replay"), commands, strict=True):
+    for label, command in zip(("product", "etf-replay", "reference"), commands, strict=True):
         completed = None
         for attempt in range(1, 4):
             completed = subprocess.run(command, check=False, env=worker_env)

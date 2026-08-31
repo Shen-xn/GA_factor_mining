@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-01T01:04:29+08:00",
-  "scope": "simple_v2 through 20260828; sealed 2018-2025 selection; development-only post-v2 research; memory-safe replay; forward v14 freeze",
+  "generated_at": "2026-09-01T01:31:23+08:00",
+  "scope": "simple_v2 through 20260828; sealed 2018-2025 selection; development-only post-v2 research; independent broad-market and ETF reference outputs; memory-safe replay; forward v14 freeze",
   "engineering_validation_passed": true,
   "strategy_acceptance_passed": true,
   "execution_ready": false,
@@ -81,6 +81,16 @@
       "detail": "The point-in-time SW L1 fundamental signal failed its predeclared development information gate with -0.0083 mean monthly IC; no strategy replay, 2024-2025 selection or 2026 observation was opened"
     },
     {
+      "name": "broad_market_reference",
+      "passed": true,
+      "detail": "Three development-only broad-market exposure candidates failed promotion; the independent five-index plus SW L1 diagnostic is current through 20260828, complete, DEFENSIVE at 39.37, agrees with the formal state and has no formal exposure effect"
+    },
+    {
+      "name": "latest_etf_proxy_reference",
+      "passed": true,
+      "detail": "The current-only proxy table contains five manually reviewable bank-ETF rows for one of three targets; two sectors have no displayable proxy, every row is ineligible for automatic mapping, and no order or LATEST_ACTIONS row was generated"
+    },
+    {
       "name": "forward_protocol",
       "passed": true,
       "detail": "v14 protocol hash 535f454e596b is frozen at 20260828 with one baseline snapshot and zero unseen days"
@@ -88,17 +98,17 @@
     {
       "name": "unit_tests",
       "passed": true,
-      "detail": "106 tests passed across 18 sequential isolated test-file processes under Python 3.11.9, pandas 2.2.2 and numpy 1.26.4"
+      "detail": "108 tests passed across 18 sequential isolated test-file processes under Python 3.11.9, pandas 2.2.2 and numpy 1.26.4"
     },
     {
       "name": "preflight",
       "passed": true,
-      "detail": "Runtime dependencies, local data pack, external Tushare credential and cross-artifact signatures all passed"
+      "detail": "Runtime dependencies, local data pack and cross-artifact signatures passed; update credentials remain external and were not written into the repository"
     },
     {
       "name": "memory_safe_default_entry",
       "passed": true,
-      "detail": "Product and ETF replays run in separate sequential processes with numerical libraries limited to one thread; Windows uses the default CPython allocator and transient native failures are retried"
+      "detail": "Product replay, ETF replay and reference outputs run in three separate sequential processes with numerical libraries limited to one thread; Windows uses the default CPython allocator and transient native failures are retried"
     },
     {
       "name": "report_validation",

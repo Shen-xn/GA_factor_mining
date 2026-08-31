@@ -1,0 +1,33 @@
+{
+  "research_name": "true_broad_market_risk_on_simple_v2",
+  "registered_before_execution": true,
+  "formal_baseline": "simple_v2",
+  "development_period": "20180101-20231231",
+  "candidate": {
+    "name": "broad_index_plus_all_a_breadth_simple_v2",
+    "trend_and_volatility": "equal-weight daily return of SSE Composite, Shenzhen Component, CSI 300, CSI 500 and CSI All Share",
+    "breadth": "point-in-time equal-weight share of all A-shares with positive 20-session and 60-session returns",
+    "absolute_exposure": "existing simple_v2 CASH/DEFENSIVE/NEUTRAL/RISK_ON mapping of 0%/30%/70%/100%"
+  },
+  "frozen_components": [
+    "quarterly expanding 5-session LightGBM score",
+    "18 formal sector features",
+    "Top5 entry and Top20 retention",
+    "10-session minimum hold",
+    "market-state thresholds and confirmation sessions",
+    "fixed 20bp drawdown reference",
+    "20bp actual transaction cost",
+    "low-risk residual allocation"
+  ],
+  "development_gate": {
+    "positive_calendar_years": ">= 4 of 6",
+    "worst_calendar_year": ">= -16%",
+    "maximum_drawdown": ">= -20%",
+    "cumulative_return": ">= simple_v2 development return + 3 percentage points",
+    "annualized_turnover": "<= 19x",
+    "median_holding_sessions": ">= 8"
+  },
+  "selection_open_rule": "Only if every development gate passes may 2024-2025 and cost stress be inspected.",
+  "observation_2026_used": false,
+  "failure_rule": "Do not tune market thresholds, exposure numbers or breadth windows after observing this result."
+}

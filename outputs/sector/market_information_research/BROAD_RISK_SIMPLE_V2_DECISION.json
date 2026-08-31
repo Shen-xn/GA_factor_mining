@@ -1,0 +1,18 @@
+{
+  "decision": "keep_sector_breadth_risk_control",
+  "candidate_count": 3,
+  "candidate_pass_count": 0,
+  "selection_2024_2025_opened": false,
+  "observation_2026_used": false,
+  "formal_strategy_changed": false,
+  "findings": [
+    "The older broad-market evidence used simple_v1 and was not sufficient to answer the current-policy question, so both candidates were replayed on frozen simple_v2 through 20231231.",
+    "Replacing the sector-derived market state with five-index trend/volatility plus all-A breadth returned -11.61%, exceeded 20% drawdown and had only two positive years.",
+    "Signal-date-aligned descriptive attribution showed conditional separation, but it was not causal evidence; an earlier return-date join was discarded and disclosed.",
+    "Using broad-market extremes only as an absolute-exposure overlay improved the worst year and turnover, but changed the holding path and reduced cumulative return to -2.82%.",
+    "Five-index trend/volatility plus SW L1 breadth was materially better at +15.39% with five positive years, but still lagged the +23.31% baseline and missed the worst-year floor by 0.20 percentage point.",
+    "True broad-market inputs remain useful diagnostics, but neither tested use improved the investable product."
+  ],
+  "runtime_note": "One isolated replay terminated in the known Windows/Pandas native merge layer; a fresh one-thread process completed successfully and only the complete result was retained.",
+  "next_step": "Keep formal sector-breadth exposure unchanged. Publish the current and complete SW L1 broad-market state as a separate diagnostic, and do not tune broad-market thresholds or exposure mappings."
+}

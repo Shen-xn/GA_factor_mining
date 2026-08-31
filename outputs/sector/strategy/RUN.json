@@ -29,7 +29,7 @@
     "execution_message": "ETF执行层未就绪，禁止执行"
   },
   "etf_execution_readiness": {
-    "generated_at": "2026-09-01T00:17:45+08:00",
+    "generated_at": "2026-09-01T01:30:30+08:00",
     "overall_status": "blocked",
     "execution_ready": false,
     "strategy_data_end": "20260828",

@@ -15,9 +15,65 @@ from ga_factor_mining.sector.rotation.etf_mapping import (
     normalize_theme_name,
     resolve_target_weights,
 )
+from ga_factor_mining.sector.rotation.reference_outputs import (
+    build_latest_proxy_candidates,
+)
 
 
 class EtfMappingTests(unittest.TestCase):
+    def test_latest_proxy_candidates_are_reference_only_and_cut_off_at_signal_date(self):
+        rng = np.random.default_rng(19)
+        dates = pd.bdate_range("2025-01-02", periods=140).strftime("%Y%m%d")
+        sector_a = rng.normal(0.0005, 0.012, len(dates))
+        sector_b = rng.normal(0.0001, 0.010, len(dates))
+        panel = pd.concat(
+            [
+                pd.DataFrame(
+                    {"trade_date": dates, "ts_code": "A.TI", "type": "N", "ret_1d": sector_a}
+                ),
+                pd.DataFrame(
+                    {"trade_date": dates, "ts_code": "B.TI", "type": "I", "ret_1d": sector_b}
+                ),
+            ],
+            ignore_index=True,
+        )
+        etf_returns = sector_a + rng.normal(0.0, 0.0005, len(dates))
+        prices = pd.DataFrame(
+            {
+                "trade_date": [*dates, "20991231"],
+                "ts_code": "512480.SH",
+                "etf_ret_1d": [*etf_returns, -0.99],
+                "amount": 200_000.0,
+            }
+        )
+        basic = pd.DataFrame(
+            {
+                "ts_code": ["512480.SH"],
+                "csname": ["半导体ETF"],
+                "index_name": ["中证半导体"],
+                "list_date": ["20200101"],
+                "list_status": ["L"],
+                "etf_type": ["纯境内"],
+            }
+        )
+        catalog = pd.DataFrame(
+            {"ts_code": ["A.TI", "B.TI"], "name": ["半导体", "银行"]}
+        )
+        result = build_latest_proxy_candidates(
+            panel,
+            prices,
+            basic,
+            catalog,
+            {"A.TI": 0.3, "LOW_RISK": 0.7},
+            dates[-1],
+            top_n=1,
+        )
+        self.assertEqual(len(result), 1)
+        self.assertGreater(float(result.iloc[0]["corr120"]), 0.9)
+        self.assertTrue(bool(result.iloc[0]["semantic_name_overlap"]))
+        self.assertFalse(bool(result.iloc[0]["automatic_mapping_eligible"]))
+        self.assertFalse(bool(result.iloc[0]["point_in_time_backtest_eligible"]))
+
     def test_candidate_fetch_ranges_resume_from_last_overlap_day(self):
         candidates = pd.DataFrame({"etf_code": ["A.SH", "B.SZ", "C.SH"]})
         daily = pd.DataFrame(

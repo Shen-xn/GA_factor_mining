@@ -1,0 +1,21 @@
+{
+  "status": "ready",
+  "diagnostic_only": true,
+  "formal_exposure_effect": "none_after_development_replacement_and_overlay_failed",
+  "risk_asof_date": "20260828",
+  "risk_score": 39.37093111403025,
+  "risk_data_quality": "complete",
+  "raw_regime": "DEFENSIVE",
+  "benchmark_trend_60d": -0.06322542294216904,
+  "breadth_positive_20d": 0.7741935483870968,
+  "breadth_positive_60d": 0.22580645161290322,
+  "market_vol_percentile": 0.6984126984126984,
+  "industry_count": 31,
+  "breadth_20d_coverage": 1.0,
+  "breadth_60d_coverage": 1.0,
+  "formal_confirmed_regime": "DEFENSIVE",
+  "formal_risk_target_exposure": 0.3,
+  "relation_to_formal_state": "agrees",
+  "regime_level_gap": 0,
+  "reason": "五个宽基指数衡量趋势和波动，31个申万一级行业衡量上涨宽度；仅供人工复核，不生成或放大交易指令。"
+}

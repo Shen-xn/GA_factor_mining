@@ -1,0 +1,5 @@
+candidate,total_return,annualized_return,maximum_drawdown,annualized_turnover,median_holding_sessions,positive_years,worst_year_return,return_gate_pass,drawdown_gate_pass,turnover_gate_pass,holding_gate_pass,year_gate_pass,worst_year_gate_pass,all_development_gates_pass,selection_opened
+simple_v2,0.2331438430388202,0.03693701582357001,-0.16754414259913852,14.364548042160093,10.0,4,-0.14756769784446477,true,true,true,true,true,true,true,false
+broad_index_plus_all_a_breadth_simple_v2,-0.11607738019530589,-0.02112881838865943,-0.20805711636747792,14.047257658436562,10.0,2,-0.1592635700833872,false,false,true,true,false,true,false,false
+broad_extremes_overlay_simple_v2,-0.0281544612564254,-0.004930604105250369,-0.18005798131880035,13.435463504384094,10.0,4,-0.13360154203625108,false,true,true,true,true,true,false,false
+five_index_trend_sw_l1_breadth_simple_v2,0.15385430013739287,0.0250779675976307,-0.1884767594351433,14.319556470902128,10.0,5,-0.16197628867417535,false,true,true,true,true,false,false,false

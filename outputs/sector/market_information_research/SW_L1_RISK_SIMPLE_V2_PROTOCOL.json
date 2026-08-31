@@ -1,0 +1,38 @@
+{
+  "research_name": "sw_l1_broad_market_state_on_simple_v2",
+  "registered_before_execution": true,
+  "candidate": {
+    "name": "five_index_trend_sw_l1_breadth_simple_v2",
+    "trend_and_volatility": "five broad-market indices",
+    "breadth": "31 published Shenwan level-1 industries",
+    "market_thresholds": "unchanged RegimePolicy",
+    "absolute_exposure": "unchanged 0%/30%/70%/100%",
+    "role": "replace only the formal market-state input"
+  },
+  "pre_registration_diagnostic": {
+    "development_regime_agreement_with_formal_raw_state": 0.6877144818119424,
+    "current_data_end": "20260828",
+    "current_data_quality": "complete",
+    "current_raw_regime": "DEFENSIVE",
+    "current_risk_score": 39.37093111403025
+  },
+  "development_period": "20180101-20231231",
+  "frozen_components": [
+    "LightGBM score and 18 features",
+    "Top5 entry, Top20 retention and 10-session minimum hold",
+    "RegimePolicy thresholds and confirmation",
+    "fixed 20bp drawdown reference and actual cost",
+    "low-risk residual allocation"
+  ],
+  "development_gate": {
+    "positive_calendar_years": ">= 4 of 6",
+    "worst_calendar_year": ">= -16%",
+    "maximum_drawdown": ">= -20%",
+    "cumulative_return": ">= simple_v2 development return + 3 percentage points",
+    "annualized_turnover": "<= 19x",
+    "median_holding_sessions": ">= 8"
+  },
+  "selection_open_rule": "Only if every development gate passes may 2024-2025 and cost stress be inspected.",
+  "observation_2026_used": false,
+  "failure_rule": "If rejected, retain this source only as a separate diagnostic and do not tune thresholds or exposure levels."
+}

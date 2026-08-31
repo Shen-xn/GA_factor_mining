@@ -181,7 +181,10 @@ def record_forward_snapshot(
                 raise RuntimeError("同一数据截止日在冻结协议下产生了不同快照")
             status_path = forward_dir / "STATUS.json"
             if status_path.exists():
-                return json.loads(status_path.read_text(encoding="utf-8"))
+                existing_status = json.loads(status_path.read_text(encoding="utf-8"))
+                # 临时工作区变化恢复后，不能继续返回已经失效的协议不匹配状态。
+                if existing_status.get("status") != "protocol_mismatch":
+                    return existing_status
         else:
             if row["data_end_date"] <= str(snapshots["data_end_date"].max()):
                 raise RuntimeError("前向快照日期必须严格递增")

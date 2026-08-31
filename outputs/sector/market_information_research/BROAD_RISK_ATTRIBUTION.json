@@ -1,0 +1,37 @@
+{
+  "period": ["20180101", "20231231"],
+  "maximum_input_date": "20231229",
+  "observation_2026_used": false,
+  "method": "Condition the already frozen simple_v2 daily return on the raw broad-market regime available at signal_date; descriptive only, not a causal backtest.",
+  "alignment_audit": "An earlier temporary calculation joined on the return-accounting date. It was discarded and recomputed on signal_date before consolidation.",
+  "rows": [
+    {
+      "broad_raw_regime": "DEFENSIVE",
+      "days": 543,
+      "formal_compound_return_on_those_days": -0.153656909137316,
+      "annualized_mean_return": -0.07400578075757193,
+      "mean_formal_exposure": 0.28736642668940976
+    },
+    {
+      "broad_raw_regime": "NEUTRAL",
+      "days": 511,
+      "formal_compound_return_on_those_days": 0.09438134910160323,
+      "annualized_mean_return": 0.055616671699713294,
+      "mean_formal_exposure": 0.5036157383255457
+    },
+    {
+      "broad_raw_regime": "CASH",
+      "days": 105,
+      "formal_compound_return_on_those_days": -0.05702225328426591,
+      "annualized_mean_return": -0.13754258298108704,
+      "mean_formal_exposure": 0.0463952096778047
+    },
+    {
+      "broad_raw_regime": "RISK_ON",
+      "days": 297,
+      "formal_compound_return_on_those_days": 0.4118779598459681,
+      "annualized_mean_return": 0.30468169613210416,
+      "mean_formal_exposure": 0.7298182630698722
+    }
+  ]
+}

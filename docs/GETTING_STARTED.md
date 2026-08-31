@@ -72,11 +72,13 @@ python -m ga_factor_mining.sector
 1. `LATEST_STATUS.csv`：先确认数据、信号和指令状态；
 2. `LATEST_PLAN.json`：核对最新收盘计划、下一交易日和阻断原因；
 3. `outputs/sector/etf_mapping/ETF_EXECUTION_READINESS.json`：确认ETF执行层状态；
-4. `LATEST_ACTIONS.csv`：只有全部安全门通过后才可能出现动作；
-5. `LATEST_TARGET_PORTFOLIO.csv`：核对板块层完整目标权重；
-6. `SUMMARY.csv` 和 `ANNUAL_RESULTS.csv`：查看历史表现。
+4. `LATEST_BROAD_MARKET_RISK.json`：核对独立的大盘趋势、宽度和风险状态；
+5. `outputs/sector/etf_mapping/LATEST_PROXY_CANDIDATES.csv`：查看需人工复核的ETF代理候选；
+6. `LATEST_ACTIONS.csv`：只有全部安全门通过后才可能出现动作；
+7. `LATEST_TARGET_PORTFOLIO.csv`：核对板块层完整目标权重；
+8. `SUMMARY.csv` 和 `ANNUAL_RESULTS.csv`：查看历史表现。
 
-默认命令会先在独立进程生成板块产品账本，再在另一个独立进程把冻结目标翻译到真实ETF开盘收益。这样可以降低Windows下原生数值库长时间运行造成的内存碎片风险。第二阶段完成不代表ETF可交易，仍必须以执行安全门和映射覆盖率为准。
+默认命令会依次在三个独立进程生成板块产品账本、真实ETF翻译回放和最新参考输出。这样可以降低Windows下原生数值库长时间运行造成的内存碎片风险。参考阶段只生成宽基风险诊断和ETF候选清单，不改变正式映射或订单；ETF是否可交易仍以执行安全门和映射覆盖率为准。
 
 `LATEST_ACTIONS.csv`为空不等于程序失败，可能是无需交易，也可能是数据、未来交易日历或ETF映射安全门阻止了执行。必须结合`LATEST_STATUS.csv`和`ETF_EXECUTION_READINESS.json`判断。上一批操作只保存在 `LAST_REBALANCE_ACTIONS.csv`，不能重复执行。
 

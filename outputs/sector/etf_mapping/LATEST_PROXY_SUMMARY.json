@@ -1,0 +1,16 @@
+{
+  "status": "reference_only",
+  "reference_only": true,
+  "signal_date": "20260828",
+  "target_sector_count": 3,
+  "candidate_rows": 5,
+  "sectors_with_strong_manual_review_candidate": 0,
+  "sectors_without_displayable_proxy": [
+    "884080.TI",
+    "885410.TI"
+  ],
+  "automatic_mapping_changed": false,
+  "orders_generated": false,
+  "latest_actions_modified": false,
+  "warning": "统计相似不等于跟踪同一资产；必须核对ETF成分、指数定义和折溢价，不能把本表直接当作订单。"
+}

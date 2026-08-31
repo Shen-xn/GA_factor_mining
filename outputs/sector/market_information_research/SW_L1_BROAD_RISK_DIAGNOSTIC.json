@@ -1,0 +1,46 @@
+{
+  "diagnostic": "five_broad_index_trend_volatility_plus_sw_l1_breadth",
+  "date_range": ["20150105", "20260828"],
+  "development_regime_agreement_with_formal_raw_state": 0.6877144818119424,
+  "development_attribution": [
+    {
+      "raw_regime": "DEFENSIVE",
+      "days": 576,
+      "compound_formal_return": -0.2896684980714683,
+      "annualized_mean_return": -0.14478176419843214
+    },
+    {
+      "raw_regime": "NEUTRAL",
+      "days": 391,
+      "compound_formal_return": 0.29763614691092966,
+      "annualized_mean_return": 0.17897103225716426
+    },
+    {
+      "raw_regime": "CASH",
+      "days": 121,
+      "compound_formal_return": -0.04398431854815621,
+      "annualized_mean_return": -0.09040852447445694
+    },
+    {
+      "raw_regime": "RISK_ON",
+      "days": 369,
+      "compound_formal_return": 0.40885849820280185,
+      "annualized_mean_return": 0.24484272983527688
+    }
+  ],
+  "latest": {
+    "trade_date": "20260828",
+    "risk_score": 39.37093111403025,
+    "risk_data_quality": "complete",
+    "raw_regime": "DEFENSIVE",
+    "benchmark_trend_60d": -0.06322542294216904,
+    "breadth_positive_20d": 0.7741935483870968,
+    "breadth_positive_60d": 0.22580645161290322,
+    "market_vol_percentile": 0.6984126984126984,
+    "industry_count": 31,
+    "minimum_breadth_coverage": 1.0
+  },
+  "development_strategy_candidate_passed": false,
+  "formal_strategy_changed": false,
+  "published_as_separate_diagnostic": true
+}

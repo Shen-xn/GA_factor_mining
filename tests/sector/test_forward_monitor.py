@@ -93,6 +93,14 @@ class ForwardMonitorTests(unittest.TestCase):
             self.assertEqual(mismatch["status"], "protocol_mismatch")
             self.assertEqual(len(pd.read_csv(forward / "SNAPSHOTS.csv")), 1)
 
+            source.write_text("VERSION = 1\n", encoding="utf-8")
+            recovered = record_forward_snapshot(
+                strategy, forward, config, source_paths=[source]
+            )
+            self.assertEqual(recovered["status"], "recorded")
+            self.assertEqual(recovered["protocol_hash"], first["protocol_hash"])
+            self.assertEqual(len(pd.read_csv(forward / "SNAPSHOTS.csv")), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -45,7 +45,7 @@ python -m ga_factor_mining.sector
 - 组合回撤状态使用固定20bp政策参考净值，真实净值仍按实际成本完整记账；
 - 2018年起唯一连续状态路径，不在2024或2026重置持仓。
 
-默认运行不会自动执行GA挖掘、参数搜索、消融实验或报告生成，也不会在缓存失效时悄悄载入全量数据重建。产品账本和真实ETF回放在两个独立进程中串行完成，避免同一Python进程反复装载Pandas/NumPy大对象；产品流程只投影读取必要列，当前环境峰值内存约174MB。
+默认运行不会自动执行GA挖掘、参数搜索、消融实验或报告生成，也不会在缓存失效时悄悄载入全量数据重建。产品账本、真实ETF回放和最新参考输出在三个独立进程中串行完成，避免同一Python进程反复装载Pandas/NumPy大对象；产品流程只投影读取必要列。
 
 ## 用户看哪些结果
 
@@ -57,6 +57,7 @@ python -m ga_factor_mining.sector
 - `LAST_REBALANCE_ACTIONS.csv`：上一批调仓记录，不能重复执行；
 - `LATEST_TARGET_PORTFOLIO.csv`：当前目标板块与低风险权重；
 - `LATEST_MARKET_RISK.csv/.json`：板块广度风险分、原始/确认状态、市场仓位与回撤上限；
+- `LATEST_BROAD_MARKET_RISK.csv/.json`：五宽基趋势/波动与申万一级宽度形成的独立大盘诊断；开发期替换试验失败，因此只供交叉核对，不改写仓位；
 - `SUMMARY.csv`：开发期、选择期和观察期汇总；
 - `ANNUAL_RESULTS.csv`：2018年至今的逐年结果；
 - `COST_SENSITIVITY.csv`：10/20/30/50bp完整重放压力结果；
@@ -65,7 +66,7 @@ python -m ga_factor_mining.sector
 - `HISTORY_DAILY.parquet`、`HISTORY_ACTIONS.parquet`：连续产品账本；
 - `POLICY.json`、`RUN.json`：本次使用的规则、数据和运行环境。
 
-ETF执行层在 `outputs/sector/etf_mapping/`：`ETF_EXECUTION_READINESS.json`汇总数据、日历、映射和回放安全门，`LATEST_MAPPING_RESOLUTION.csv`逐项解释板块如何映射或回退，`RESOLVED_ETF_TARGET_PORTFOLIO.csv`保证最终ETF权重守恒。被阻止的参考组合只会写入`BLOCKED_ORDERS.csv`，不会进入`LATEST_ACTIONS.csv`。
+ETF执行层在 `outputs/sector/etf_mapping/`：`ETF_EXECUTION_READINESS.json`汇总数据、日历、映射和回放安全门，`LATEST_MAPPING_RESOLUTION.csv`逐项解释板块如何映射或回退，`RESOLVED_ETF_TARGET_PORTFOLIO.csv`保证最终ETF权重守恒。`LATEST_PROXY_CANDIDATES.csv`只为最新目标列出名称语义重合、流动性合格且具有一定统计相似度的ETF，必须人工检查成分和指数定义；它永远不会自动升级为正式映射。被阻止的参考组合只会写入`BLOCKED_ORDERS.csv`，不会进入`LATEST_ACTIONS.csv`。
 
 `outputs/sector/etf_backtest/`保存冻结板块目标到真实ETF复权开盘价的翻译回放。它不改变LightGBM排名、持有规则或原策略目标，只负责暴露ETF映射覆盖和实施损耗。当前20bp全期回放为`+17.51%`、最大回撤约`-0.49%`，但历史平均映射覆盖仅`0.73%`，收益主要来自未映射权重回退`511880.SH`，因此明确标记为不可晋级，不能解释为可交易的板块策略。
 
@@ -79,7 +80,7 @@ ETF执行层在 `outputs/sector/etf_mapping/`：`ETF_EXECUTION_READINESS.json`�
 
 研究产物可以保留，但日常用户只需要默认入口和 `outputs/sector/strategy/`。
 
-这里的风险分来自同花顺行业与概念板块的趋势、上涨宽度和波动率，只能称为“板块广度健康分”，不是严格的宽基大盘指数。分数越高，越适合承担权益风险；它用于解释`simple_v2`既有市场状态，不是收益率预测。`LATEST_TARGET_PORTFOLIO.csv`中的连续风险调整强度等于模型横截面相对强度乘以板块广度健康分；实际执行预算仍看风险目标仓位。数据过期时一律禁止执行。
+正式仓位风险分来自同花顺行业与概念板块的趋势、上涨宽度和波动率，只能称为“板块广度健康分”，不是严格的宽基大盘指数。分数越高，越适合承担权益风险；它用于解释`simple_v2`既有市场状态，不是收益率预测。独立的`LATEST_BROAD_MARKET_RISK`使用五个宽基指数和31个申万一级行业提供真正的大盘交叉诊断。开发期内，直接替换正式状态只有`+15.4%`，低于正式基线`+23.3%`；五宽基加全A宽度更降到`-11.6%`，极端仓位叠加为`-2.8%`，因此大盘诊断不反向改写正式仓位。`LATEST_TARGET_PORTFOLIO.csv`中的连续风险调整强度仍等于模型横截面相对强度乘以板块广度健康分；实际执行预算看风险目标仓位。数据过期时一律禁止执行。
 
 ## 更新到最新行情
 
@@ -105,7 +106,7 @@ python -m unittest discover -s tests -t . -v
 
 若Windows上的Pandas原生层在单进程测试中异常退出，按[使用手册](docs/GETTING_STARTED.md#5-运行测试)给出的逐文件串行方式重跑，不要并发测试。
 
-当前基线通过106项测试，覆盖无未来信息标签、滚动训练边界、`planned → executed_unsettled → settled`时间轴、交易日历、缺失行情、持仓状态、固定政策成本风险参考、ETF分年增量更新与头部缺口修复、映射安全门、真实ETF回放、成本、风险评分、前向协议和运行前自检。全量测试按文件串行隔离，正式产品与ETF回放也各用独立进程；Windows下保留CPython默认内存分配器，减少Pandas原生层长期运行造成的内存冲突。
+当前基线通过108项测试，覆盖无未来信息标签、滚动训练边界、`planned → executed_unsettled → settled`时间轴、交易日历、缺失行情、持仓状态、固定政策成本风险参考、ETF分年增量更新与头部缺口修复、映射安全门、真实ETF回放、宽基诊断、参考代理的日期截断、成本、风险评分、前向协议和运行前自检。全量测试按文件串行隔离，正式产品、ETF回放和参考输出各用独立进程；Windows下保留CPython默认内存分配器，减少Pandas原生层长期运行造成的内存冲突。
 
 ## 当前结果口径
 

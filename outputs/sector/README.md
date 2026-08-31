@@ -9,14 +9,16 @@
 1. `strategy/LATEST_STATUS.csv`：数据是否可用、市场状态和仓位；
 2. `strategy/LATEST_PLAN.json`：最新收盘计划、下一交易日和阻断原因；
 3. `etf_mapping/ETF_EXECUTION_READINESS.json`：ETF执行层是否仅供参考或被阻止；
-4. `strategy/LATEST_ACTIONS.csv`：全部安全门通过后才出现的操作；
-5. `strategy/LATEST_TARGET_PORTFOLIO.csv`：完整板块目标组合；
-6. `strategy/LATEST_MARKET_RISK.csv`：板块广度风险、仓位来源与确认进度；
-7. `strategy/SUMMARY.csv`、`strategy/ANNUAL_RESULTS.csv`：分段与逐年表现；
-8. `strategy/ACCEPTANCE_GATE.json`：当前版本是否通过收益、低频、风险和成本目标；
-9. `strategy/TARGET_WEIGHT_TIMELINE.csv`：全部已执行和计划目标的完整权重时间线；
-10. `etf_backtest/READINESS.json`：冻结目标翻译到真实ETF后的覆盖率、收益与晋级结论；
-11. `forward/STATUS.json`：当前前向协议是否正常；`forward/archive/v8/`保留14日未见证据，v9-v13保留后续冻结基线。
+4. `strategy/LATEST_BROAD_MARKET_RISK.json`：真正宽基含义的大盘交叉诊断，不改变正式仓位；
+5. `etf_mapping/LATEST_PROXY_CANDIDATES.csv`：最新目标的人工复核ETF候选，不是订单；
+6. `strategy/LATEST_ACTIONS.csv`：全部安全门通过后才出现的操作；
+7. `strategy/LATEST_TARGET_PORTFOLIO.csv`：完整板块目标组合；
+8. `strategy/LATEST_MARKET_RISK.csv`：板块广度风险、仓位来源与确认进度；
+9. `strategy/SUMMARY.csv`、`strategy/ANNUAL_RESULTS.csv`：分段与逐年表现；
+10. `strategy/ACCEPTANCE_GATE.json`：当前版本是否通过收益、低频、风险和成本目标；
+11. `strategy/TARGET_WEIGHT_TIMELINE.csv`：全部已执行和计划目标的完整权重时间线；
+12. `etf_backtest/READINESS.json`：冻结目标翻译到真实ETF后的覆盖率、收益与晋级结论；
+13. `forward/STATUS.json`：当前前向协议是否正常；`forward/archive/v8/`保留14日未见证据，v9-v13保留后续冻结基线。
 
 `rotation/sector_feature_panel.parquet` 和 `adaptation/SELECTED_SCORES.parquet` 是本地运行缓存，不进入Git，但默认策略必须使用。对应JSON元数据会提交。
 

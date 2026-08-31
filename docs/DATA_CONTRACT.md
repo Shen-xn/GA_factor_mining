@@ -28,6 +28,13 @@
 
 缺少这四个文件不妨碍历史研究回放，但执行层必须标记`blocked`，不得猜下一自然日或沿用过期ETF映射。
 
+要生成独立的大盘风险交叉诊断，还需要以下可选数据；缺失时正式策略仍可运行，但`LATEST_BROAD_MARKET_RISK`会标记为不可用：
+
+| 文件 | 必要字段 | 用途 |
+|---|---|---|
+| `data/sector/market_index_daily.parquet` | `ts_code,trade_date,close` | 五个宽基指数的趋势与波动 |
+| `data/sector/sw_l1_daily.parquet` | `ts_code,trade_date,close` | 31个申万一级行业的20/60日上涨宽度 |
+
 ETF行情更新会按自然年拆分长区间，并同时检查行情与复权因子的头部缺口和尾部增量。这样可以避免接口单次行数上限把早期复权因子静默截断；任一配对文件仍有缺口时，真实ETF回放必须停止。
 
 下面两个小型元数据文件已经提交Git，必须与上述Parquet来自同一版本：
