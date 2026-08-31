@@ -1,0 +1,61 @@
+{
+  "research_name": "post_simple_v2_iteration_1",
+  "consolidated_after_replay": true,
+  "source_protocols_registered_before_each_family": true,
+  "development_period": "20180101-20231231",
+  "formal_baseline": "simple_v2",
+  "baseline_development_return": 0.2331438430388202,
+  "common_development_gate": {
+    "positive_calendar_years": ">= 4 of 6",
+    "worst_calendar_year": ">= -16.0%",
+    "maximum_drawdown": ">= -20.0%",
+    "cumulative_return": ">= baseline + 3 percentage points",
+    "annualized_turnover": "<= 19.0x",
+    "median_holding_sessions": ">= 8 when applicable"
+  },
+  "selection_period": "20240101-20251231",
+  "selection_open_rule": "Only a candidate passing every development gate may be inspected on 2024-2025.",
+  "selection_gate": {
+    "2024_and_2025_each_positive": true,
+    "cumulative_return": ">= 30%",
+    "maximum_drawdown": ">= -12%",
+    "full_2018_2025_return": "> current simple_v2 baseline",
+    "30bp_development_and_selection_return": "> 0",
+    "50bp_full_return": "> 0"
+  },
+  "families": [
+    {
+      "name": "absolute_exposure_mapping",
+      "candidates": ["0/10/70/100", "0/10/80/100", "0/0/75/100"],
+      "frozen": "market classifier, model, holdings, drawdown controls"
+    },
+    {
+      "name": "regime_confirmation",
+      "candidates": ["improve 3 sessions", "improve 2 sessions", "both with current or 10/80 exposure"],
+      "frozen": "market inputs, classification thresholds, model and holdings"
+    },
+    {
+      "name": "risk_score_absolute_mapping",
+      "candidates": ["20/40/60", "25/45/65", "30/50/70 score bands"],
+      "exposures": [0.0, 0.1, 0.7, 1.0]
+    },
+    {
+      "name": "risk_score_extreme_overlay",
+      "candidates": ["25/75", "30/70"],
+      "rule": "Only extreme scores override the formal raw regime"
+    },
+    {
+      "name": "model_horizon",
+      "candidates": ["annual-expanding 10d target", "equal 5d/10d blend"],
+      "frozen": "18 features, product policy and risk layer"
+    },
+    {
+      "name": "formula_ensemble",
+      "candidates": ["75% LGBM + 25% 10/20d momentum", "75% LGBM + 25% low-vol medium momentum"],
+      "normalization": "same-day cross-sectional percentile ranks"
+    }
+  ],
+  "candidate_count_excluding_baseline": 16,
+  "observation_2026_used_for_selection": false,
+  "promotion_rule": "No candidate changes formal code or outputs unless every registered gate passes."
+}

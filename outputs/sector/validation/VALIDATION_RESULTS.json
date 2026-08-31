@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-01T00:22:03+08:00",
-  "scope": "simple_v2 through 20260828; sealed 2018-2025 selection; memory-safe replay; forward v14 freeze",
+  "generated_at": "2026-09-01T00:49:41+08:00",
+  "scope": "simple_v2 through 20260828; sealed 2018-2025 selection; development-only post-v2 research; memory-safe replay; forward v14 freeze",
   "engineering_validation_passed": true,
   "strategy_acceptance_passed": true,
   "execution_ready": false,
@@ -69,6 +69,11 @@
       "name": "bad_year_attribution",
       "passed": true,
       "detail": "2018 and 2022 attribution reconciles exactly; market component remains the primary negative driver and no extra defensive overlay was added"
+    },
+    {
+      "name": "post_v2_development_research",
+      "passed": true,
+      "detail": "Six predeclared families and 16 candidates were replayed only through 20231231; none passed every development gate, so 2024-2025 and 2026 remained closed and simple_v2 was not changed"
     },
     {
       "name": "forward_protocol",

@@ -1,0 +1,27 @@
+{
+  "decision": "keep_simple_v2",
+  "candidate_count_excluding_baseline": 16,
+  "candidate_pass_count": 0,
+  "selection_2024_2025_opened": false,
+  "observation_2026_used": false,
+  "formal_strategy_changed": false,
+  "best_return_candidate": {
+    "name": "score_band_30_50_70",
+    "development_return": 0.33231850817111064,
+    "maximum_drawdown": -0.16217983170759664,
+    "annualized_turnover": 12.577893756031338,
+    "positive_years": 3,
+    "reason_rejected": "Only three of six development years were positive."
+  },
+  "findings": [
+    "Directly clearing weak-market exposure improved the worst year and turnover but reduced cumulative return.",
+    "Faster regime recovery did not restore return because confirmation interacts with costs, drawdown caps and position state.",
+    "The 30/50/70 risk-score bands are informative and remain a future research lead, but they failed the majority-positive-year gate.",
+    "Risk-score extreme overrides did not beat the formal regime.",
+    "A pure 10-session target and a 5d/10d blend both failed; the 5d label is not the direct cause of product turnover.",
+    "Adding 25% transparent medium-term momentum duplicated existing information and reduced return."
+  ],
+  "research_execution_note": "Every retained result ends on 20231231. An early diagnostic runner that unnecessarily emitted later-period fields was discarded without using them for candidate selection.",
+  "runtime_note": "Long Pandas replays were isolated by process with one numerical thread and bounded retries; only completed JSON results were retained.",
+  "next_step": "Seek a genuinely new point-in-time sector feature with information not already encoded by price momentum, volatility or market breadth. Do not add another exposure rule or label-horizon variant without new evidence."
+}
