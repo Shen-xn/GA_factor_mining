@@ -1,0 +1,44 @@
+{
+  "research_name": "simple_v2_conviction_weighting",
+  "registered_before_replay": true,
+  "development_period": "20180101-20231231",
+  "formal_baseline": "simple_v2_equal_weight",
+  "baseline_development_return": 0.2331438430388202,
+  "frozen_components": [
+    "quarterly expanding 5-day LightGBM scores",
+    "Top5 entry and Top20 retention",
+    "minimum 10-session holding period",
+    "market regime and absolute exposure",
+    "drawdown control",
+    "20bp transaction cost"
+  ],
+  "candidates": [
+    {
+      "name": "score_tilt",
+      "conviction": "same-day full-universe percentile rank of the smoothed LightGBM score",
+      "raw_weight": "(0.10 + conviction)^2"
+    },
+    {
+      "name": "score_trend_tilt",
+      "conviction": "70% same-day LightGBM score percentile + 30% same-day 20-session return percentile",
+      "raw_weight": "(0.10 + conviction)^2"
+    }
+  ],
+  "shared_constraints": {
+    "membership_changes": "forbidden outside the frozen simple_v2 rules",
+    "sector_sleeve_weight_sum": "unchanged",
+    "maximum_single_name_share_of_sector_sleeve": "40%, relaxed only to the mathematical minimum 1/N when N < 3",
+    "rebalance_tolerance": "frozen at 3% absolute portfolio weight"
+  },
+  "development_gate": {
+    "positive_calendar_years": ">= 4 of 6",
+    "worst_calendar_year": ">= -16.0%",
+    "maximum_drawdown": ">= -20.0%",
+    "cumulative_return": ">= baseline + 3 percentage points",
+    "annualized_turnover": "<= 19.0x",
+    "median_holding_sessions": ">= 8"
+  },
+  "selection_open_rule": "Only a candidate passing every development gate may be inspected on 2024-2025.",
+  "observation_2026_used_for_selection": false,
+  "promotion_rule": "No candidate changes formal code or outputs unless it passes the development and existing selection gates."
+}

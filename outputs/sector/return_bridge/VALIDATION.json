@@ -6,10 +6,10 @@
     "gross_contribution_identity": true,
     "net_return_identity": true
   },
-  "layer_count": 6,
-  "return_days_per_layer": 2086,
+  "layer_count": 7,
+  "return_days_per_layer": 2100,
   "first_return_date": "20180103",
-  "last_return_date": "20260810",
-  "max_gross_identity_error": 2.973085644862594e-18,
-  "max_net_identity_error": 8.890457814381136e-17
+  "last_return_date": "20260828",
+  "max_gross_identity_error": 5.2583805365546965e-18,
+  "max_net_identity_error": 8.673617379884035e-17
 }

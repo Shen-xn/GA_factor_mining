@@ -1,0 +1,3 @@
+candidate,total_return,annualized_return,maximum_drawdown,annualized_turnover,median_holding_sessions,positive_years,worst_year_return,maximum_desired_sleeve_share,development_pass,selection_period_opened
+score_tilt,0.0734080637162755,0.012336011597832819,-0.18878393185279763,17.449462042490683,10.0,4,-0.14502356263735316,0.4000000000000001,false,false
+score_trend_tilt,0.024605943009794906,0.004216032476290099,-0.20052516387101238,15.989090744385875,10.0,4,-0.14047701148154468,0.4000000000000001,false,false

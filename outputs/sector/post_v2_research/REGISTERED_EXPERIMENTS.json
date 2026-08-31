@@ -59,9 +59,15 @@
       "candidates": ["3-year half-life", "5-year half-life"],
       "frozen": "18 features, 5d label, annual schedule, simple_v2 holdings and risk layer",
       "protocol_file": "RECENCY_PROTOCOL.json"
+    },
+    {
+      "name": "conviction_weighting",
+      "candidates": ["score tilt", "70% score + 30% 20-session trend tilt"],
+      "frozen": "membership, Top5/Top20/hold10, market exposure, drawdown controls and 20bp costs",
+      "protocol_file": "CONVICTION_WEIGHT_PROTOCOL.json"
     }
   ],
-  "candidate_count_excluding_baseline": 18,
+  "candidate_count_excluding_baseline": 20,
   "observation_2026_used_for_selection": false,
   "promotion_rule": "No candidate changes formal code or outputs unless every registered gate passes."
 }

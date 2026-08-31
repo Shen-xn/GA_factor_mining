@@ -1,0 +1,26 @@
+{
+  "research_name": "simple_v2_conviction_weighting",
+  "decision": "reject_all",
+  "formal_policy_changed": false,
+  "baseline_development_return": 0.2331438430388202,
+  "candidate_results": {
+    "score_tilt": {
+      "development_return": 0.0734080637162755,
+      "maximum_drawdown": -0.18878393185279763,
+      "annualized_turnover": 17.449462042490683,
+      "positive_years": 4,
+      "failed_gates": ["cumulative_return"]
+    },
+    "score_trend_tilt": {
+      "development_return": 0.024605943009794906,
+      "maximum_drawdown": -0.20052516387101238,
+      "annualized_turnover": 15.989090744385875,
+      "positive_years": 4,
+      "failed_gates": ["maximum_drawdown", "cumulative_return"]
+    }
+  },
+  "interpretation": "The frozen LightGBM score remains useful for ordering candidates but its magnitude is not a reliable position-size estimate. Equal weighting provides material diversification. Adding 20-session trend to position sizing did not recover returns.",
+  "selection_period_opened": false,
+  "observation_2026_used_for_selection": false,
+  "next_action": "Keep simple_v2 equal weighting and stop tuning conviction-weight parameters."
+}

@@ -202,7 +202,7 @@ def main() -> None:
     scored = panel.merge(predictions, on=["ts_code", "trade_date"], how="left")
     low_risk_frame = build_low_risk_return_frame(panel)
 
-    simple = get_strategy_policy("simple_v1")
+    simple = get_strategy_policy("simple_v2")
     smoothing_sessions = simple.score_smoothing_sessions
     layers: dict[str, pd.DataFrame] = {
         "raw_top5_gross": _direct_topk_backtest(
@@ -231,6 +231,13 @@ def main() -> None:
             use_market_regime=False,
             use_drawdown_cap=False,
         ),
+        "market_only_cash_gross": dict(
+            strategy_policy=simple,
+            cost_bps=0.0,
+            low_risk_frame=None,
+            use_market_regime=True,
+            use_drawdown_cap=False,
+        ),
         "risk_control_cash_gross": dict(
             strategy_policy=simple,
             cost_bps=0.0,
@@ -245,7 +252,7 @@ def main() -> None:
             use_market_regime=True,
             use_drawdown_cap=True,
         ),
-        "simple_product_20bp": dict(
+        "simple_v2_product_20bp": dict(
             strategy_policy=simple,
             cost_bps=20.0,
             low_risk_frame=low_risk_frame,
@@ -297,9 +304,10 @@ def main() -> None:
     bridge_pairs = (
         ("raw_top5_gross", "smoothed_top5_gross", "score_smoothing"),
         ("smoothed_top5_gross", "stateful_full_exposure_gross", "holding_rules"),
-        ("stateful_full_exposure_gross", "risk_control_cash_gross", "market_and_drawdown_control"),
+        ("stateful_full_exposure_gross", "market_only_cash_gross", "market_regime_control"),
+        ("market_only_cash_gross", "risk_control_cash_gross", "portfolio_drawdown_cap"),
         ("risk_control_cash_gross", "risk_control_low_risk_gross", "low_risk_residual_asset"),
-        ("risk_control_low_risk_gross", "simple_product_20bp", "trading_cost_20bp"),
+        ("risk_control_low_risk_gross", "simple_v2_product_20bp", "trading_cost_20bp"),
     )
     bridge_rows: list[dict] = []
     for period, _, _ in period_specs:
@@ -387,6 +395,7 @@ def main() -> None:
                 "boundary_mode": "continuous_carry",
                 "observation_used_for_selection": False,
                 "cost_bps": 20.0,
+                "policy_name": "simple_v2",
                 "score_smoothing_sessions": smoothing_sessions,
                 "low_risk_code": DEFAULT_LOW_RISK_CODE,
                 "low_risk_data_signature": low_risk_data_signature(),
