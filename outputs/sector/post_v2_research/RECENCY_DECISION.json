@@ -1,0 +1,32 @@
+{
+  "decision": "keep_simple_v2",
+  "candidate_count_excluding_baseline": 2,
+  "candidate_pass_count": 0,
+  "selection_2024_2025_opened": false,
+  "observation_2026_used": false,
+  "formal_strategy_changed": false,
+  "baseline_development_return": 0.2331438430388202,
+  "results": [
+    {
+      "name": "recency_half_life_3y",
+      "development_return": 0.28222133561476115,
+      "maximum_drawdown": -0.17701407422702853,
+      "annualized_turnover": 15.124953555390768,
+      "positive_years": 3,
+      "worst_year_return": -0.15895346136362842,
+      "reason_rejected": "Only three of six development years were positive."
+    },
+    {
+      "name": "recency_half_life_5y",
+      "development_return": 0.10264973236157449,
+      "maximum_drawdown": -0.18892886550319732,
+      "annualized_turnover": 15.304658993348006,
+      "positive_years": 4,
+      "worst_year_return": -0.15052194094311788,
+      "reason_rejected": "Development return was below both the baseline and the registered improvement threshold."
+    }
+  ],
+  "finding": "Gradual time decay changes the return distribution but does not provide a stable improvement. The three-year decay concentrates gains in 2021 and turns 2023 slightly negative; the five-year decay sacrifices too much cumulative return.",
+  "runtime_note": "Each score training and replay ran in a separate process with one numerical thread. Retained score inputs and results end at 20231231.",
+  "next_step": "Keep simple_v2 frozen. Do not test more nearby half-life values; additional tuning would be parameter search around a failed family."
+}

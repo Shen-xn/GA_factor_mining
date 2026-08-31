@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-01T00:51:00+08:00",
+  "generated_at": "2026-09-01T01:00:36+08:00",
   "passed": true,
   "reports": [
     {
@@ -15,7 +15,7 @@
     {
       "name": "factor_mining",
       "markdown_path": "reports/sector/factor_mining/FACTOR_MINING_REPORT.md",
-      "markdown_sha256": "7249d05c3387328a44e348d86541d43af2704bd520b37cc3cd78e10f8e9adb9a",
+      "markdown_sha256": "3fee45ca1d100cc7b5053f185ab74d9500b678a2bea2ca5d7911b16823543f8c",
       "format": "markdown_only",
       "pdf_present": false,
       "replacement_character_found": false

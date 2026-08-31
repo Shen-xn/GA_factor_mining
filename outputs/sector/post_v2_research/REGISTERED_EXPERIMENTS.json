@@ -53,9 +53,15 @@
       "name": "formula_ensemble",
       "candidates": ["75% LGBM + 25% 10/20d momentum", "75% LGBM + 25% low-vol medium momentum"],
       "normalization": "same-day cross-sectional percentile ranks"
+    },
+    {
+      "name": "recency_weighting",
+      "candidates": ["3-year half-life", "5-year half-life"],
+      "frozen": "18 features, 5d label, annual schedule, simple_v2 holdings and risk layer",
+      "protocol_file": "RECENCY_PROTOCOL.json"
     }
   ],
-  "candidate_count_excluding_baseline": 16,
+  "candidate_count_excluding_baseline": 18,
   "observation_2026_used_for_selection": false,
   "promotion_rule": "No candidate changes formal code or outputs unless every registered gate passes."
 }

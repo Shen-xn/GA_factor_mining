@@ -1,0 +1,37 @@
+{
+  "research_name": "post_simple_v2_recency_weighting",
+  "registered_before_execution": true,
+  "formal_baseline": "simple_v2",
+  "research_question": "Can gradual time decay make the frozen 5-session LightGBM score adapt better without changing features, labels, holdings or risk controls?",
+  "development_period": "20180101-20231231",
+  "candidates": [
+    {
+      "name": "recency_half_life_3y",
+      "recency_half_life_years": 3.0
+    },
+    {
+      "name": "recency_half_life_5y",
+      "recency_half_life_years": 5.0
+    }
+  ],
+  "frozen_components": [
+    "18 formal features",
+    "5-session cross-sectional target",
+    "annual expanding retraining schedule during development",
+    "simple_v2 Top5 entry, Top20 retention and 10-session minimum hold",
+    "simple_v2 market risk and drawdown controls",
+    "20bp transaction cost"
+  ],
+  "development_gate": {
+    "positive_calendar_years": ">= 4 of 6",
+    "worst_calendar_year": ">= -16.0%",
+    "maximum_drawdown": ">= -20.0%",
+    "cumulative_return": ">= simple_v2 development return + 3 percentage points",
+    "annualized_turnover": "<= 19.0x",
+    "median_holding_sessions": ">= 8"
+  },
+  "selection_period": "20240101-20251231",
+  "selection_open_rule": "Only a candidate passing every development gate may be trained or inspected on 2024-2025.",
+  "observation_2026_used_for_selection": false,
+  "promotion_rule": "No formal code, score cache or strategy output changes unless every registered development and selection gate passes."
+}

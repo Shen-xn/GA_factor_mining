@@ -1,0 +1,4 @@
+candidate,recency_half_life_years,total_return,annualized_return,maximum_drawdown,annualized_turnover,median_holding_sessions,positive_years,worst_year_return,return_gate_pass,drawdown_gate_pass,turnover_gate_pass,holding_gate_pass,year_gate_pass,worst_year_gate_pass,all_development_gates_pass,selection_opened
+simple_v2,,0.2331438430388202,0.03693701582357001,-0.16754414259913852,14.364548042160093,10.0,4,-0.14756769784446477,true,true,true,true,true,true,true,false
+recency_half_life_3y,3.0,0.28222133561476115,0.04396491573667549,-0.17701407422702853,15.124953555390768,10.0,3,-0.15895346136362842,true,true,true,true,false,true,false,false
+recency_half_life_5y,5.0,0.10264973236157449,0.017056231672154087,-0.18892886550319732,15.304658993348006,10.0,4,-0.15052194094311788,false,true,true,true,true,true,false,false

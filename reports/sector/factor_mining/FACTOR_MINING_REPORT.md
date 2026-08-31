@@ -12,6 +12,8 @@
 - 5日与10日评分各半，累计收益仍为`-4.6%`；
 - 在冻结5日LightGBM上加入25%的10/20日人工动量，累计收益为`+11.1%`；
 - 加入25%的低波动中期动量，累计收益为`+16.6%`；
+- 训练样本使用3年半衰期时累计收益提高到`+28.2%`、最大回撤`-17.7%`，但只有3/6年份为正；
+- 训练样本使用5年半衰期时有4/6年份为正，但累计收益降到`+10.3%`；
 - 同期正式`simple_v2`基线为`+23.3%`。
 
 这些候选都只看到2018—2023，未打开2024—2025，也未使用2026。因此正式评分、模型缓存和前向v14协议均未改变。
@@ -72,10 +74,13 @@ GA不进入默认训练、默认回放或用户建议。旧GA结果来自已经�
 
 ## 下一步
 
-停止继续调整仓位数字、确认天数、标签长度和已有动量公式。下一轮只研究真正新增的时点信息，例如可靠的行业盈利预期变化、订单/景气度或可追溯公告扩散；如果拿不到满足历史时点的数据，就保持当前18项特征和`simple_v2`不动。
+停止继续调整仓位数字、确认天数、标签长度、时间衰减参数和已有动量公式。现有板块资金流历史不足以覆盖开发期，同花顺成分缓存又没有历史进出日期，二者都不能安全回填。下一轮只研究真正新增的时点信息，例如可靠的行业盈利预期变化、订单/景气度或可追溯公告扩散；如果拿不到满足历史时点的数据，就保持当前18项特征和`simple_v2`不动。
 
 本轮结构化证据位于：
 
 - `outputs/sector/post_v2_research/REGISTERED_EXPERIMENTS.json`
 - `outputs/sector/post_v2_research/DEVELOPMENT_RESULTS.csv`
+- `outputs/sector/post_v2_research/RECENCY_PROTOCOL.json`
+- `outputs/sector/post_v2_research/RECENCY_DEVELOPMENT_RESULTS.csv`
+- `outputs/sector/post_v2_research/RECENCY_DECISION.json`
 - `outputs/sector/post_v2_research/DECISION.json`
