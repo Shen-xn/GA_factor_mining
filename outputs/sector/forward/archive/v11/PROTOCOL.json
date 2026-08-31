@@ -1,17 +1,17 @@
 {
-  "created_at": "2026-08-31T09:34:51+08:00",
-  "protocol_hash": "36eab370ce140da8ee59b22865f8e295622c159bb2a10f1d1a09b1bd183e7663",
+  "created_at": "2026-08-31T08:46:09+08:00",
+  "protocol_hash": "0b465ae5096860b914a9ac8032bce160cf5629c88505869bb5f9b2c93759b2fe",
   "payload": {
     "config": {
-      "version": 12,
+      "version": 11,
       "freeze_data_end": "20260828",
       "first_unseen_after": "20260828",
-      "evidence_name": "sector_simple_quarterly_forward_v12",
+      "evidence_name": "sector_simple_quarterly_forward_v11",
       "execution_layer": "planned_executed_settled_with_frozen_target_real_etf_replay_and_process_isolation",
       "cost_bps": 20.0,
       "model_retraining_schedule": "quarterly_expanding_window",
       "policy_name": "simple_v1",
-      "notes": "v8已记录2026-08-11至2026-08-28共14个真正未见交易日并归档；v9至v11在同一冻结日都只有基线、没有未见数据。v12仍不改变模型、因子、simple_v1仓位或买卖规则；ETF数据更新改为按自然年分段并修复头部截断，273只ETF重建后严格映射覆盖仍未改善，ETF原生和行业子宇宙候选全部未晋级。2026-08-28及以前均已被看到，只有之后的数据可作为v12前向证据。"
+      "notes": "v8已记录2026-08-11至2026-08-28共14个真正未见交易日并归档；v9和v10在同一冻结日都只有基线、没有未见数据。v11仍不改变模型、因子、simple_v1仓位或买卖规则，只新增完整目标权重时间线、冻结目标的真实ETF开盘回放、按计划执行日检查映射、两阶段进程隔离以及最小数据包缺少ETF实施数据时的安全降级；2026-08-28及以前均已被看到，只有之后的数据可作为v11前向证据。"
     },
     "model": {
       "variant": "expanding_quarterly",
@@ -45,7 +45,7 @@
       "src/ga_factor_mining/sector/rotation/risk.py": "1cb0bc2eccac3f13a6c0d2630d4aac744dbcd8b7aab700822ee4f9370c870c30",
       "src/ga_factor_mining/sector/rotation/low_risk.py": "6ccee3b89125ddca4ba92c982a97f7351c4925a354ec50701d9e46f4579a75b0",
       "src/ga_factor_mining/sector/rotation/product_backtest.py": "743be2f8ce7ce5042f23aa1fbfa604eaa465ff30370e7c6295f20b628b3fe830",
-      "src/ga_factor_mining/sector/rotation/etf_mapping.py": "09bdcb053595dae82d240dc0f84253ada0dc446a85e9c879abe1d2cfcd4aa415",
+      "src/ga_factor_mining/sector/rotation/etf_mapping.py": "934d10e5004f4f62e4814e7362887a530c36739dd3e4b49db46f0ba5e57b755e",
       "src/ga_factor_mining/sector/rotation/etf_backtest.py": "6a08ae6bdf6dc83734b4b8eda4d72656524b7cf695b585381c7ddb085b83cda7",
       "src/ga_factor_mining/sector/rotation/refresh_data.py": "5d972947187174a986ad8a8f497b89256cf9282330bc721292189f18a7db96bd"
     }

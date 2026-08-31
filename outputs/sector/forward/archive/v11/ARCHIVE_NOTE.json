@@ -1,0 +1,6 @@
+{
+  "protocol_version": 11,
+  "status": "archived_without_unseen_data",
+  "freeze_data_end": "20260828",
+  "reason": "ETF行情更新器增加自然年分段与头部缺口修复，决策相关源文件哈希改变；模型、因子和simple_v1规则未改变。"
+}

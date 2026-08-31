@@ -926,13 +926,29 @@ def candidate_fetch_ranges(
     start_date: str,
     end_date: str,
 ) -> list[tuple[str, str]]:
-    """为每只ETF计算断点续传起点；包含最后重叠日用于去重校验。"""
+    """为每只ETF计算断点续传起点，并识别旧接口截断造成的头部缺口。"""
+    daily_first = (
+        existing_daily.assign(trade_date=existing_daily["trade_date"].astype(str))
+        .groupby("ts_code")["trade_date"]
+        .min()
+        .to_dict()
+        if not existing_daily.empty
+        else {}
+    )
     daily_latest = (
         existing_daily.assign(trade_date=existing_daily["trade_date"].astype(str))
         .groupby("ts_code")["trade_date"]
         .max()
         .to_dict()
         if not existing_daily.empty
+        else {}
+    )
+    adj_first = (
+        existing_adj.assign(trade_date=existing_adj["trade_date"].astype(str))
+        .groupby("ts_code")["trade_date"]
+        .min()
+        .to_dict()
+        if not existing_adj.empty
         else {}
     )
     adj_latest = (
@@ -944,11 +960,48 @@ def candidate_fetch_ranges(
         else {}
     )
     ranges = []
-    for code in sorted(set(candidates["etf_code"].astype(str))):
-        overlap = min(daily_latest.get(code, start_date), adj_latest.get(code, start_date))
-        fetch_start = max(str(start_date), str(overlap))
+    candidate_rows = candidates.copy()
+    candidate_rows["etf_code"] = candidate_rows["etf_code"].astype(str)
+    listing_dates = (
+        candidate_rows.dropna(subset=["list_date"])
+        .groupby("etf_code")["list_date"]
+        .min()
+        .astype(str)
+        .to_dict()
+        if "list_date" in candidate_rows.columns
+        else {}
+    )
+    for code in sorted(set(candidate_rows["etf_code"])):
+        expected_start = max(str(start_date), listing_dates.get(code, str(start_date)))
+        # 任一配对文件起点偏晚都代表复权开盘序列存在头部缺口。
+        first_available = max(
+            daily_first.get(code, "99999999"),
+            adj_first.get(code, "99999999"),
+        )
+        expected_timestamp = pd.to_datetime(expected_start, format="%Y%m%d", errors="coerce")
+        first_timestamp = pd.to_datetime(first_available, format="%Y%m%d", errors="coerce")
+        leading_gap = code in listing_dates and (
+            pd.isna(first_timestamp)
+            or pd.isna(expected_timestamp)
+            or (first_timestamp - expected_timestamp).days > 14
+        )
+        overlap = min(daily_latest.get(code, expected_start), adj_latest.get(code, expected_start))
+        fetch_start = expected_start if leading_gap else max(expected_start, str(overlap))
         if fetch_start <= end_date:
             ranges.append((code, fetch_start))
+    return ranges
+
+
+def calendar_year_ranges(start_date: str, end_date: str) -> list[tuple[str, str]]:
+    """把长区间拆为自然年，避开行情接口单次返回行数上限。"""
+    start = pd.to_datetime(start_date, format="%Y%m%d")
+    end = pd.to_datetime(end_date, format="%Y%m%d")
+    ranges = []
+    cursor = start
+    while cursor <= end:
+        stop = min(pd.Timestamp(year=cursor.year, month=12, day=31), end)
+        ranges.append((cursor.strftime("%Y%m%d"), stop.strftime("%Y%m%d")))
+        cursor = stop + pd.Timedelta(days=1)
     return ranges
 
 
@@ -980,10 +1033,23 @@ def fetch_candidate_history(
         end_date,
     )
     for index, (code, fetch_start) in enumerate(fetch_ranges, start=1):
-        daily = pro.fund_daily(ts_code=code, start_date=fetch_start, end_date=end_date)
-        time.sleep(call_interval)
-        adj = pro.fund_adj(ts_code=code, start_date=fetch_start, end_date=end_date)
-        time.sleep(call_interval)
+        daily_parts = []
+        adj_parts = []
+        for chunk_start, chunk_end in calendar_year_ranges(fetch_start, end_date):
+            daily_chunk = pro.fund_daily(
+                ts_code=code, start_date=chunk_start, end_date=chunk_end
+            )
+            time.sleep(call_interval)
+            adj_chunk = pro.fund_adj(
+                ts_code=code, start_date=chunk_start, end_date=chunk_end
+            )
+            time.sleep(call_interval)
+            if not daily_chunk.empty:
+                daily_parts.append(daily_chunk)
+            if not adj_chunk.empty:
+                adj_parts.append(adj_chunk)
+        daily = pd.concat(daily_parts, ignore_index=True) if daily_parts else pd.DataFrame()
+        adj = pd.concat(adj_parts, ignore_index=True) if adj_parts else pd.DataFrame()
         if daily.empty or adj.empty:
             raise RuntimeError(f"ETF {code} 行情或复权因子为空")
         daily_frames.append(daily)

@@ -7,6 +7,7 @@ from ga_factor_mining.sector.rotation.etf_mapping import (
     MappingPolicy,
     build_latest_execution_readiness,
     candidate_fetch_ranges,
+    calendar_year_ranges,
     build_strategy_allocation_audit,
     build_strategy_coverage_audit,
     build_monthly_mapping,
@@ -39,6 +40,27 @@ class EtfMappingTests(unittest.TestCase):
             "20260828",
         )
         self.assertEqual(ranges, [("A.SH", "20260528"), ("B.SZ", "20150101")])
+
+    def test_candidate_fetch_ranges_repairs_truncated_leading_history(self):
+        candidates = pd.DataFrame(
+            {"etf_code": ["A.SH"], "list_date": ["20110101"]}
+        )
+        daily = pd.DataFrame(
+            {"ts_code": ["A.SH", "A.SH"], "trade_date": ["20150105", "20260828"]}
+        )
+        adj = pd.DataFrame(
+            {"ts_code": ["A.SH", "A.SH"], "trade_date": ["20151217", "20260828"]}
+        )
+        self.assertEqual(
+            candidate_fetch_ranges(candidates, daily, adj, "20150101", "20260828"),
+            [("A.SH", "20150101")],
+        )
+
+    def test_calendar_year_ranges_do_not_cross_year_boundaries(self):
+        self.assertEqual(
+            calendar_year_ranges("20251217", "20260203"),
+            [("20251217", "20251231"), ("20260101", "20260203")],
+        )
 
     def test_normalized_name_is_conservative_but_handles_common_suffixes(self):
         self.assertEqual(normalize_theme_name("芯片概念"), "芯片")

@@ -1,0 +1,7 @@
+family,candidate,selection_end,cost_bps,annualized_return,maximum_drawdown,annualized_turnover,positive_years,worst_year,gate_pass,default_modified
+etf_manual,blend_retain_full,20251231,20,0.063923,-0.537769,5.817139,5,-0.413449,false,false
+etf_manual_risk,daily_risk_equal_drawdown,20251231,20,0.032690,-0.287487,4.281676,5,-0.127934,false,false
+industry_frozen_lgbm,industry_stable20,20251231,20,0.035560,-0.189269,9.749298,6,-0.159830,false,false
+industry_manual,score_low_vol_mom,20251231,20,0.006875,-0.366139,7.194960,3,-0.127829,false,false
+industry_specific_lgbm,quarterly_lgbm5_stable20,20251231,20,-0.007573,-0.219346,7.725713,4,-0.157537,false,false
+etf_native_lgbm,quarterly_lgbm20_monthly,20251231,20,0.015417,-0.309724,4.884151,4,-0.132806,false,false

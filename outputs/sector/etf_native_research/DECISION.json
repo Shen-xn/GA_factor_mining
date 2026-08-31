@@ -1,0 +1,30 @@
+{
+  "status": "completed",
+  "selection_end": "20251231",
+  "observation_used_for_selection": false,
+  "candidate_count": 22,
+  "families": [
+    "etf_manual_monthly",
+    "etf_manual_daily_risk_overlay",
+    "industry_universe_frozen_lgbm",
+    "industry_universe_manual_scores",
+    "industry_specific_lgbm",
+    "etf_native_lgbm20"
+  ],
+  "passed_candidate_count": 0,
+  "promotion": "rejected",
+  "default_strategy_modified": false,
+  "default_strategy": "simple_v1",
+  "decision": "No ETF-native or industry-only candidate simultaneously passed the frozen return, drawdown, year-stability and turnover gates. Keep simple_v1 as the reference baseline and do not substitute a lower-return implementation merely because it is directly tradable.",
+  "implementation_audit_after_quote_expansion": {
+    "quoted_etfs": 273,
+    "historical_average_strict_mapping_coverage": 0.008476117979858547,
+    "current_target_coverage": 0.0,
+    "coverage_changed": false
+  },
+  "remaining_research_boundary": [
+    "point_in_time ETF master and sector constituents",
+    "new independent information rather than more holding rules",
+    "forward evidence after 20260828"
+  ]
+}

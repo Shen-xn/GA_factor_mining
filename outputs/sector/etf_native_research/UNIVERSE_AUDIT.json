@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-08-31",
+  "etf_master_rows": 1829,
+  "listed_rows": 1658,
+  "delisted_rows": 127,
+  "pending_rows": 44,
+  "locally_quoted_etfs_after_refresh": 273,
+  "quote_history_start": "20150105",
+  "quote_history_end": "20260828",
+  "available_etfs_by_year": {
+    "2018": 33,
+    "2019": 46,
+    "2020": 68,
+    "2021": 134,
+    "2022": 160,
+    "2023": 186,
+    "2024": 206,
+    "2025": 228,
+    "2026": 273
+  },
+  "classification_basis": "domestic ETF tracked-index name only; broad, style, bond, commodity, overseas and ownership-theme indices excluded",
+  "point_in_time_master_complete": false,
+  "raw_quotes_committed_to_git": false
+}

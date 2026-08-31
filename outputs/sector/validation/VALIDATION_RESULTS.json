@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-31T08:41:48+08:00",
-  "scope": "simple_v1 through 20260828, isolated product and ETF replay, persistent validated cost caches, true ETF implementation audit, proxy hypothesis rejection and forward v11 freeze",
+  "generated_at": "2026-08-31T09:38:15+08:00",
+  "scope": "simple_v1 through 20260828, isolated product and ETF replay, annual-chunk ETF history repair, 273-ETF universe audit, sealed native-candidate rejection and forward v12 freeze",
   "engineering_validation_passed": true,
   "strategy_acceptance_passed": false,
   "execution_ready": false,
@@ -51,6 +51,16 @@
       "detail": "Four post-observation semantic proxy hypotheses were registered outside the default mapping; 0/4 passed the historical pair gate and no mapping was promoted"
     },
     {
+      "name": "etf_history_integrity",
+      "passed": true,
+      "detail": "Long ETF history requests are split by calendar year and leading daily/adjustment gaps are repaired; the local equity ETF quote universe expanded from 143 to 273 codes without changing simple_v1"
+    },
+    {
+      "name": "etf_native_candidate_seal",
+      "passed": true,
+      "detail": "Twenty-two ETF-native, industry-subset, manual-score and industry-specific LightGBM candidates were evaluated only on 2018-2025; none passed the predeclared return, drawdown, yearly-stability and turnover gates, so no candidate was promoted or opened on 2026"
+    },
+    {
       "name": "etf_point_in_time_boundary",
       "passed": true,
       "detail": "ETF master and sector catalog are explicitly marked non-point-in-time; mapping validity is checked on the planned execution date"
@@ -68,12 +78,12 @@
     {
       "name": "forward_protocol",
       "passed": true,
-      "detail": "v8 archived 14 unseen days from 20260811 through 20260828 with +0.5505% return and -1.3127% drawdown; v9/v10 archived baselines with no unseen data; v11 0b465ae50968 froze at 20260828"
+      "detail": "v8 archived 14 unseen days from 20260811 through 20260828 with +0.5505% return and -1.3127% drawdown; v9-v11 archived baselines with no unseen data; v12 36eab370ce14 froze at 20260828"
     },
     {
       "name": "unit_tests",
       "passed": true,
-      "detail": "102 standard-library unit tests passed under Python 3.12.7, pandas 2.2.2 and numpy 1.26.4 with numerical libraries limited to one thread"
+      "detail": "104 standard-library unit tests passed under Python 3.12.7, pandas 2.2.2 and numpy 1.26.4 with numerical libraries limited to one thread"
     },
     {
       "name": "preflight",
