@@ -1,0 +1,16 @@
+{
+  "decision": "keep_simple_v1",
+  "simple_v2_created": false,
+  "observation_2026_used_for_candidate_selection": false,
+  "findings": [
+    "Broad-index and all-A breadth alternatives did not improve the sealed 2018-2025 baseline.",
+    "SW L1 medium-term price scoring reduced turnover but lost the selection return.",
+    "retain_top20_hold10 passed the 20bp gates but failed because drawdown feedback made the 30bp path non-robust."
+  ],
+  "formal_changes": [
+    "Avoid per-day namedtuple type creation during portfolio replay.",
+    "Use standard-library scalar math in risk calculations to reduce Windows native runtime pressure."
+  ],
+  "strategy_behavior_changed": false,
+  "next_research_constraint": "Only test a genuinely independent information source with long point-in-time history; do not add more price-only rules or tune on 2026."
+}

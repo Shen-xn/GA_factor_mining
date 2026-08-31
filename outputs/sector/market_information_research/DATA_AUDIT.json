@@ -1,0 +1,36 @@
+{
+  "selection_period": "20180101-20251231",
+  "observation_2026_used_for_selection": false,
+  "raw_data_committed": false,
+  "sources": {
+    "broad_market_indices": {
+      "codes": ["000001.SH", "399001.SZ", "000300.SH", "000905.SH", "000985.CSI"],
+      "date_range": "20150105-20260828",
+      "rows_per_code": 2833
+    },
+    "all_a_daily": {
+      "source_rows": 11316866,
+      "daily_basic_rows": 11226171,
+      "breadth_dates": 2769,
+      "date_range": "20150105-20260529",
+      "maximum_stock_count": 5506,
+      "methods": ["equal_weight", "total_market_cap_weighted"]
+    },
+    "sw_l1": {
+      "industry_count": 31,
+      "rows_per_industry": 2833,
+      "date_range": "20150105-20260828",
+      "point_in_time_membership_fields_present": true
+    },
+    "money_flow": {
+      "ths_date_range": "20240910-20260529",
+      "dc_date_range": "20230912-20260529",
+      "selection_use": "rejected_insufficient_history"
+    }
+  },
+  "memory_safety": {
+    "large_breadth_aggregation": "out_of_core_single_thread",
+    "runtime_memory_limit_mb": 768,
+    "formal_backtest_behavior_changed": false
+  }
+}

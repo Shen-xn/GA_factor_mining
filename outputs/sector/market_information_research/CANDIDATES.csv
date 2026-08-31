@@ -1,0 +1,9 @@
+candidate,information_source,exposure_rule,total_return,annualized_return,max_drawdown,annualized_turnover,median_holding_sessions,positive_years,worst_year,passed,observation_2026_used
+simple_v1_reference,sector_proxy,default,0.545054638,0.058109409,-0.189337027,22.361495,5,6,-0.127254307,false,false
+broad_default,5_broad_indices,default,0.327208052,0.037435654,-0.200789162,22.803938,5,6,-0.181914310,false,false
+broad_continuous,5_broad_indices,continuous_defensive,0.147458234,0.018018427,-0.168971027,18.985104,5,5,-0.071152619,false,false
+stock_breadth_default,all_a_equal_weight_breadth,default,0.232096870,0.027468272,-0.201912342,23.175479,5,5,-0.178895803,false,false
+stock_breadth_continuous,all_a_equal_weight_breadth,continuous_defensive,0.239109929,0.028225686,-0.181176186,22.419447,5,5,-0.061778938,false,false
+cap_breadth_default,all_a_cap_weighted_breadth,default,0.329328894,0.037650736,-0.207650563,23.348451,5,5,-0.185631322,false,false
+sw_l1_medium_hold10,sw_l1_price_momentum,default,-0.210909849,-0.030285363,-0.318980041,7.279641,10,2,-0.085185088,false,false
+sw_l1_medium_hold20,sw_l1_price_momentum,default,-0.208762569,-0.029943173,-0.333105629,7.636511,13,3,-0.095566838,false,false

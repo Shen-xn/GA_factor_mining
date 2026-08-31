@@ -1,0 +1,44 @@
+{
+  "candidate": "retain_top20_hold10",
+  "selection_period": "20180101-20251231",
+  "observation_2026_used": false,
+  "results": {
+    "20bp_full_system": {
+      "total_return": 0.732384860,
+      "annualized_return": 0.073947858,
+      "max_drawdown": -0.167544143,
+      "annualized_turnover": 15.000745,
+      "median_holding_sessions": 10,
+      "passed_base_gates": true
+    },
+    "30bp_full_system": {
+      "total_return": -0.012193856,
+      "annualized_return": -0.001591592,
+      "max_drawdown": -0.206565145,
+      "annualized_turnover": 12.267152,
+      "passed_cost_robustness_gate": false
+    },
+    "30bp_applied_to_frozen_20bp_holdings": {
+      "total_return": 0.543221,
+      "interpretation": "extra_direct_cost_does_not_explain_failure"
+    },
+    "without_drawdown_cap": {
+      "20bp_total_return": 0.553304,
+      "20bp_max_drawdown": -0.223408,
+      "30bp_total_return": 0.358198,
+      "30bp_max_drawdown": -0.236871
+    },
+    "gross_equity_drawdown_reference_20bp": {
+      "total_return": 0.442026,
+      "annualized_return": 0.048672,
+      "max_drawdown": -0.199427
+    }
+  },
+  "first_divergence": {
+    "drawdown_cap": "20181015",
+    "target_exposure_or_positions": "20181130",
+    "holdings_and_gross_return": "20181203"
+  },
+  "conclusion": "net_equity_drawdown_feedback_causes_nonlinear_path_dependence",
+  "promotion": "rejected"
+}

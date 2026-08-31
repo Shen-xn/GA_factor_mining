@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import sqrt
 
 import numpy as np
 import pandas as pd
@@ -60,7 +61,7 @@ def risk_exit_reason(row: pd.Series, policy: StrategyPolicy) -> str | None:
     if pd.notna(position_return) and position_return <= policy.hard_drawdown:
         return "hard_position_loss"
     if pd.notna(position_drawdown) and pd.notna(volatility):
-        dynamic_stop = float(np.clip(2.5 * volatility * np.sqrt(5.0), 0.06, 0.12))
+        dynamic_stop = max(0.06, min(0.12, 2.5 * volatility * sqrt(5.0)))
         if position_drawdown <= -dynamic_stop:
             return "trailing_stop"
     if (
@@ -194,13 +195,14 @@ def step_portfolio(
     eligible = daily.loc[eligible_mask]
 
     # 只在出现空位时买入Top5，不为小幅分数变化主动替换现有持仓。
-    for row in eligible.itertuples(index=False):
+    # 这里只需要代码列；避免每日创建namedtuple类型，降低Windows长回放的原生堆压力。
+    for code in eligible["ts_code"].astype(str).tolist():
         if len(current) >= policy.target_positions:
             break
-        current[row.ts_code] = PositionState(entry_date=signal_date)
+        current[code] = PositionState(entry_date=signal_date)
         decisions.append({
             "signal_date": signal_date,
-            "ts_code": row.ts_code,
+            "ts_code": code,
             "action": "buy",
             "reason": "vacancy_and_strong_signal",
             "held_sessions": 0,

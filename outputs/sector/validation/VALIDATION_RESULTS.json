@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-31T09:38:15+08:00",
-  "scope": "simple_v1 through 20260828, isolated product and ETF replay, annual-chunk ETF history repair, 273-ETF universe audit, sealed native-candidate rejection and forward v12 freeze",
+  "generated_at": "2026-08-31T22:54:00+08:00",
+  "scope": "simple_v1 through 20260828, memory-safe replay, sealed broad-market and SW L1 candidate rejection, cost-path audit and forward v13 freeze",
   "engineering_validation_passed": true,
   "strategy_acceptance_passed": false,
   "execution_ready": false,
@@ -71,6 +71,16 @@
       "detail": "10/20/30/50bp complete-system results were reused only after validating period, cost, policy, score, feature and low-risk signatures; each missing replay runs in an isolated process"
     },
     {
+      "name": "cost_path_audit",
+      "passed": true,
+      "detail": "retain_top20_hold10 passed all 20bp gates but failed at 30bp because net-equity drawdown feedback changed exposure from 20181015 and holdings from 20181203; direct extra cost on frozen holdings did not explain the cliff, so the candidate remained rejected"
+    },
+    {
+      "name": "independent_market_information_seal",
+      "passed": true,
+      "detail": "Five broad indices, equal- and cap-weighted all-A breadth, and two SW L1 medium-term price candidates were evaluated only on 2018-2025; none improved the baseline and 2026 was not opened for selection"
+    },
+    {
       "name": "strategy_acceptance",
       "passed": false,
       "detail": "simple_v1 passes drawdown, year stability and execution safety, but fails the 7% annual return, low-turnover, median-holding and cost-robustness targets"
@@ -78,7 +88,7 @@
     {
       "name": "forward_protocol",
       "passed": true,
-      "detail": "v8 archived 14 unseen days from 20260811 through 20260828 with +0.5505% return and -1.3127% drawdown; v9-v11 archived baselines with no unseen data; v12 36eab370ce14 froze at 20260828"
+      "detail": "v8 archived 14 unseen days from 20260811 through 20260828 with +0.5505% return and -1.3127% drawdown; v9-v12 archived baselines with no unseen data; v13 44a9b87719bb froze at 20260828"
     },
     {
       "name": "unit_tests",
@@ -93,7 +103,7 @@
     {
       "name": "native_runtime_mitigation",
       "passed": true,
-      "detail": "The default entry runs the product ledger and ETF implementation replay in separate sequential processes; retry and persistent small-cache paths avoid accumulating repeated full-panel allocations"
+      "detail": "The default entry runs product and ETF replay in separate sequential processes; scalar risk math and lightweight holding iteration reduce Windows native heap pressure without changing official metrics"
     }
   ]
 }

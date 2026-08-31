@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import erf, sqrt
+from math import erf, isfinite, sqrt
 
 import numpy as np
 import pandas as pd
@@ -11,6 +11,11 @@ import pandas as pd
 
 REGIME_ORDER = {"CASH": 0, "DEFENSIVE": 1, "NEUTRAL": 2, "RISK_ON": 3}
 REGIME_EXPOSURE = {"CASH": 0.0, "DEFENSIVE": 0.3, "NEUTRAL": 0.7, "RISK_ON": 1.0}
+
+
+def _clip(value: float, lower: float = 0.0, upper: float = 1.0) -> float:
+    """标量裁剪不调用NumPy内核，降低Windows长回放的原生运行时风险。"""
+    return max(lower, min(upper, value))
 
 
 @dataclass(frozen=True)
@@ -56,32 +61,31 @@ def market_risk_components(row: pd.Series) -> dict[str, float | str]:
     coverage60 = float(row.get("breadth_60d_coverage", 1.0))
     sector_count = float(row.get("sector_count", 100.0))
 
-    if np.isfinite(trend) and np.isfinite(volatility) and volatility > 0:
+    if isfinite(trend) and isfinite(volatility) and volatility > 0:
         trend_z = trend / (volatility * sqrt(60.0))
         trend_score = 0.5 * (1.0 + erf(trend_z / sqrt(2.0)))
     else:
         trend_score = 0.5
     components = {
-        "trend_health": float(np.clip(trend_score, 0.0, 1.0)),
-        "breadth_20d_health": float(np.clip(breadth20, 0.0, 1.0)) if np.isfinite(breadth20) else 0.5,
-        "breadth_60d_health": float(np.clip(breadth60, 0.0, 1.0)) if np.isfinite(breadth60) else 0.5,
-        "volatility_health": float(np.clip(1.0 - vol_percentile, 0.0, 1.0)) if np.isfinite(vol_percentile) else 0.5,
+        "trend_health": _clip(trend_score),
+        "breadth_20d_health": _clip(breadth20) if isfinite(breadth20) else 0.5,
+        "breadth_60d_health": _clip(breadth60) if isfinite(breadth60) else 0.5,
+        "volatility_health": _clip(1.0 - vol_percentile) if isfinite(vol_percentile) else 0.5,
     }
     complete = volatility > 0.0 and sector_count >= 30 and all(
-        np.isfinite(
-            [
-                trend,
-                volatility,
-                breadth20,
-                breadth60,
-                vol_percentile,
-                coverage20,
-                coverage60,
-                sector_count,
-            ]
+        isfinite(value)
+        for value in (
+            trend,
+            volatility,
+            breadth20,
+            breadth60,
+            vol_percentile,
+            coverage20,
+            coverage60,
+            sector_count,
         )
     ) and min(coverage20, coverage60) >= 0.80
-    score = 100.0 * float(np.mean(list(components.values())))
+    score = 100.0 * sum(components.values()) / len(components)
     # 数据不完整时最多给中性分，不能因缺失而产生乐观信号。
     if not complete:
         score = min(score, 50.0)
@@ -134,7 +138,7 @@ def classify_market(row: pd.Series, policy: RegimePolicy | None = None) -> str:
     breadth20 = float(row.get("breadth_positive_20d", np.nan))
     breadth60 = float(row.get("breadth_positive_60d", np.nan))
     vol_pct = float(row.get("market_vol_percentile", np.nan))
-    if not all(np.isfinite([trend, breadth20, breadth60, vol_pct])):
+    if not all(isfinite(value) for value in (trend, breadth20, breadth60, vol_pct)):
         return "NEUTRAL"
     if trend < 0 and breadth20 < policy.cash_breadth_20d and vol_pct >= policy.cash_vol_percentile:
         return "CASH"
@@ -207,11 +211,11 @@ def technical_regime_exposure(
         return regime_exposure(regime, policy)
     trend = float(market_row.get("benchmark_trend_60d", np.nan))
     breadth = float(market_row.get("breadth_positive_20d", np.nan))
-    if not np.isfinite(trend) or not np.isfinite(breadth):
+    if not isfinite(trend) or not isfinite(breadth):
         return policy.defensive_exposure
-    trend_strength = float(np.clip((trend + 0.12) / 0.12, 0.0, 1.0))
-    breadth_strength = float(np.clip((breadth - 0.20) / 0.25, 0.0, 1.0))
-    return policy.defensive_exposure * float(np.sqrt(trend_strength * breadth_strength))
+    trend_strength = _clip((trend + 0.12) / 0.12)
+    breadth_strength = _clip((breadth - 0.20) / 0.25)
+    return policy.defensive_exposure * sqrt(trend_strength * breadth_strength)
 
 
 def leading_sector_strength(
