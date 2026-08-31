@@ -1,0 +1,41 @@
+{
+  "protocol_version": 1,
+  "registered_at": "2026-08-31",
+  "registered_after_observation": true,
+  "historical_results_are_diagnostic_only": true,
+  "forward_evidence_eligible_after": "20260828",
+  "hypotheses": [
+    {
+      "sector_code": "885410.TI",
+      "sector_name": "固废处理",
+      "etf_code": "159861.SZ",
+      "etf_name": "国泰中证环保产业50ETF",
+      "semantic_basis": "环保产业是固废处理的上位行业代理，需用成分与跟踪误差进一步核验",
+      "status": "research_only"
+    },
+    {
+      "sector_code": "885410.TI",
+      "sector_name": "固废处理",
+      "etf_code": "512580.SH",
+      "etf_name": "广发中证环保产业ETF",
+      "semantic_basis": "环保产业是固废处理的上位行业代理，需用成分与跟踪误差进一步核验",
+      "status": "research_only"
+    },
+    {
+      "sector_code": "885472.TI",
+      "sector_name": "上海自贸区",
+      "etf_code": "510810.SH",
+      "etf_name": "汇添富中证上海国企ETF",
+      "semantic_basis": "上海国企是区域资产代理，不等同于自贸区主题，必须单独验证",
+      "status": "research_only"
+    },
+    {
+      "sector_code": "885472.TI",
+      "sector_name": "上海自贸区",
+      "etf_code": "512650.SH",
+      "etf_name": "汇添富中证长三角一体化发展主题ETF",
+      "semantic_basis": "长三角是更宽区域代理，不等同于上海自贸区主题，必须单独验证",
+      "status": "research_only"
+    }
+  ]
+}

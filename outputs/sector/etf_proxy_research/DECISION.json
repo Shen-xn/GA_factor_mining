@@ -1,0 +1,20 @@
+{
+  "status": "completed",
+  "registered_at": "2026-08-31",
+  "registered_after_observation": true,
+  "selection_end": "20251231",
+  "historical_results_are_diagnostic_only": true,
+  "forward_evidence_eligible_after": "20260828",
+  "hypothesis_count": 4,
+  "historical_pair_gate_pass_count": 0,
+  "historical_selected_pair_count": 0,
+  "default_mapping_modified": false,
+  "promotion": "rejected_pending_forward_and_point_in_time_audit",
+  "blockers": [
+    "hypotheses_registered_after_2026_observation",
+    "index_constituent_overlap_not_verified",
+    "etf_master_not_point_in_time",
+    "sector_catalog_not_point_in_time",
+    "independent_forward_evidence_missing"
+  ]
+}

@@ -1,0 +1,5 @@
+﻿sector_code,sector_name,sector_type,etf_code,etf_name,index_code,index_name,list_date,list_status,normalized_name,candidate_method,candidate_asof_date,semantic_basis,status
+885410.TI,固废处理,N,159861.SZ,国泰中证环保产业50ETF,930614.CSI,中证环保50,20210402,L,固废处理,registered_semantic_proxy,20260831,环保产业是固废处理的上位行业代理，需用成分与跟踪误差进一步核验,research_only
+885410.TI,固废处理,N,512580.SH,广发中证环保产业ETF,000827.SH,中证环保,20170228,L,固废处理,registered_semantic_proxy,20260831,环保产业是固废处理的上位行业代理，需用成分与跟踪误差进一步核验,research_only
+885472.TI,上海自贸区,N,510810.SH,汇添富中证上海国企ETF,950096.CSI,中证上海国企,20160829,L,上海自贸区,registered_semantic_proxy,20260831,上海国企是区域资产代理，不等同于自贸区主题，必须单独验证,research_only
+885472.TI,上海自贸区,N,512650.SH,汇添富中证长三角一体化发展主题ETF,931141.CSI,中证CS长三角,20191025,L,上海自贸区,registered_semantic_proxy,20260831,长三角是更宽区域代理，不等同于上海自贸区主题，必须单独验证,research_only

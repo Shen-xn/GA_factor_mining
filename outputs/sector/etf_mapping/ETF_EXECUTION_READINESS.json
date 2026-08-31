@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-31T02:28:22+08:00",
+  "generated_at": "2026-08-31T08:48:01+08:00",
   "overall_status": "blocked",
   "execution_ready": false,
   "strategy_data_end": "20260828",
@@ -23,12 +23,12 @@
   "research_blockers": [
     "etf_master_not_point_in_time",
     "sector_catalog_not_point_in_time",
-    "resolved_etf_backtest_missing"
+    "resolved_etf_backtest_not_promotable"
   ],
   "blockers": [
     "mapping_coverage_incomplete",
     "etf_master_not_point_in_time",
     "sector_catalog_not_point_in_time",
-    "resolved_etf_backtest_missing"
+    "resolved_etf_backtest_not_promotable"
   ]
 }

@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import argparse
+from bisect import bisect_left, bisect_right
 from datetime import datetime
 import hashlib
 import json
@@ -374,27 +375,62 @@ def build_monthly_mapping(
     ).reset_index(drop=True)
 
 
-def resolve_target_weights(
-    target_weights: dict[str, float],
+def build_active_mapping_lookup(
     mapping: pd.DataFrame,
-    signal_date: str,
+    execution_dates: list[str],
+) -> dict[str, pd.DataFrame]:
+    """一次性展开执行日映射，避免逐日重复扫描整张历史表。"""
+    dates = sorted(set(str(value) for value in execution_dates if value))
+    buckets: dict[str, list[int]] = {date: [] for date in dates}
+    if not dates or mapping.empty:
+        return {date: mapping.iloc[0:0].copy() for date in dates}
+    selected_flag = mapping.get("selected", pd.Series(False, index=mapping.index))
+    selected = mapping.loc[selected_flag.fillna(False).astype(bool)].copy()
+    for index, row in selected.iterrows():
+        effective_from = str(row["effective_from"])
+        effective_to = None if pd.isna(row.get("effective_to")) else str(row["effective_to"])
+        asof_value = row.get("asof_date")
+        asof = pd.to_datetime(
+            str(asof_value), format="%Y%m%d", errors="coerce"
+        ) if pd.notna(asof_value) else pd.NaT
+        review_due = (
+            (asof + pd.offsets.MonthEnd(1)).strftime("%Y%m%d")
+            if pd.notna(asof)
+            else None
+        )
+        start_index = bisect_left(dates, effective_from)
+        stop_index = len(dates)
+        if effective_to:
+            stop_index = min(stop_index, bisect_left(dates, effective_to))
+        if review_due:
+            stop_index = min(stop_index, bisect_right(dates, review_due))
+        for date in dates[start_index:stop_index]:
+            buckets[date].append(index)
+    lookup: dict[str, pd.DataFrame] = {}
+    for date, indices in buckets.items():
+        active = selected.loc[indices].copy() if indices else selected.iloc[0:0].copy()
+        if not active.empty:
+            active = active.sort_values(
+                ["mapping_score", "median_amount20"], ascending=False
+            ).drop_duplicates("sector_code")
+        lookup[date] = active
+    return lookup
+
+
+def active_mapping_for_date(mapping: pd.DataFrame, execution_date: str) -> pd.DataFrame:
+    """返回执行日有效且当月重新验收通过的唯一板块映射。"""
+    return build_active_mapping_lookup(mapping, [execution_date]).get(
+        execution_date, mapping.iloc[0:0].copy()
+    )
+
+
+def resolve_target_weights_from_active(
+    target_weights: dict[str, float],
+    active_mapping: pd.DataFrame,
     low_risk_code: str = DEFAULT_LOW_RISK_CODE,
 ) -> pd.DataFrame:
-    """将未映射或冲突的板块权重透明地转入低风险ETF。"""
-    review_due = (
-        pd.to_datetime(mapping["asof_date"].astype(str), format="%Y%m%d", errors="coerce")
-        + pd.offsets.MonthEnd(1)
-        if "asof_date" in mapping.columns
-        else pd.Series(pd.NaT, index=mapping.index)
-    )
-    active = mapping[
-        mapping.get("selected", False).astype(bool)
-        & mapping["effective_from"].astype(str).le(signal_date)
-        & (mapping["effective_to"].isna() | mapping["effective_to"].astype(str).gt(signal_date))
-        & (review_due.isna() | review_due.ge(pd.to_datetime(signal_date, format="%Y%m%d")))
-    ].copy()
-    active = active.sort_values(["mapping_score", "median_amount20"], ascending=False)
-    active = active.drop_duplicates("sector_code").set_index("sector_code", drop=False)
+    """使用已经冻结到执行日的映射解析目标权重。"""
+    active = active_mapping.set_index("sector_code", drop=False)
     # 同一ETF冲突由映射质量决定，不能依赖target_weights的插入顺序。
     mapped_candidates = []
     for sector_code, requested_weight in target_weights.items():
@@ -483,6 +519,20 @@ def resolve_target_weights(
     return result
 
 
+def resolve_target_weights(
+    target_weights: dict[str, float],
+    mapping: pd.DataFrame,
+    execution_date: str,
+    low_risk_code: str = DEFAULT_LOW_RISK_CODE,
+) -> pd.DataFrame:
+    """将未映射或冲突的板块权重透明地转入低风险ETF。"""
+    return resolve_target_weights_from_active(
+        target_weights,
+        active_mapping_for_date(mapping, execution_date),
+        low_risk_code,
+    )
+
+
 def build_latest_execution_readiness(
     plan: dict,
     mapping: pd.DataFrame,
@@ -493,6 +543,7 @@ def build_latest_execution_readiness(
 ) -> tuple[dict, pd.DataFrame, pd.DataFrame]:
     """把指数目标解析成ETF参考组合，并对所有执行前提做硬阻断。"""
     signal_date = str(plan.get("signal_date") or "")
+    execution_date = str(plan.get("planned_execution_date") or "")
     data_end = str(plan.get("market_data_asof") or "")
     reference = pd.Timestamp(reference_date or pd.Timestamp.today()).normalize()
     data_age = (
@@ -518,7 +569,12 @@ def build_latest_execution_readiness(
         if latest_mapping_asof
         else None
     )
-    resolved = resolve_target_weights(targets, mapping, signal_date) if targets else pd.DataFrame()
+    resolution_date = execution_date or signal_date
+    resolved = (
+        resolve_target_weights(targets, mapping, resolution_date)
+        if targets
+        else pd.DataFrame()
+    )
     metadata_columns = [
         "sector_code",
         "sector_name",
@@ -618,9 +674,9 @@ def build_latest_execution_readiness(
         operational_blockers.append("strategy_data_stale")
     if signal_date != data_end:
         operational_blockers.append("signal_not_aligned_with_market_data")
-    if plan.get("stage") != "planned" or not plan.get("planned_execution_date"):
+    if plan.get("stage") != "planned" or not execution_date:
         operational_blockers.append("next_trade_calendar_missing")
-    if risk_weight > 1e-12 and (review_due is None or signal_date > review_due):
+    if risk_weight > 1e-12 and (review_due is None or execution_date > review_due):
         operational_blockers.append("mapping_stale")
     if risk_weight > 1e-12 and (not equity_quote_date or equity_quote_date < signal_date):
         operational_blockers.append("equity_etf_quotes_stale")
@@ -630,11 +686,22 @@ def build_latest_execution_readiness(
         operational_blockers.append("mapping_coverage_incomplete")
     if not weights_valid:
         operational_blockers.append("resolved_weights_invalid")
+    replay_path = OUTPUT_ROOT / "sector" / "etf_backtest" / "READINESS.json"
     research_blockers = [
         "etf_master_not_point_in_time",
         "sector_catalog_not_point_in_time",
-        "resolved_etf_backtest_missing",
     ]
+    if not replay_path.exists():
+        research_blockers.append("resolved_etf_backtest_missing")
+    else:
+        try:
+            replay_status = json.loads(replay_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            replay_status = {}
+        if replay_status.get("status") != "completed":
+            research_blockers.append("resolved_etf_backtest_incomplete")
+        elif not replay_status.get("backtest_promotable", False):
+            research_blockers.append("resolved_etf_backtest_not_promotable")
     overall_status = "blocked" if operational_blockers else "reference_only"
     payload = {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),

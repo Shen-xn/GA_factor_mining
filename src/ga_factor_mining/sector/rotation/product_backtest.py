@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import tempfile
@@ -817,6 +818,7 @@ def run_product_backtest(
     use_sector_strength_override: bool = False,
     latest_plan_sink: dict | None = None,
     planned_execution_date: str | None = None,
+    target_weight_sink: list[dict] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, float]]:
     """运行状态化产品回测，所有决策在收盘后产生并于次日开盘执行。"""
     if universe not in UNIVERSES:
@@ -892,6 +894,34 @@ def run_product_backtest(
     actions: list[pd.DataFrame] = []
     position_entry_open: dict[str, float] = {}
     position_close_peak: dict[str, float] = {}
+
+    def record_targets(
+        signal_date: str,
+        execution_date: str,
+        target: dict[str, float],
+        stage: str,
+    ) -> None:
+        if target_weight_sink is None:
+            return
+        for code, weight in sorted(target.items()):
+            target_weight_sink.append(
+                {
+                    "signal_date": signal_date,
+                    "execution_date": execution_date,
+                    "stage": stage,
+                    "asset_code": code,
+                    "target_weight": float(weight),
+                }
+            )
+        target_weight_sink.append(
+            {
+                "signal_date": signal_date,
+                "execution_date": execution_date,
+                "stage": stage,
+                "asset_code": "LOW_RISK",
+                "target_weight": 1.0 - float(sum(target.values())),
+            }
+        )
 
     def decide(signal_date: str) -> tuple[dict[str, float], str, float, bool, pd.DataFrame, dict]:
         nonlocal positions, regime_state, drawdown_state, risk_peak
@@ -1030,6 +1060,7 @@ def run_product_backtest(
     equity *= 1.0 + initial_net
     peak = max(peak, equity)
     live_weights = first_target
+    record_targets(first_signal, first_execution_date, live_weights, "executed")
     first_execution_prices = open_pivot.loc[first_execution_date].reindex(live_weights)
     position_entry_open = {code: float(first_execution_prices.loc[code]) for code in live_weights}
     position_close_peak = {code: 1.0 for code in live_weights}
@@ -1124,6 +1155,7 @@ def run_product_backtest(
         risk_peak = max(risk_peak, equity)
         prior_codes = set(live_weights)
         live_weights = target
+        record_targets(signal_date, execution_date, live_weights, "executed")
         execution_prices = open_pivot.loc[execution_date].reindex(live_weights)
         for code in prior_codes - set(live_weights):
             position_entry_open.pop(code, None)
@@ -1211,7 +1243,11 @@ def run_product_backtest(
         )
 
     # 最新收盘只形成planned目标，不把未知下一开盘伪装成已成交或收益。
-    latest_signal_date = str(sub.loc[sub["trade_date"].le(end), "trade_date"].max())
+    # Windows本机Pandas对大型object数组反复比较偶发原生异常；日期为YYYYMMDD，
+    # 直接在Python字符串上取最大值既等价，也避免再扫描一份布尔数组。
+    latest_signal_date = max(
+        str(value) for value in sub["trade_date"].dropna().tolist() if str(value) <= end
+    )
     if latest_plan_sink is not None and latest_signal_date > last_signal:
         current_weights = dict(live_weights)
         (
@@ -1250,6 +1286,12 @@ def run_product_backtest(
                 "risk": planned_risk,
                 "actions": preview_actions,
             }
+        )
+        record_targets(
+            latest_signal_date,
+            planned_execution_date or "",
+            planned_target,
+            "planned",
         )
 
     daily_result = pd.DataFrame(rows).sort_values("date").reset_index(drop=True)
@@ -1363,6 +1405,55 @@ def build_cost_sensitivity_frame(
             }
         )
     return pd.DataFrame(rows)
+
+
+def cost_worker_frame_is_current(
+    frame: pd.DataFrame,
+    *,
+    cost_bps: float,
+    policy_name: str,
+    feature_signature: str,
+    low_risk_signature: str,
+    expected_score_name: str | None = None,
+) -> bool:
+    """验证小型成本缓存，防止复用旧数据或其他策略的结果。"""
+    required = {
+        "period",
+        "cost_bps",
+        "policy_name",
+        "score_name",
+        "feature_protocol_version",
+        "feature_cache_signature",
+        "strategy_policy_version",
+        "low_risk_data_signature",
+        "full_path_rerun",
+        "stress_kind",
+    }
+    if frame.empty or required - set(frame.columns):
+        return False
+    periods = set(frame["period"].astype(str))
+    if not {"development", "selection", "full", "observation"}.issubset(periods):
+        return False
+    checks = (
+        pd.to_numeric(frame["cost_bps"], errors="coerce").eq(cost_bps).all()
+        and frame["policy_name"].astype(str).eq(policy_name).all()
+        and pd.to_numeric(frame["feature_protocol_version"], errors="coerce")
+        .eq(FEATURE_PROTOCOL_VERSION)
+        .all()
+        and frame["feature_cache_signature"].astype(str).eq(feature_signature).all()
+        and pd.to_numeric(frame["strategy_policy_version"], errors="coerce")
+        .eq(STRATEGY_POLICY_VERSION)
+        .all()
+        and frame["low_risk_data_signature"].astype(str).eq(low_risk_signature).all()
+        and frame["full_path_rerun"].astype(str).str.lower().eq("true").all()
+        and frame["stress_kind"]
+        .astype(str)
+        .eq("full_system_replay_with_drawdown_feedback")
+        .all()
+    )
+    if expected_score_name is not None:
+        checks = checks and frame["score_name"].astype(str).eq(expected_score_name).all()
+    return bool(checks)
 
 
 def write_acceptance_gate(
@@ -1681,10 +1772,83 @@ def main() -> None:
         # 每条成本路径使用独立进程，避免Pandas/Numpy长期重复回放产生内存碎片。
         isolated_frames = []
         worker_python = os.environ.get("GA_FACTOR_WORKER_PYTHON", sys.executable)
+        feature_signature = current_feature_cache_signature()
+        low_risk_signature = low_risk_data_signature()
+        expected_score_name = (
+            args.score
+            or (
+                f"score_rolling_lgbm_{args.rolling_lgbm_horizon}d"
+                if args.rolling_lgbm_horizon
+                else None
+            )
+        )
+        cache_label = re.sub(
+            r"[^0-9A-Za-z_.-]+",
+            "_",
+            expected_score_name or "selected_default",
+        )
+        cache_dir = ensure_output_dir("sector", "cost_workers")
+        official_cost_path = ensure_output_dir("sector", "strategy") / "COST_SENSITIVITY.csv"
+        official_cost_frame = (
+            pd.read_csv(official_cost_path) if official_cost_path.exists() else pd.DataFrame()
+        )
+        worker_env = os.environ.copy()
+        for name in (
+            "OMP_NUM_THREADS",
+            "OPENBLAS_NUM_THREADS",
+            "MKL_NUM_THREADS",
+            "NUMEXPR_NUM_THREADS",
+        ):
+            worker_env[name] = "1"
+        worker_env["PYTHONMALLOC"] = "malloc"
+        source_root = str(Path(__file__).resolve().parents[3])
+        worker_env["PYTHONPATH"] = os.pathsep.join(
+            value
+            for value in (source_root, worker_env.get("PYTHONPATH", ""))
+            if value
+        )
         with tempfile.TemporaryDirectory(prefix="sector-cost-") as temp_dir:
             temp_root = Path(temp_dir)
             for cost_bps in (10.0, 20.0, 30.0, 50.0):
-                output_path = temp_root / f"cost_{int(cost_bps)}.csv"
+                cache_path = cache_dir / (
+                    f"{args.policy}_{cache_label}_{int(cost_bps)}bp.csv"
+                )
+                cached_frame = pd.DataFrame()
+                if cache_path.exists():
+                    candidate_cache = pd.read_csv(cache_path)
+                    if cost_worker_frame_is_current(
+                        candidate_cache,
+                        cost_bps=cost_bps,
+                        policy_name=args.policy,
+                        feature_signature=feature_signature,
+                        low_risk_signature=low_risk_signature,
+                        expected_score_name=expected_score_name,
+                    ):
+                        cached_frame = candidate_cache
+                if cached_frame.empty and not official_cost_frame.empty:
+                    official_subset = official_cost_frame.loc[
+                        pd.to_numeric(official_cost_frame["cost_bps"], errors="coerce").eq(
+                            cost_bps
+                        )
+                    ].copy()
+                    if cost_worker_frame_is_current(
+                        official_subset,
+                        cost_bps=cost_bps,
+                        policy_name=args.policy,
+                        feature_signature=feature_signature,
+                        low_risk_signature=low_risk_signature,
+                        expected_score_name=expected_score_name,
+                    ):
+                        official_subset.to_csv(
+                            cache_path, index=False, encoding="utf-8-sig"
+                        )
+                        cached_frame = official_subset
+                if not cached_frame.empty:
+                    isolated_frames.append(cached_frame)
+                    print(f"[cost] {cost_bps:.0f}bp 使用已验证缓存")
+                    continue
+
+                output_path = cache_dir / f".{cache_path.stem}.partial.csv"
                 command = [
                     worker_python,
                     "-X",
@@ -1704,26 +1868,28 @@ def main() -> None:
                     command.extend(["--rolling-lgbm-horizon", str(args.rolling_lgbm_horizon)])
                 elif args.use_selected_adaptive:
                     command.append("--use-selected-adaptive")
-                worker_env = os.environ.copy()
-                for name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
-                    worker_env[name] = "1"
-                worker_env["PYTHONMALLOC"] = "malloc"
-                source_root = str(Path(__file__).resolve().parents[3])
-                worker_env["PYTHONPATH"] = os.pathsep.join(
-                    value
-                    for value in (source_root, worker_env.get("PYTHONPATH", ""))
-                    if value
-                )
                 completed = None
                 for attempt in range(1, 4):
                     output_path.unlink(missing_ok=True)
                     completed = subprocess.run(command, check=False, env=worker_env)
                     if completed.returncode == 0 and output_path.exists():
-                        break
+                        candidate_cache = pd.read_csv(output_path)
+                        if cost_worker_frame_is_current(
+                            candidate_cache,
+                            cost_bps=cost_bps,
+                            policy_name=args.policy,
+                            feature_signature=feature_signature,
+                            low_risk_signature=low_risk_signature,
+                            expected_score_name=expected_score_name,
+                        ):
+                            os.replace(output_path, cache_path)
+                            cached_frame = candidate_cache
+                            break
                     print(f"[cost] {cost_bps:.0f}bp 子进程异常，第{attempt}/3次")
-                if completed is None or completed.returncode != 0 or not output_path.exists():
+                output_path.unlink(missing_ok=True)
+                if cached_frame.empty:
                     raise RuntimeError(f"{cost_bps:.0f}bp 成本隔离回放连续失败")
-                isolated_frames.append(pd.read_csv(output_path))
+                isolated_frames.append(cached_frame)
                 print(f"[cost] {cost_bps:.0f}bp 隔离回放完成")
             combined_path = temp_root / "cost_sensitivity.csv"
             pd.concat(isolated_frames, ignore_index=True).to_csv(
@@ -1884,6 +2050,7 @@ def main() -> None:
     from .refresh_data import next_trade_date
 
     latest_plan: dict = {}
+    target_weight_timeline: list[dict] = []
     continuous_daily, continuous_actions, _ = run_product_backtest(
         panel,
         score_name,
@@ -1894,9 +2061,14 @@ def main() -> None:
         low_risk_frame=low_risk_frame,
         latest_plan_sink=latest_plan,
         planned_execution_date=next_trade_date(market_data_end_date),
+        target_weight_sink=target_weight_timeline,
     )
     continuous_daily.to_parquet(output_dir / "HISTORY_DAILY.parquet", index=False)
     continuous_actions.to_parquet(output_dir / "HISTORY_ACTIONS.parquet", index=False)
+    pd.DataFrame(target_weight_timeline).to_csv(
+        output_dir / "TARGET_WEIGHT_TIMELINE.csv", index=False, encoding="utf-8-sig"
+    )
+    mapping_output_dir = ensure_output_dir("sector", "etf_mapping")
     for period, start, end in (
         ("development", PRODUCT_HISTORY_START, TRAIN_END),
         ("selection", VAL_START, VAL_END),
@@ -1946,7 +2118,7 @@ def main() -> None:
 
     etf_execution_readiness = write_latest_execution_readiness(
         output_dir,
-        ensure_output_dir("sector", "etf_mapping"),
+        mapping_output_dir,
     )
     risk_snapshot = latest_market_risk_snapshot(
         panel,

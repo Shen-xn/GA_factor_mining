@@ -1,19 +1,19 @@
 ﻿name,threshold,value,pass
 complete_2018_2025_coverage,年份必须完整为2018—2025且每年>=200日,"{'first': '20180103', 'last': '20251231', 'days': {'2018': 242, '2019': 244, '2020': 243, '2021': 243, '2022': 242, '2023': 242, '2024': 242, '2025': 243}}",True
-cumulative_return,>= 68.39%（与7%年化同口径）,0.5450546377087413,False
-annualized_return,>= 7.00%,0.058109408543265406,False
-development_return,>= 20.00%（2018—2023）,0.13477041691039182,False
-selection_return,>= 30.00%（2024—2025）,0.36155702923188704,True
-selection_years_positive,2024与2025分别为正,"{'2024': 0.24113681820986677, '2025': 0.09702412276811367}",True
-maximum_drawdown,>= -20.00%,-0.1893370269982635,True
+cumulative_return,>= 68.39%（与7%年化同口径）,0.5450546705320212,False
+annualized_return,>= 7.00%,0.05810941146165782,False
+development_return,>= 20.00%（2018—2023）,0.1347704399362295,False
+selection_return,>= 30.00%（2024—2025）,0.36155703052931853,True
+selection_years_positive,2024与2025分别为正,"{'2024': 0.2411368171893069, '2025': 0.09702412471552835}",True
+maximum_drawdown,>= -20.00%,-0.189337019965376,True
 positive_years,>= 6 of 8,6,True
 years_above_3pct,>= 5 of 8,5,True
-worst_calendar_year,>= -15.00%,-0.12725430708832108,True
-average_daily_turnover,<= 7.50%,0.08873608978866689,False
-annualized_turnover,<= 19.0x,22.361494626744054,False
+worst_calendar_year,>= -15.00%,-0.1272543048224013,True
+average_daily_turnover,<= 7.50%,0.0887360897647445,False
+annualized_turnover,<= 19.0x,22.36149462071561,False
 trade_day_ratio,<= 40.00%,0.4657393096342092,False
 median_holding_sessions,>= 8,5.0,False
 risk_explanation_schema,"风险字段齐全且risk_target=min(market_after_override, drawdown_cap)","{'required_fields_present': True, 'identity_holds': True}",True
 latest_output_compatibility,最新风险日等于数据截止日且风险/目标组合字段齐全,"{'files_present': True, 'risk_asof_date': '20260828', 'data_end_date': '20260828', 'risk_schema_ok': True, 'portfolio_schema_ok': True}",True
-execution_safety_interlock,最新计划与行情同日；执行层未就绪时LATEST_ACTIONS必须为空,"{'files_present': True, 'plan_stage': 'planned', 'signal_date': '20260828', 'market_data_asof': '20260828', 'execution_ready': False, 'blockers': ['mapping_coverage_incomplete', 'etf_master_not_point_in_time', 'sector_catalog_not_point_in_time', 'resolved_etf_backtest_missing'], 'latest_action_rows': 0, 'safe_block_holds': True}",True
-cost_robustness,30bp开发/选择期为正且保留20bp收益60%；50bp全期为正,"{'status': 'evaluated', 'development_30bp': -0.0473208780449319, 'selection_30bp': 0.1991690602674316, 'full_20bp': 0.5450546377087413, 'full_30bp': 0.14242332741126, 'full_50bp': -0.1138416754842531, 'retention_30bp_vs_20bp': 0.2613010101335312}",False
+execution_safety_interlock,最新计划与行情同日；执行层未就绪时LATEST_ACTIONS必须为空,"{'files_present': True, 'plan_stage': 'planned', 'signal_date': '20260828', 'market_data_asof': '20260828', 'execution_ready': False, 'blockers': ['mapping_coverage_incomplete', 'etf_master_not_point_in_time', 'sector_catalog_not_point_in_time', 'resolved_etf_backtest_not_promotable'], 'latest_action_rows': 0, 'safe_block_holds': True}",True
+cost_robustness,30bp开发/选择期为正且保留20bp收益60%；50bp全期为正,{'status': 'not_evaluated'},

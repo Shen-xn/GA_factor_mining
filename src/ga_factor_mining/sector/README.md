@@ -21,9 +21,10 @@ python -m ga_factor_mining.sector --check
 5. `rotation/low_risk.py`：构造货币ETF真实收益；
 6. `rotation/product_backtest.py`：生成连续账本、指标和用户建议；
 7. `rotation/etf_mapping.py`：解析ETF参考组合并执行映射/新鲜度安全门；
-8. `rotation/forward_monitor.py`：维护冻结协议后的新样本记录。
+8. `rotation/etf_backtest.py`：冻结原目标并使用真实ETF复权开盘价回放实施层；
+9. `rotation/forward_monitor.py`：维护冻结协议后的新样本记录。
 
-`doctor.py`只做运行前检查，不参与投资决策。默认运行读取已冻结的季度评分、`simple_v1`和20bp成本，不执行研究搜索。产品时间轴明确拆成`planned`、`executed_unsettled`和`settled`：最新收盘计划不需要未来收益，只有下一开盘真实出现后才改变模拟持仓。
+`doctor.py`只做运行前检查，不参与投资决策。默认运行读取已冻结的季度评分、`simple_v1`和20bp成本，不执行研究搜索。产品账本和ETF实施回放在两个进程中串行运行，避免同一进程累计大对象。产品时间轴明确拆成`planned`、`executed_unsettled`和`settled`：最新收盘计划不需要未来收益，只有下一开盘真实出现后才改变模拟持仓。
 
 `risk.py`同时输出0—100的板块广度风险解释分。仓位仍由已冻结的离散状态与回撤保护决定；风险分暂不直接替代仓位规则，避免在没有封存验证时改变基准收益。产品日账本分别记录`market_base_exposure`、`drawdown_cap`、`risk_target_exposure`和实际组合仓位。
 
@@ -38,6 +39,8 @@ python -m ga_factor_mining.sector --check
 | 研究 | `feature_ablation.py`、`ga_ablation.py`、`market_context_ablation.py` | 否 |
 | 诊断 | `return_bridge.py`、`prototype_recovery.py`、`sector_strength_validation.py` | 否 |
 | 正式安全门 | `etf_mapping.py`的最新解析与执行就绪检查 | 是 |
+| 正式诊断 | `etf_backtest.py`的冻结目标真实ETF回放 | 是 |
+| 研究 | `etf_proxy_research.py`的预登记语义代理检验 | 否 |
 | 诊断 | `bad_year_attribution.py`、`etf_mapping.py`的历史映射研究 | 否 |
 
 研究产物保留在 `outputs/sector/`，但未通过固定门槛的模块不能改变默认模型和策略。
@@ -66,9 +69,12 @@ python -m ga_factor_mining.sector.rotation.return_bridge
 python -m ga_factor_mining.sector.rotation.sector_strength_validation
 python -m ga_factor_mining.sector.rotation.product_backtest --cost-sensitivity
 python -m ga_factor_mining.sector.rotation.product_backtest --boundary-sensitivity
+python -m ga_factor_mining.sector.rotation.etf_proxy_research
 ```
 
 这些命令会写入结构化输出，但不会自动改变正式策略。
+
+语义ETF代理必须先写入`configs/sector/etf_proxy_hypotheses.json`，随后才允许检验；结果只写诊断目录，不能自动修改默认映射。当前四个事后登记假设在截止2025年末的历史闸门中均未通过。
 
 成本压力命令会用四个相互隔离的子进程依次重放10/20/30/50bp，再由独立进程生成正式账本和统一的`ACCEPTANCE_GATE.json`，避免重复回放造成内存碎片。候选只允许使用2018—2025晋级；2026可作诊断，但`observation_used_for_selection`固定为`false`。本机默认Python原生运行时不稳定时，可用`GA_FACTOR_WORKER_PYTHON`指向另一个已验证的Python解释器，代码、数据和口径不变。
 

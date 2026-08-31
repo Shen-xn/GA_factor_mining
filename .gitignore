@@ -32,6 +32,7 @@ data/
 *.tmp
 *.bak
 /tmp/
+/outputs/sector/cost_workers/
 
 # 报告排版检查截图由 Codex 在项目外维护，不进入研究仓库。
 reports/**/preview*/

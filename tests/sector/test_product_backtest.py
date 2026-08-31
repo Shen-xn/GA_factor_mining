@@ -11,6 +11,7 @@ from ga_factor_mining.sector.rotation.product_backtest import (
     _execution_actions,
     _turnover,
     append_latest_signal_strength,
+    cost_worker_frame_is_current,
     latest_market_risk_snapshot,
     prepare_product_panel,
     product_feature_columns,
@@ -23,6 +24,42 @@ from ga_factor_mining.sector.rotation.strategy import StrategyPolicy
 
 
 class ProductBacktestTests(unittest.TestCase):
+    def test_cost_worker_cache_requires_matching_signatures(self):
+        frame = pd.DataFrame(
+            {
+                "period": ["development", "selection", "full", "observation"],
+                "cost_bps": [20.0] * 4,
+                "policy_name": ["simple_v1"] * 4,
+                "score_name": ["score_x"] * 4,
+                "feature_protocol_version": [4] * 4,
+                "feature_cache_signature": ["feature"] * 4,
+                "strategy_policy_version": [5] * 4,
+                "low_risk_data_signature": ["low_risk"] * 4,
+                "full_path_rerun": [True] * 4,
+                "stress_kind": ["full_system_replay_with_drawdown_feedback"] * 4,
+            }
+        )
+        self.assertTrue(
+            cost_worker_frame_is_current(
+                frame,
+                cost_bps=20.0,
+                policy_name="simple_v1",
+                feature_signature="feature",
+                low_risk_signature="low_risk",
+                expected_score_name="score_x",
+            )
+        )
+        self.assertFalse(
+            cost_worker_frame_is_current(
+                frame,
+                cost_bps=30.0,
+                policy_name="simple_v1",
+                feature_signature="feature",
+                low_risk_signature="low_risk",
+                expected_score_name="score_x",
+            )
+        )
+
     def test_market_risk_is_not_executable_when_product_layer_blocks(self):
         snapshot = {
             "status": "ready",

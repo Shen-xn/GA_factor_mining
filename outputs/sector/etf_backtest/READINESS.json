@@ -1,0 +1,24 @@
+{
+  "status": "completed",
+  "replay_kind": "frozen_sector_targets_to_real_etf_open",
+  "changes_sector_ranking": false,
+  "changes_sector_holding_rules": false,
+  "cost_paths_bps": [
+    10.0,
+    20.0,
+    30.0,
+    50.0
+  ],
+  "full_20bp_total_return": 0.16789167996523102,
+  "full_20bp_annualized_return": 0.02035400603447779,
+  "full_20bp_maximum_drawdown": -0.01418144982797942,
+  "full_20bp_average_mapping_coverage": 0.008476117979858547,
+  "price_gaps_encountered": 0,
+  "point_in_time_master_available": false,
+  "backtest_promotable": false,
+  "blockers": [
+    "mapping_coverage_insufficient",
+    "etf_master_not_point_in_time",
+    "sector_catalog_not_point_in_time"
+  ]
+}

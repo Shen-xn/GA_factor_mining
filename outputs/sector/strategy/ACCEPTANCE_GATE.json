@@ -7,7 +7,7 @@
   "policy_signature": "9f8d0005261cddef6fdb1d76ae5be8d343b7adae1fc03ac81ec9c5828c8390f6",
   "regime_policy_signature": "a0bbfa8b1488f69e16bb2264b547fb61f6e756b7444889451a88debc898aac8f",
   "low_risk_data_signature": "760bf7fdeefae8d8ea0e0e7c3401d1ff395c7f171dc96a4760031d67f0f522a8",
-  "decision_source_signature": "4c6e0538a1b103b04757e1cb2f3d4a7edbc35b044ecb422f031b4b383a917b03",
+  "decision_source_signature": "82e0a07c0a2b4210246f3acbee0e27ae9fba2141cde44aeb1654cde9f144234e",
   "score_name": "score_frozen_selected_5d",
   "feature_protocol_version": 4,
   "feature_cache_signature": "6dd1e5ddb4c0afce5af4cd142ce9917243bf4f5ec090a32ef6d14cdd7262a445",
@@ -34,40 +34,40 @@
     {
       "name": "cumulative_return",
       "threshold": ">= 68.39%（与7%年化同口径）",
-      "value": 0.5450546377087413,
+      "value": 0.5450546705320212,
       "pass": false
     },
     {
       "name": "annualized_return",
       "threshold": ">= 7.00%",
-      "value": 0.058109408543265406,
+      "value": 0.05810941146165782,
       "pass": false
     },
     {
       "name": "development_return",
       "threshold": ">= 20.00%（2018—2023）",
-      "value": 0.13477041691039182,
+      "value": 0.1347704399362295,
       "pass": false
     },
     {
       "name": "selection_return",
       "threshold": ">= 30.00%（2024—2025）",
-      "value": 0.36155702923188704,
+      "value": 0.36155703052931853,
       "pass": true
     },
     {
       "name": "selection_years_positive",
       "threshold": "2024与2025分别为正",
       "value": {
-        "2024": 0.24113681820986677,
-        "2025": 0.09702412276811367
+        "2024": 0.2411368171893069,
+        "2025": 0.09702412471552835
       },
       "pass": true
     },
     {
       "name": "maximum_drawdown",
       "threshold": ">= -20.00%",
-      "value": -0.1893370269982635,
+      "value": -0.189337019965376,
       "pass": true
     },
     {
@@ -85,19 +85,19 @@
     {
       "name": "worst_calendar_year",
       "threshold": ">= -15.00%",
-      "value": -0.12725430708832108,
+      "value": -0.1272543048224013,
       "pass": true
     },
     {
       "name": "average_daily_turnover",
       "threshold": "<= 7.50%",
-      "value": 0.08873608978866689,
+      "value": 0.0887360897647445,
       "pass": false
     },
     {
       "name": "annualized_turnover",
       "threshold": "<= 19.0x",
-      "value": 22.361494626744054,
+      "value": 22.36149462071561,
       "pass": false
     },
     {
@@ -146,7 +146,7 @@
           "mapping_coverage_incomplete",
           "etf_master_not_point_in_time",
           "sector_catalog_not_point_in_time",
-          "resolved_etf_backtest_missing"
+          "resolved_etf_backtest_not_promotable"
         ],
         "latest_action_rows": 0,
         "safe_block_holds": true
@@ -157,15 +157,9 @@
       "name": "cost_robustness",
       "threshold": "30bp开发/选择期为正且保留20bp收益60%；50bp全期为正",
       "value": {
-        "status": "evaluated",
-        "development_30bp": -0.0473208780449319,
-        "selection_30bp": 0.1991690602674316,
-        "full_20bp": 0.5450546377087413,
-        "full_30bp": 0.14242332741126,
-        "full_50bp": -0.1138416754842531,
-        "retention_30bp_vs_20bp": 0.2613010101335312
+        "status": "not_evaluated"
       },
-      "pass": false
+      "pass": null
     }
   ]
 }

@@ -6,7 +6,7 @@
   "score_name": "score_frozen_selected_5d",
   "policy_name": "simple_v1",
   "cost_bps": 20.0,
-  "cost_sensitivity_run": true,
+  "cost_sensitivity_run": false,
   "boundary_sensitivity_run": false,
   "product_history_start": "20180101",
   "boundary_mode": "continuous_carry_from_2018",
@@ -28,7 +28,7 @@
     "execution_message": "ETF执行层未就绪，禁止执行"
   },
   "etf_execution_readiness": {
-    "generated_at": "2026-08-31T02:28:22+08:00",
+    "generated_at": "2026-08-31T08:47:53+08:00",
     "overall_status": "blocked",
     "execution_ready": false,
     "strategy_data_end": "20260828",
@@ -52,18 +52,18 @@
     "research_blockers": [
       "etf_master_not_point_in_time",
       "sector_catalog_not_point_in_time",
-      "resolved_etf_backtest_missing"
+      "resolved_etf_backtest_not_promotable"
     ],
     "blockers": [
       "mapping_coverage_incomplete",
       "etf_master_not_point_in_time",
       "sector_catalog_not_point_in_time",
-      "resolved_etf_backtest_missing"
+      "resolved_etf_backtest_not_promotable"
     ]
   },
   "runtime": {
-    "python": "3.12.13",
-    "pandas": "3.0.3",
-    "numpy": "2.4.6"
+    "python": "3.12.7",
+    "pandas": "2.2.2",
+    "numpy": "1.26.4"
   }
 }

@@ -1,17 +1,17 @@
 {
-  "created_at": "2026-08-31T08:46:09+08:00",
-  "protocol_hash": "0b465ae5096860b914a9ac8032bce160cf5629c88505869bb5f9b2c93759b2fe",
+  "created_at": "2026-08-31T02:30:37+08:00",
+  "protocol_hash": "07afbd839caf0771830e46e49d27faffec31da3cc720e65432d2a16185709042",
   "payload": {
     "config": {
-      "version": 11,
+      "version": 9,
       "freeze_data_end": "20260828",
       "first_unseen_after": "20260828",
-      "evidence_name": "sector_simple_quarterly_forward_v11",
-      "execution_layer": "planned_executed_settled_with_frozen_target_real_etf_replay_and_process_isolation",
+      "evidence_name": "sector_simple_quarterly_forward_v9",
+      "execution_layer": "planned_executed_settled_sector_reference_with_incremental_etf_and_memory_isolation",
       "cost_bps": 20.0,
       "model_retraining_schedule": "quarterly_expanding_window",
       "policy_name": "simple_v1",
-      "notes": "v8已记录2026-08-11至2026-08-28共14个真正未见交易日并归档；v9和v10在同一冻结日都只有基线、没有未见数据。v11仍不改变模型、因子、simple_v1仓位或买卖规则，只新增完整目标权重时间线、冻结目标的真实ETF开盘回放、按计划执行日检查映射、两阶段进程隔离以及最小数据包缺少ETF实施数据时的安全降级；2026-08-28及以前均已被看到，只有之后的数据可作为v11前向证据。"
+      "notes": "v8已在冻结后记录2026-08-11至2026-08-28共14个真正未见交易日并归档。v9不改变模型、因子、simple_v1仓位或买卖规则，只升级增量ETF行情、映射过期检查、执行口径一致性和隔离成本回放；2026-08-28及以前均已被看到，只有之后的数据可作为v9前向证据。"
     },
     "model": {
       "variant": "expanding_quarterly",
@@ -41,12 +41,11 @@
     "source_sha256": {
       "src/ga_factor_mining/sector/rotation/run_experiments.py": "dbd2d48a1c60761fdf22ec597daa1c07454737b263bdff32e4288432af953f2e",
       "src/ga_factor_mining/sector/rotation/rolling_validation.py": "32ae70523c76bd583435188e0e53edda6a8aa065a8b8a5c92e14f2f7c054e0fd",
-      "src/ga_factor_mining/sector/rotation/strategy.py": "f701a1a5aa4d239453973738a4dea34f4eedc1460dd61cb373d1178fd411c4a8",
+      "src/ga_factor_mining/sector/rotation/strategy.py": "49bb7bfaf75bfac61c45344433e3d9850aeabe8a2ca89ec152047442ce4d3921",
       "src/ga_factor_mining/sector/rotation/risk.py": "1cb0bc2eccac3f13a6c0d2630d4aac744dbcd8b7aab700822ee4f9370c870c30",
       "src/ga_factor_mining/sector/rotation/low_risk.py": "6ccee3b89125ddca4ba92c982a97f7351c4925a354ec50701d9e46f4579a75b0",
-      "src/ga_factor_mining/sector/rotation/product_backtest.py": "743be2f8ce7ce5042f23aa1fbfa604eaa465ff30370e7c6295f20b628b3fe830",
-      "src/ga_factor_mining/sector/rotation/etf_mapping.py": "934d10e5004f4f62e4814e7362887a530c36739dd3e4b49db46f0ba5e57b755e",
-      "src/ga_factor_mining/sector/rotation/etf_backtest.py": "6a08ae6bdf6dc83734b4b8eda4d72656524b7cf695b585381c7ddb085b83cda7",
+      "src/ga_factor_mining/sector/rotation/product_backtest.py": "341ff214d759ea61618eb598e0ad58b7b0a715cfe55bb22f6f24a6452abfdf1b",
+      "src/ga_factor_mining/sector/rotation/etf_mapping.py": "df9e72b910743ce6dd885010593c960c7bbc70af0912d8b5c5d8debdc168fae3",
       "src/ga_factor_mining/sector/rotation/refresh_data.py": "5d972947187174a986ad8a8f497b89256cf9282330bc721292189f18a7db96bd"
     }
   }

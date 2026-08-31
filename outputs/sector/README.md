@@ -14,7 +14,9 @@
 6. `strategy/LATEST_MARKET_RISK.csv`：板块广度风险、仓位来源与确认进度；
 7. `strategy/SUMMARY.csv`、`strategy/ANNUAL_RESULTS.csv`：分段与逐年表现；
 8. `strategy/ACCEPTANCE_GATE.json`：当前版本距收益、低频和成本目标还差什么；
-9. `forward/STATUS.json`：当前v9前向协议是否正常；`forward/archive/v8/`保留8月11—28日的14日未见证据。
+9. `strategy/TARGET_WEIGHT_TIMELINE.csv`：全部已执行和计划目标的完整权重时间线；
+10. `etf_backtest/READINESS.json`：冻结目标翻译到真实ETF后的覆盖率、收益与晋级结论；
+11. `forward/STATUS.json`：当前v11前向协议是否正常；`forward/archive/v8/`保留14日未见证据，`v9/`和`v10/`保留无未见数据的冻结基线。
 
 `rotation/sector_feature_panel.parquet` 和 `adaptation/SELECTED_SCORES.parquet` 是本地运行缓存，不进入Git，但默认策略必须使用。对应JSON元数据会提交。
 
@@ -33,6 +35,8 @@
 | `feature_ablation/` | 为什么三项高相关派生因子仍被保留 |
 | `low_risk/` | 为什么低风险腿选择 `511880.SH` |
 | `etf_mapping/` | 当前板块到权益ETF映射为何尚不能实盘化 |
+| `etf_backtest/` | 原始板块目标翻译到真实ETF后实际剩下多少覆盖与收益 |
+| `etf_proxy_research/` | 事后登记的语义ETF代理为何没有进入默认映射 |
 | `validation/` | 当前代码、文档和正式结果的验收摘要 |
 
 除此之外的研究尝试不代表当前产品，不应重新放回本目录；如需恢复，应该作为新的研究协议单独运行。

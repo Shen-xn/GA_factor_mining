@@ -268,3 +268,35 @@ class EtfMappingTests(unittest.TestCase):
         self.assertEqual(resolution.iloc[0]["final_asset_code"], "511880.SH")
         self.assertAlmostEqual(float(portfolio["final_target_weight"].sum()), 1.0)
         self.assertEqual(portfolio["etf_code"].tolist(), ["511880.SH"])
+
+    def test_mapping_expiry_is_checked_on_planned_execution_date(self):
+        mapping = pd.DataFrame(
+            {
+                "asof_date": ["20260731"],
+                "sector_code": ["A.TI"],
+                "sector_name": ["半导体"],
+                "etf_code": ["512480.SH"],
+                "etf_name": ["半导体ETF"],
+                "effective_from": ["20260803"],
+                "effective_to": [pd.NA],
+                "mapping_score": [0.9],
+                "median_amount20": [200_000.0],
+                "selected": [True],
+            }
+        )
+        plan = {
+            "stage": "planned",
+            "market_data_asof": "20260831",
+            "signal_date": "20260831",
+            "planned_execution_date": "20260901",
+            "target_weights": {"A.TI": 0.3, "LOW_RISK": 0.7},
+        }
+        payload, resolution, _ = build_latest_execution_readiness(
+            plan,
+            mapping,
+            equity_quote_date="20260831",
+            low_risk_quote_date="20260831",
+            reference_date="20260831",
+        )
+        self.assertIn("mapping_stale", payload["operational_blockers"])
+        self.assertEqual(resolution.iloc[0]["final_asset_code"], "511880.SH")

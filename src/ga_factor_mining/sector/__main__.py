@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import os
+import subprocess
 import sys
 
 
@@ -39,15 +41,25 @@ def main() -> None:
         else:
             print(f"[update] 已是最新可得数据: {result['new_end']}")
 
-    # 高级研究参数仍交给产品模块，但不占用默认入口的帮助页面。
-    original_argv = sys.argv
-    try:
-        sys.argv = [original_argv[0], *product_args]
-        from .rotation.product_backtest import main as product_main
-
-        product_main()
-    finally:
-        sys.argv = original_argv
+    # 大面板账本和ETF回放必须分进程串行执行，避免Pandas/Numpy内存碎片累积。
+    worker_env = os.environ.copy()
+    for name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
+        worker_env[name] = "1"
+    worker_env["PYTHONMALLOC"] = "malloc"
+    python = worker_env.get("GA_FACTOR_WORKER_PYTHON", sys.executable)
+    commands = (
+        [python, "-X", "faulthandler", "-m", "ga_factor_mining.sector.rotation.product_backtest", *product_args],
+        [python, "-X", "faulthandler", "-m", "ga_factor_mining.sector.rotation.etf_backtest"],
+    )
+    for label, command in zip(("product", "etf-replay"), commands, strict=True):
+        completed = None
+        for attempt in range(1, 4):
+            completed = subprocess.run(command, check=False, env=worker_env)
+            if completed.returncode == 0:
+                break
+            print(f"[{label}] 隔离进程异常，第{attempt}/3次")
+        if completed is None or completed.returncode != 0:
+            raise SystemExit(f"{label} 隔离进程连续失败")
 
 
 if __name__ == "__main__":

@@ -76,9 +76,11 @@ python -m ga_factor_mining.sector
 5. `LATEST_TARGET_PORTFOLIO.csv`：核对板块层完整目标权重；
 6. `SUMMARY.csv` 和 `ANNUAL_RESULTS.csv`：查看历史表现。
 
+默认命令会先在独立进程生成板块产品账本，再在另一个独立进程把冻结目标翻译到真实ETF开盘收益。这样可以降低Windows下原生数值库长时间运行造成的内存碎片风险。第二阶段完成不代表ETF可交易，仍必须以执行安全门和映射覆盖率为准。
+
 `LATEST_ACTIONS.csv`为空不等于程序失败，可能是无需交易，也可能是数据、未来交易日历或ETF映射安全门阻止了执行。必须结合`LATEST_STATUS.csv`和`ETF_EXECUTION_READINESS.json`判断。上一批操作只保存在 `LAST_REBALANCE_ACTIONS.csv`，不能重复执行。
 
-普通板块代码目前是研究建议。系统会把ETF解析结果单独写到`outputs/sector/etf_mapping/`，但时点目录、真实ETF回放或行情新鲜度任一不完整时，只生成`BLOCKED_ORDERS.csv`，不会伪装成可执行订单。
+普通板块代码目前是研究建议。系统会把ETF解析结果单独写到`outputs/sector/etf_mapping/`，把真实ETF翻译回放写到`outputs/sector/etf_backtest/`；时点目录、映射覆盖、回放晋级或行情新鲜度任一不完整时，只生成`BLOCKED_ORDERS.csv`，不会伪装成可执行订单。
 
 ## 4. 增量更新
 
@@ -104,7 +106,7 @@ python -m ga_factor_mining.sector --update
 python -m ga_factor_mining.sector --update --token-file "D:\private\tushare_token.txt"
 ```
 
-成本压力会把10/20/30/50bp和最终正式账本拆到相互隔离的进程中。如果本机默认Python存在原生运行时异常，可临时设置`GA_FACTOR_WORKER_PYTHON`指向另一个已验证、依赖齐全的Python解释器；数据、策略和验收口径不会因此改变。
+成本压力会把10/20/30/50bp拆到相互隔离的进程中，并复用经过周期、策略、成本、特征签名和低风险数据签名校验的小型结果缓存。最终正式账本和ETF回放也各自使用独立进程。如果本机默认Python存在原生运行时异常，可临时设置`GA_FACTOR_WORKER_PYTHON`指向另一个已验证、依赖齐全的Python解释器；数据、策略和验收口径不会因此改变。
 
 更新会额外缓存请求日之后至少31个自然日的交易日历，用于生成严格晚于最新信号日的下一开市日。行情、特征、评分和日历通过尾部校验后才替换正式缓存；网络或数据校验失败时原文件保持不变。更新不会重新搜索模型参数或策略规则。
 

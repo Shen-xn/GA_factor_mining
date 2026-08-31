@@ -175,18 +175,23 @@ def step_portfolio(
             del current[code]
 
     execution_allowed = (
-        daily["execution_allowed"] if "execution_allowed" in daily.columns else True
+        daily["execution_allowed"].fillna(False).astype(bool)
+        if "execution_allowed" in daily.columns
+        else pd.Series(True, index=daily.index)
     )
     valuation_available = (
-        daily["valuation_available"] if "valuation_available" in daily.columns else True
+        daily["valuation_available"].fillna(False).astype(bool)
+        if "valuation_available" in daily.columns
+        else pd.Series(True, index=daily.index)
     )
-    eligible = daily[
+    eligible_mask = (
         (daily["score_rank"] <= policy.entry_rank)
         & execution_allowed
         & valuation_available
         & (~daily["ts_code"].isin(current))
         & (~daily["ts_code"].isin(sold_today))
-    ]
+    )
+    eligible = daily.loc[eligible_mask]
 
     # 只在出现空位时买入Top5，不为小幅分数变化主动替换现有持仓。
     for row in eligible.itertuples(index=False):

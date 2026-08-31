@@ -1,0 +1,9 @@
+{
+  "version": 9,
+  "freeze_data_end": "20260828",
+  "unseen_days": 0,
+  "archive_reason": "执行层新增冻结目标真实ETF回放、计划执行日映射检查和两阶段进程隔离；模型、因子与simple_v1买卖规则未改变",
+  "successor_protocol": "v10",
+  "evidence_preserved": false,
+  "note": "v9只有冻结基线，没有独立未见数据；v8的14日未见证据仍单独保留"
+}
